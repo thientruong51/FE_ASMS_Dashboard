@@ -7,12 +7,13 @@ import {
   Tooltip,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import TruckImg from "@/assets/react.svg"; 
+import Warehouse3DViewer from "../../../components/Warehouse3DViewer"; 
 import WeightBlock100 from "./WeightBlock100";
 import WeightBlock200 from "./WeightBlock200";
 
 export default function TruckLoadCard() {
   const loadPercent = 60;
+  const shelfCount = 71; // ✅ số lượng kệ muốn render
 
   return (
     <Card
@@ -27,9 +28,9 @@ export default function TruckLoadCard() {
       }}
     >
       <CardContent sx={{ p: 3 }}>
-        {/* HEADER: truck info */}
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box>
+        {/* HEADER: Truck/Warehouse Info */}
+        <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
+          <Box flexShrink={0}>
             <Typography fontWeight={700} fontSize={16}>
               Eicher Pro 2059
             </Typography>
@@ -37,17 +38,11 @@ export default function TruckLoadCard() {
               DL04MP7045
             </Typography>
           </Box>
-          <Box
-            component="img"
-            src={TruckImg}
-            alt="Truck"
-            sx={{
-              width: "100%",
-              maxWidth: 300,
-              objectFit: "contain",
-              display: "block",
-            }}
-          />
+
+          {/* ✅ Mô hình 3D kho + kệ */}
+          <Box sx={{ flex: 1, minWidth: 280 }}>
+            <Warehouse3DViewer shelfCount={shelfCount} />
+          </Box>
         </Box>
 
         {/* LOAD INFO */}
@@ -62,7 +57,7 @@ export default function TruckLoadCard() {
             <Typography fontSize={13} color="text.secondary">
               Max Weight
             </Typography>
-            <Typography fontWeight={600}>6.5 Tone</Typography>
+            <Typography fontWeight={600}>6.5 Ton</Typography>
           </Box>
         </Box>
 
@@ -121,7 +116,7 @@ export default function TruckLoadCard() {
           Drag and drop the orders into available weight blocks. You can also move the order to relevant block.
         </Box>
 
-        {/* SUB WIDGETS */}
+        {/* SUB-WIDGETS */}
         <WeightBlock100 />
         <WeightBlock200 />
       </CardContent>

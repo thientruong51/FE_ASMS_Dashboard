@@ -7,7 +7,7 @@ import {
   DialogContent,
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import ShelfView from "./ShelfView";
+import ShelfView from "./ShelfView/ShelfView";
 
 type Props = {
   shelfId: number;
