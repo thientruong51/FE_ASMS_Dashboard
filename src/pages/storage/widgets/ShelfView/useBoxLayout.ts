@@ -1,41 +1,33 @@
 import type { BoxData } from "./types";
 
-// 🧱 Loại thùng
 type BoxType = "A" | "B" | "C" | "D";
 
-// 📦 Kích thước (D × R × C, mét) — D: chiều dài (Z), R: chiều sâu (X), C: chiều cao (Y)
 const BOX_SIZES: Record<BoxType, [number, number, number]> = {
   A: [0.5, 0.5, 0.45],
   B: [0.75, 0.75, 0.45],
   C: [1.0, 0.5, 0.45],
-  D: [0.6, 0.6, 0.8],
+  D: [0.5, 0.5, 0.8],
 };
 
-// 🧱 Kích thước tổng thể của kệ (m)
 const SHELF_BOUNDS = {
-  length: 1.7, // theo trục Z (dài)
-  depth: 1.07, // theo trục X (sâu)
-  height: 6.2, // theo trục Y (cao)
+  length: 1.7, 
+  depth: 1.07, 
+  height: 5.2, 
 };
 
-// 🧭 Chiều cao đáy từng tầng (tổng cao 6.2 m)
 const FLOOR_BASE = [-0.1, 1.19, 2.47, 3.57];
 
-// ⚙️ Cấu hình từng tầng
 const FLOOR_CONFIG = {
   1: { usableTypes: ["A", "B", "C"] as BoxType[], stack: 2 },
   2: { usableTypes: ["A", "B", "C"] as BoxType[], stack: 2 },
   3: { usableTypes: ["A", "B", "C"] as BoxType[], stack: 2 },
-  4: { usableTypes: ["D"] as BoxType[], stack: 2 }, // tầng 4 chỉ chứa D
+  4: { usableTypes: ["D"] as BoxType[], stack: 2 }, 
 };
 
-// ⚙️ Offset tinh chỉnh vị trí hộp trong lòng kệ (m)
 const OFFSET_Y = -0.15; // hạ nhẹ xuống mặt sàn
 const OFFSET_Z = -0.6; // đẩy vào trong lòng kệ
 
-/**
- * 🧮 Tính toán bố cục thùng cho 1 tầng
- */
+
 export function computeBoxesForFloor(floor: number): BoxData[] {
   const config = FLOOR_CONFIG[floor as 1 | 2 | 3 | 4];
   const floorBase = FLOOR_BASE[floor - 1];

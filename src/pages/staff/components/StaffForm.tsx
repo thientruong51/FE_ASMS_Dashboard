@@ -1,49 +1,6 @@
-import {
-  Stack,
-  TextField,
-  MenuItem,
-  Button,
-  Box,
-  FormControlLabel,
-  Switch,
-Grid,
-  Typography,
-  Divider,
-} from "@mui/material";
-import { useState, useEffect } from "react";
-
-export interface Employee {
-  id: number;
-  employeeCode: string;
-  employeeRoleId?: number;
-  name?: string;
-  buildingId?: number;
-  phone?: string;
-  address?: string;
-  username?: string;
-  password?: string;
-  status?: string;
-  isActive: boolean;
-  employeeRole?: {
-    employeeRoleId: number;
-    name?: string;
-  };
-  building?: {
-    buildingId: number;
-    name?: string;
-  };
-}
-
-export interface EmployeeRole {
-  employeeRoleId: number;
-  name?: string;
-  isActive?: boolean;
-}
-
-export interface Building {
-  buildingId: number;
-  name?: string;
-}
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Box, Stack, TextField, MenuItem, Button, FormControlLabel, Switch, Typography, Divider } from "@mui/material";
+import type { Employee, EmployeeRole, Building } from "../../../types/staff";
 
 interface StaffFormProps {
   employee: Employee | null;
@@ -53,30 +10,37 @@ interface StaffFormProps {
   onCancel: () => void;
 }
 
-export default function StaffForm({ 
-  employee, 
-  roles, 
-  buildings, 
-  onSave, 
-  onCancel 
-}: StaffFormProps) {
-  // ✅ FIX: Correct type for formData
-  const [formData, setFormData] = useState<{
-    employeeCode: string;
-    name: string;
-    employeeRoleId: number | undefined;
-    buildingId: number | undefined;
-    phone: string;
-    address: string;
-    username: string;
-    password: string;
-    status: string;
-    isActive: boolean;
-  }>({
+function TwoColRowInner({ children, gap = 2 }: { children: React.ReactNode; gap?: number | string }) {
+  return (
+    <Box sx={{ display: "flex", gap, flexDirection: { xs: "column", sm: "row" }, alignItems: "stretch", width: "100%" }}>
+      {Array.isArray(children)
+        ? (children as React.ReactNode[]).map((child, i) => (
+            <Box key={i} sx={{ flex: 1, minWidth: 0 }}>
+              {child}
+            </Box>
+          ))
+        : <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>}
+    </Box>
+  );
+}
+
+export function TwoColRow(props: { children: React.ReactNode; gap?: number | string }) {
+  return <TwoColRowInner {...props} />;
+}
+
+function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffFormProps) {
+
+  useEffect(() => {
+   
+    return () => {  };
+  }, []);
+
+  const [formData, setFormData] = useState({
     employeeCode: "",
     name: "",
-    employeeRoleId: undefined,
-    buildingId: undefined,
+    employeeRoleId: undefined as number | undefined,
+    roleName: "" as string,
+    buildingId: undefined as number | undefined,
     phone: "",
     address: "",
     username: "",
@@ -90,81 +54,147 @@ export default function StaffForm({
   useEffect(() => {
     if (employee) {
       setFormData({
-        employeeCode: employee.employeeCode,
-        name: employee.name || "",
-        employeeRoleId: employee.employeeRoleId,
-        buildingId: employee.buildingId,
-        phone: employee.phone || "",
-        address: employee.address || "",
-        username: employee.username || "",
+        employeeCode: employee.employeeCode ?? "",
+        name: employee.name ?? "",
+        employeeRoleId: employee.employeeRoleId ?? undefined,
+        roleName: employee.roleName ?? employee.employeeRole?.name ?? "",
+        buildingId: employee.buildingId ?? employee.building?.buildingId,
+        phone: employee.phone ?? "",
+        address: employee.address ?? "",
+        username: employee.username ?? "",
         password: "",
-        status: employee.status || "Active",
-        isActive: employee.isActive,
+        status: employee.status ?? "Active",
+        isActive: employee.isActive ?? true,
       });
     } else {
-      setFormData((prev) => ({
-        ...prev,
+      setFormData({
         employeeCode: `EMP${String(Date.now()).slice(-6)}`,
-      }));
+        name: "",
+        employeeRoleId: undefined,
+        roleName: "",
+        buildingId: undefined,
+        phone: "",
+        address: "",
+        username: "",
+        password: "",
+        status: "Active",
+        isActive: true,
+      });
     }
   }, [employee]);
 
-  const validate = (): boolean => {
+  useEffect(() => {
+    if (!formData.roleName && formData.employeeRoleId) {
+      const match = roles.find((r) => String((r as any).employeeRoleId ?? (r as any).id ?? "") === String(formData.employeeRoleId));
+      if (match && match.name) {
+        setFormData((prev) => ({ ...prev, roleName: match.name ?? "" }));
+      }
+    }
+  }, [roles, formData.employeeRoleId, formData.roleName]);
+
+  const handleChange = useCallback((field: keyof typeof formData, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  }, []);
+
+  const validate = useCallback(() => {
     const newErrors: Record<string, string> = {};
-
-    if (!formData.employeeCode.trim()) {
-      newErrors.employeeCode = "Employee code is required";
-    }
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    }
-
-    if (!formData.employeeRoleId) {
-      newErrors.employeeRoleId = "Role is required";
-    }
-
-    if (!formData.username.trim()) {
-      newErrors.username = "Username is required";
-    }
-
-    if (!employee && !formData.password.trim()) {
-      newErrors.password = "Password is required for new employee";
-    }
-
-    if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) {
-      newErrors.phone = "Invalid phone number (10-11 digits)";
-    }
-
+    if (!formData.employeeCode.trim()) newErrors.employeeCode = "Employee code is required";
+    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.employeeRoleId && !formData.roleName.trim()) newErrors.employeeRoleId = "Role is required";
+    if (!formData.username.trim()) newErrors.username = "Username is required";
+    if (!employee && !formData.password.trim()) newErrors.password = "Password is required for new employee";
+    if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) newErrors.phone = "Invalid phone number (10-11 digits)";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData, employee]);
 
-  const handleChange = (field: keyof typeof formData, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
-  };
+  const handleSubmit = useCallback(() => {
+    if (!validate()) return;
+    const dataToSave: Partial<Employee> = {
+      employeeCode: formData.employeeCode,
+      name: formData.name,
+      employeeRoleId: formData.employeeRoleId,
+      roleName: formData.roleName || undefined,
+      buildingId: formData.buildingId,
+      phone: formData.phone,
+      address: formData.address,
+      username: formData.username,
+      password: formData.password || undefined,
+      status: formData.status,
+      isActive: formData.isActive,
+    };
+    onSave(dataToSave);
+  }, [formData, onSave, validate]);
 
-  const handleSubmit = () => {
-    if (validate()) {
-      // ✅ FIX: Convert formData to match Employee type
-      const dataToSave: Partial<Employee> = {
-        employeeCode: formData.employeeCode,
-        name: formData.name,
-        employeeRoleId: formData.employeeRoleId,
-        buildingId: formData.buildingId,
-        phone: formData.phone,
-        address: formData.address,
-        username: formData.username,
-        password: formData.password || undefined,
-        status: formData.status,
-        isActive: formData.isActive,
-      };
-      onSave(dataToSave);
+  const roleLookup = useMemo(() => {
+    const m = new Map<string, EmployeeRole>();
+    for (const r of roles) {
+      const key = String((r as any).employeeRoleId ?? (r as any).id ?? r.name ?? "");
+      if (key) m.set(key, r);
     }
-  };
+    return m;
+  }, [roles]);
+
+  const roleOptions = useMemo(() => {
+    const values: string[] = [];
+    const items = roles.map((r) => {
+      const value = String((r as any).employeeRoleId ?? (r as any).id ?? r.name ?? "");
+      const label = r.name ?? value;
+      values.push(value);
+      return (
+        <MenuItem key={value} value={value}>
+          {label}
+        </MenuItem>
+      );
+    });
+
+    const currentVal = formData.employeeRoleId ? String(formData.employeeRoleId) : (formData.roleName ?? "");
+    if (currentVal && !values.includes(currentVal)) {
+      items.unshift(
+        <MenuItem key={`_current_${currentVal}`} value={currentVal}>
+          {formData.roleName || currentVal}
+        </MenuItem>
+      );
+    }
+
+    return items;
+  }, [roles, formData.employeeRoleId, formData.roleName]);
+
+  const buildingOptions = useMemo(
+    () =>
+      buildings.map((b) => {
+        const value = String((b as any).buildingId ?? (b as any).id ?? "");
+        return (
+          <MenuItem key={value} value={value}>
+            {b.name}
+          </MenuItem>
+        );
+      }),
+    [buildings]
+  );
+
+  const handleRoleSelect = useCallback(
+    (val: string) => {
+      if (!val) {
+        handleChange("employeeRoleId", undefined);
+        handleChange("roleName", "");
+        return;
+      }
+      if (/^\d+$/.test(val) && roleLookup.has(val)) {
+        const r = roleLookup.get(val)!;
+        handleChange("employeeRoleId", Number(val));
+        handleChange("roleName", r.name ?? "");
+      } else if (/^\d+$/.test(val)) {
+        handleChange("employeeRoleId", Number(val));
+        handleChange("roleName", "");
+      } else {
+        handleChange("employeeRoleId", undefined);
+        handleChange("roleName", val);
+      }
+    },
+    [handleChange, roleLookup]
+  );
 
   return (
     <Box sx={{ pt: 2 }}>
@@ -175,9 +205,8 @@ export default function StaffForm({
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
-          {/* ✅ FIX: Use Grid2 (Grid container/item) */}
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+          <Stack spacing={2}>
+            <TwoColRow>
               <TextField
                 label="Employee Code"
                 value={formData.employeeCode}
@@ -188,9 +217,6 @@ export default function StaffForm({
                 helperText={errors.employeeCode}
                 disabled={!!employee}
               />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label="Full Name"
                 value={formData.name}
@@ -200,46 +226,41 @@ export default function StaffForm({
                 error={!!errors.name}
                 helperText={errors.name}
               />
-            </Grid>
+            </TwoColRow>
 
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <TwoColRow>
               <TextField
                 select
                 label="Role"
-                value={formData.employeeRoleId || ""}
-                onChange={(e) => handleChange("employeeRoleId", e.target.value ? Number(e.target.value) : undefined)}
+                value={
+                  formData.employeeRoleId ? String(formData.employeeRoleId) : formData.roleName ?? ""
+                }
+                onChange={(e) => handleRoleSelect(String(e.target.value))}
                 fullWidth
                 required
                 error={!!errors.employeeRoleId}
                 helperText={errors.employeeRoleId}
               >
-                {roles.map((role) => (
-                  <MenuItem key={role.employeeRoleId} value={role.employeeRoleId}>
-                    {role.name}
-                  </MenuItem>
-                ))}
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                {roleOptions}
               </TextField>
-            </Grid>
 
-            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 select
                 label="Building"
-                value={formData.buildingId || ""}
+                value={formData.buildingId ?? ""}
                 onChange={(e) => handleChange("buildingId", e.target.value ? Number(e.target.value) : undefined)}
                 fullWidth
               >
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                {buildings.map((building) => (
-                  <MenuItem key={building.buildingId} value={building.buildingId}>
-                    {building.name}
-                  </MenuItem>
-                ))}
+                {buildingOptions}
               </TextField>
-            </Grid>
-          </Grid>
+            </TwoColRow>
+          </Stack>
         </Box>
 
         <Box>
@@ -248,8 +269,8 @@ export default function StaffForm({
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+          <Stack spacing={2}>
+            <TwoColRow>
               <TextField
                 label="Phone"
                 value={formData.phone}
@@ -259,19 +280,13 @@ export default function StaffForm({
                 helperText={errors.phone}
                 placeholder="0901234567"
               />
-            </Grid>
+              <Box />
+            </TwoColRow>
 
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                label="Address"
-                value={formData.address}
-                onChange={(e) => handleChange("address", e.target.value)}
-                fullWidth
-                multiline
-                rows={2}
-              />
-            </Grid>
-          </Grid>
+            <Box>
+              <TextField label="Address" value={formData.address} onChange={(e) => handleChange("address", e.target.value)} fullWidth multiline rows={2} />
+            </Box>
+          </Stack>
         </Box>
 
         <Box>
@@ -280,8 +295,8 @@ export default function StaffForm({
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+          <Stack spacing={2}>
+            <TwoColRow>
               <TextField
                 label="Username"
                 value={formData.username}
@@ -291,9 +306,6 @@ export default function StaffForm({
                 error={!!errors.username}
                 helperText={errors.username}
               />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label="Password"
                 type="password"
@@ -304,9 +316,9 @@ export default function StaffForm({
                 error={!!errors.password}
                 helperText={errors.password || (employee ? "Leave blank to keep current" : "")}
               />
-            </Grid>
+            </TwoColRow>
 
-            <Grid size={{ xs: 12 }}>
+            <Box>
               <FormControlLabel
                 control={
                   <Switch
@@ -319,25 +331,33 @@ export default function StaffForm({
                     color="success"
                   />
                 }
-                label={
-                  <Typography variant="body2">
-                    {formData.isActive ? "Active" : "Inactive"}
-                  </Typography>
-                }
+                label={<Typography variant="body2">{formData.isActive ? "Active" : "Inactive"}</Typography>}
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Stack>
         </Box>
 
-        <Stack direction="row" spacing={2} justifyContent="flex-end" pt={2}>
-          <Button onClick={onCancel} variant="outlined">
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} variant="contained">
-            {employee ? "Update" : "Create"}
-          </Button>
-        </Stack>
+        <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" }, justifyContent: "flex-end", pt: 2 }}>
+          <Box sx={{ width: { xs: "100%", sm: "auto" } }}>
+            <Button onClick={onCancel} variant="outlined" fullWidth>
+              Cancel
+            </Button>
+          </Box>
+
+          <Box sx={{ width: { xs: "100%", sm: "auto" } }}>
+            <Button onClick={handleSubmit} variant="contained" fullWidth>
+              {employee ? "Update" : "Create"}
+            </Button>
+          </Box>
+        </Box>
       </Stack>
     </Box>
   );
 }
+
+export default React.memo(StaffFormInner, (prev, next) => {
+  if (prev.employee !== next.employee) return false;
+  if (prev.roles !== next.roles) return false;
+  if (prev.buildings !== next.buildings) return false;
+  return true;
+});

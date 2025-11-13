@@ -1,3 +1,4 @@
+import  { useEffect, useState } from "react";
 import {
   Stack,
   TextField,
@@ -5,11 +6,9 @@ import {
   Box,
   FormControlLabel,
   Switch,
-  Grid,
   Typography,
   Divider,
 } from "@mui/material";
-import { useState, useEffect } from "react";
 import type { Customer } from "./customer.types";
 
 interface CustomerFormProps {
@@ -53,29 +52,15 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.customerCode.trim()) {
-      newErrors.customerCode = "Customer code is required";
-    }
+    if (!formData.customerCode.trim()) newErrors.customerCode = "Customer code is required";
+    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Invalid email format";
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    }
+    if (!customer && !formData.password.trim()) newErrors.password = "Password is required for new customer";
+    else if (formData.password && formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
-    }
-
-    if (!customer && !formData.password.trim()) {
-      newErrors.password = "Password is required for new customer";
-    } else if (formData.password && formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) {
-      newErrors.phone = "Invalid phone number (10-11 digits)";
-    }
+    if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) newErrors.phone = "Invalid phone number (10-11 digits)";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -83,32 +68,29 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
 
   const handleChange = (field: keyof typeof formData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const handleSubmit = () => {
     if (validate()) {
-      const dataToSave: Partial<Customer> = {
-        ...formData,
-        password: formData.password || undefined,
-      };
+      const dataToSave: Partial<Customer> = { ...formData, password: formData.password || undefined };
       onSave(dataToSave);
     }
   };
 
+  const twoColStyle = { width: { xs: "100%", sm: "50%" }, pr: { sm: 1 } };
+
   return (
-    <Box sx={{ pt: 2 }}>
+    <Box sx={{ pt: 1 }}>
       <Stack spacing={3}>
         <Box>
           <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-            Basic Information
+            Basic information
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} flexWrap="wrap">
+            <Box sx={twoColStyle}>
               <TextField
                 label="Customer Code"
                 value={formData.customerCode}
@@ -116,24 +98,26 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
                 fullWidth
                 required
                 error={!!errors.customerCode}
-                helperText={errors.customerCode}
+                helperText={errors.customerCode || (customer ? "Auto-generated and locked" : "")}
                 disabled={!!customer}
+                size="small"
               />
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
               <TextField
-                label="Full Name"
+                label="Full name"
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 fullWidth
                 required
                 error={!!errors.name}
                 helperText={errors.name}
+                size="small"
               />
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Box sx={twoColStyle}>
               <TextField
                 label="Email"
                 type="email"
@@ -144,10 +128,11 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
                 error={!!errors.email}
                 helperText={errors.email}
                 placeholder="example@gmail.com"
+                size="small"
               />
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
               <TextField
                 label="Phone"
                 value={formData.phone}
@@ -156,10 +141,11 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
                 error={!!errors.phone}
                 helperText={errors.phone}
                 placeholder="0901234567"
+                size="small"
               />
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12 }}>
+            <Box sx={{ width: "100%" }}>
               <TextField
                 label="Address"
                 value={formData.address}
@@ -168,53 +154,45 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
                 multiline
                 rows={2}
                 placeholder="Enter full address"
+                size="small"
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Stack>
         </Box>
 
         <Box>
           <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-            Account Information
+            Account information
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                label="Password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => handleChange("password", e.target.value)}
-                fullWidth
-                required={!customer}
-                error={!!errors.password}
-                helperText={
-                  errors.password || (customer ? "Leave blank to keep current password" : "")
-                }
-              />
-            </Grid>
+          <Stack spacing={2}>
+            <TextField
+              label="Password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => handleChange("password", e.target.value)}
+              fullWidth
+              required={!customer}
+              error={!!errors.password}
+              helperText={errors.password || (customer ? "Leave blank to keep current password" : "")}
+              size="small"
+            />
 
-            <Grid size={{ xs: 12 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.isActive}
-                    onChange={(e) => handleChange("isActive", e.target.checked)}
-                    color="success"
-                  />
-                }
-                label={
-                  <Typography variant="body2">
-                    {formData.isActive ? "Active" : "Inactive"}
-                  </Typography>
-                }
-              />
-            </Grid>
-          </Grid>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.isActive}
+                  onChange={(e) => handleChange("isActive", e.target.checked)}
+                  color="success"
+                />
+              }
+              label={<Typography variant="body2">{formData.isActive ? "Active" : "Inactive"}</Typography>}
+            />
+          </Stack>
         </Box>
 
-        <Stack direction="row" spacing={2} justifyContent="flex-end" pt={2}>
+        <Stack direction="row" spacing={2} justifyContent="flex-end" pt={1}>
           <Button onClick={onCancel} variant="outlined">
             Cancel
           </Button>
