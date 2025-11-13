@@ -7,13 +7,10 @@ import {
   Tooltip,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import Warehouse3DViewer from "../../../components/Warehouse3DViewer"; 
 import WeightBlock100 from "./WeightBlock100";
-import WeightBlock200 from "./WeightBlock200";
 
 export default function TruckLoadCard() {
   const loadPercent = 60;
-  const shelfCount = 71; // ✅ số lượng kệ muốn render
 
   return (
     <Card
@@ -28,7 +25,7 @@ export default function TruckLoadCard() {
       }}
     >
       <CardContent sx={{ p: 3 }}>
-        {/* HEADER: Truck/Warehouse Info */}
+        {/* HEADER: Truck Info */}
         <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
           <Box flexShrink={0}>
             <Typography fontWeight={700} fontSize={16}>
@@ -39,9 +36,22 @@ export default function TruckLoadCard() {
             </Typography>
           </Box>
 
-          {/* ✅ Mô hình 3D kho + kệ */}
-          <Box sx={{ flex: 1, minWidth: 280 }}>
-            <Warehouse3DViewer shelfCount={shelfCount} />
+          {/* THAY 3D = block rỗng hoặc hình thumbnail (optional) */}
+          <Box
+            sx={{
+              flex: 1,
+              minWidth: 280,
+              height: 120,
+              borderRadius: 2,
+              bgcolor: "#f5f5f5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "text.secondary",
+              fontSize: 12,
+            }}
+          >
+            (No 3D Preview)
           </Box>
         </Box>
 
@@ -68,9 +78,7 @@ export default function TruckLoadCard() {
               Load Management
             </Typography>
             <Tooltip title="Drag and drop the orders into available weight blocks">
-              <InfoOutlinedIcon
-                sx={{ fontSize: 16, color: "text.secondary" }}
-              />
+              <InfoOutlinedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
             </Tooltip>
           </Box>
 
@@ -118,7 +126,6 @@ export default function TruckLoadCard() {
 
         {/* SUB-WIDGETS */}
         <WeightBlock100 />
-        <WeightBlock200 />
       </CardContent>
     </Card>
   );
