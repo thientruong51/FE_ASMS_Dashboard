@@ -16,8 +16,10 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import PeopleIcon from "@mui/icons-material/People";
 import SettingsIcon from "@mui/icons-material/Settings";
-import BadgeIcon from "@mui/icons-material/Badge";
+import ShelvesIcon from '@mui/icons-material/Shelves';
 import EngineeringIcon from "@mui/icons-material/Engineering";
+import WidgetsIcon from "@mui/icons-material/Widgets";
+import ApartmentIcon from '@mui/icons-material/Apartment';
 export default function Sidebar() {
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -33,6 +35,9 @@ export default function Sidebar() {
     { label: "Storage", icon: <InventoryIcon />, to: "/storage" },
     { label: "Customers", icon: <PeopleIcon />, to: "/customers" },
     { label: "Staffs", icon: <EngineeringIcon />, to: "/staffs" },
+    { label: "Buildings", icon: <ApartmentIcon />, to: "/buildings" },
+    { label: "Shelfs", icon: <ShelvesIcon />, to: "/shelfs" },
+    { label: "Container Types", icon: <WidgetsIcon />, to: "/container-types" },
     { label: "Settings", icon: <SettingsIcon />, to: "/settings" },
     
   ];
