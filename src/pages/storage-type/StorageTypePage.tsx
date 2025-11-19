@@ -11,7 +11,6 @@ import {
   ToggleButton,
   Chip,
   Avatar,
-  Pagination as MuiPagination,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -20,43 +19,41 @@ import {
   CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import ApartmentIcon from "@mui/icons-material/Apartment";
-import StorageIcon from "@mui/icons-material/Storage";
+import DoorSlidingIcon from "@mui/icons-material/DoorSliding";
+import AcUnitIcon from "@mui/icons-material/AcUnit";
 import WarehouseIcon from "@mui/icons-material/Warehouse";
 import DeleteIcon from "@mui/icons-material/Delete";
-import BuildingList from "./components/BuildingList";
-import BuildingFormDialog from "./components/BuildingFormDialog";
-import type { Building, Pagination as Pag } from "./components/types";
-import * as api from "../../api/buildingApi";
+import StorageTypeList from "./components/StorageTypeList";
+import StorageTypeFormDialog from "./components/StorageTypeFormDialog";
+import type { StorageType } from "./components/types";
+import * as api from "../../api/storageTypeApi";
 import { useGLTF } from "@react-three/drei";
 
 const UPLOADED_HEADER = "/mnt/data/5c1c4b28-14bf-4a18-b70c-5acac3461e5e.png";
 
-type CategoryKey = "self" | "warehouse";
+type CategoryKey = "noac" | "ac" | "warehouse";
 
 function groupKeyFromName(name?: string): CategoryKey {
   const n = (name ?? "").toLowerCase();
-  if (!n) return "self";
-  if (n.includes("warehouse") || n.includes("ware")) return "warehouse";
-  if (n.includes("storage") || n.includes("self")) return "self";
-  return "self";
+  if (!n) return "noac";
+  if (n.includes("ware") || n.includes("warehouse")) return "warehouse";
+  if (n.includes("ac")) return "ac";
+  return "noac";
 }
 
-export default function BuildingPage() {
-  const [list, setList] = useState<Building[]>([]);
+export default function StorageTypePage() {
+  const [list, setList] = useState<StorageType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState<Building | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [editing, setEditing] = useState<StorageType | null>(null);
   const [snack, setSnack] = useState<{ open: boolean; message?: string; severity?: "success" | "error" }>({
     open: false,
     message: "",
     severity: "success",
   });
 
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [pagination, setPagination] = useState<Pag | null>(null);
-  const [category, setCategory] = useState<CategoryKey>("self");
+  const [category, setCategory] = useState<CategoryKey>("noac");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id?: number; name?: string }>({
     open: false,
@@ -65,83 +62,72 @@ export default function BuildingPage() {
   });
   const [deleting, setDeleting] = useState(false);
 
-  const fetchAll = useCallback(
-    async (p = 1) => {
-      setLoading(true);
-      try {
-        const res = await api.getBuildings(p, pageSize);
-        setList(res.data ?? []);
-        setPagination(res.pagination ?? null);
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    try {
+      const resp = await api.getStorageTypes({ page: 1, pageSize: 100 });
+      const data = Array.isArray(resp.data) ? resp.data : [];
+      setList(data);
 
-        try {
-          const urls = Array.from(
-            new Set(
-              (res.data ?? [])
-                .map((b: any) => b.imageUrl)
-                .filter(Boolean)
-                .filter((u: string) => /\.(glb|gltf|obj)$/i.test(u))
-            )
-          );
-          urls.forEach((u) => {
-            try {
-              useGLTF.preload?.(u);
-            } catch {}
-          });
-        } catch {}
-      } catch (err) {
-        console.error(err);
-        setSnack({ open: true, message: "Failed to load buildings", severity: "error" });
-      } finally {
-        setLoading(false);
-      }
-    },
-    [pageSize]
-  );
+      const urls = Array.from(new Set(data.map((b: any) => b.imageUrl).filter(Boolean) as string[]));
+      urls.forEach((u) => {
+        if (/\.(glb|gltf|obj)$/i.test(u)) {
+          try {
+            useGLTF.preload?.(u);
+          } catch {
+          }
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      setSnack({ open: true, message: "Get the list of failures", severity: "error" });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchAll(page);
-  }, [fetchAll, page]);
+    fetchAll();
+  }, [fetchAll]);
 
   const groups = useMemo(() => {
-    const byKey: Record<CategoryKey, Building[]> = { self: [], warehouse: [] };
-    for (const b of list) {
-      const k = groupKeyFromName(b.name);
-      byKey[k].push(b);
+    const byKey: Record<CategoryKey, StorageType[]> = { noac: [], ac: [], warehouse: [] };
+    for (const s of list) {
+      const k = groupKeyFromName(s.name);
+      byKey[k].push(s);
     }
-    (["self", "warehouse"] as CategoryKey[]).forEach((k) => {
-      byKey[k].sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
+    (["noac", "ac", "warehouse"] as CategoryKey[]).forEach((k) => {
+      byKey[k].sort((a, b) => a.name.localeCompare(b.name));
     });
     return byKey;
   }, [list]);
-
-  const displayed = groups[category];
 
   function openCreate() {
     setEditing(null);
     setOpenDialog(true);
   }
-  function openEdit(b: Building) {
-    setEditing(b);
+  function openEdit(s: StorageType) {
+    setEditing(s);
     setOpenDialog(true);
   }
 
-  async function onSave(payload: Partial<Building>) {
+  async function handleSave(payload: Partial<StorageType>) {
     try {
       if (editing) {
-        await api.updateBuilding(editing.buildingId, payload);
-        setSnack({ open: true, message: "Updated successfully", severity: "success" });
-        setOpenDialog(false);
-        await fetchAll(page);
+        const updated = await api.updateStorageType(editing.storageTypeId, payload);
+        setList((prev) => prev.map((p) => (p.storageTypeId === updated.storageTypeId ? updated : p)));
+        setSnack({ open: true, message: "Update successful", severity: "success" });
       } else {
-        await api.createBuilding(payload);
-        setSnack({ open: true, message: "Created successfully", severity: "success" });
-        setOpenDialog(false);
-        setPage(1);
-        await fetchAll(1);
+        const created = await api.createStorageType(payload);
+        setList((prev) => [created, ...prev]);
+        setSnack({ open: true, message: "Create success", severity: "success" });
       }
+      setOpenDialog(false);
+
+      await fetchAll();
     } catch (err: any) {
       console.error(err);
-      const msg = err?.message || err?.response?.data?.message || "Error while saving";
+      const msg = err?.message || err?.response?.data?.message || "Lỗi khi lưu";
       setSnack({ open: true, message: msg, severity: "error" });
     }
   }
@@ -158,22 +144,13 @@ export default function BuildingPage() {
     }
     setDeleting(true);
     try {
-      await api.deleteBuilding(id);
-      setSnack({ open: true, message: "Deleted successfully", severity: "success" });
-
-      const nextList = list.filter((b) => b.buildingId !== id);
-      if (nextList.length === 0 && page > 1) {
-        const newPage = Math.max(1, page - 1);
-        setPage(newPage);
-        await fetchAll(newPage);
-      } else {
-        await fetchAll(page);
-      }
-
+      await api.deleteStorageType(id);
+      setSnack({ open: true, message: "Delete successful", severity: "success" });
       setDeleteDialog({ open: false, id: undefined, name: undefined });
+      await fetchAll();
     } catch (err: any) {
       console.error(err);
-      const msg = err?.message || err?.response?.data?.message || "Delete failed";
+      const msg = err?.message || err?.response?.data?.message || "Delete failure";
       setSnack({ open: true, message: msg, severity: "error" });
     } finally {
       setDeleting(false);
@@ -184,10 +161,12 @@ export default function BuildingPage() {
     setDeleteDialog({ open: false, id: undefined, name: undefined });
   }
 
+  const displayed = groups[category];
+
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <Container maxWidth="lg" sx={{ py: 6 }}>
       <Stack spacing={4} alignItems="center">
-        {/* Header */}
+        {/* Header with subtle background image */}
         <Box
           sx={{
             width: "100%",
@@ -198,7 +177,14 @@ export default function BuildingPage() {
             minHeight: 140,
           }}
         >
-          <Box sx={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.06))`, zIndex: 1 }} />
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: `linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.06))`,
+              zIndex: 1,
+            }}
+          />
           <Box
             sx={{
               position: "absolute",
@@ -217,28 +203,33 @@ export default function BuildingPage() {
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Box display="flex" alignItems="center" gap={2}>
                 <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
-                  <ApartmentIcon />
+                  <WarehouseIcon />
                 </Avatar>
                 <Box>
                   <Typography variant="h5" fontWeight={800}>
-                    Buildings
+                    Storage Types
                   </Typography>
-                  <Typography color="text.secondary">Manage buildings — includes 3D preview</Typography>
+                  <Typography color="text.secondary">Manage room and warehouse dimensions — 3D preview if available</Typography>
                 </Box>
               </Box>
 
               <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-                Create Building
+                Create
               </Button>
             </Box>
           </Box>
         </Box>
 
-        {/* Tabs */}
+        {/* Tabs with icons */}
         <ToggleButtonGroup value={category} exclusive onChange={(_, v) => v && setCategory(v)} sx={{ borderRadius: 10, bgcolor: "#fff", p: 1 }}>
-          <ToggleButton value="self" sx={{ px: 3 }}>
-            <StorageIcon sx={{ mr: 1 }} />
-            Self Storage
+          <ToggleButton value="noac" sx={{ px: 3 }}>
+            <DoorSlidingIcon sx={{ mr: 1 }} />
+            Room Without AC
+          </ToggleButton>
+
+          <ToggleButton value="ac" sx={{ px: 3 }}>
+            <AcUnitIcon sx={{ mr: 1 }} />
+            Room With AC
           </ToggleButton>
 
           <ToggleButton value="warehouse" sx={{ px: 3 }}>
@@ -248,22 +239,25 @@ export default function BuildingPage() {
         </ToggleButtonGroup>
 
         <Box>
-          <Chip label={`Total: ${displayed.length}`} sx={{ mr: 1 }} />
+          <Chip label={`Count: ${displayed.length}`} sx={{ mr: 1 }} />
           <Chip label={`Category: ${category}`} />
         </Box>
 
+        {/* List */}
         <Box width="100%">
-          <BuildingList list={displayed} onEdit={openEdit} onDelete={(id: number, name?: string) => onDeleteRequested(id, name)} loading={loading} />
+          <StorageTypeList
+            list={displayed}
+            loading={loading}
+            onEdit={openEdit}
+            onDelete={(id: number) => onDeleteRequested(id)}
+            selectable
+            selectedId={selectedId ?? undefined}
+            onSelect={(id) => setSelectedId(id)}
+          />
         </Box>
       </Stack>
 
-      {pagination && pagination.totalPages > 1 && (
-        <Box display="flex" justifyContent="center" mt={3}>
-          <MuiPagination count={pagination.totalPages} page={page} onChange={(_, v) => setPage(v)} color="primary" />
-        </Box>
-      )}
-
-      <BuildingFormDialog open={openDialog} initial={editing ?? undefined} onClose={() => setOpenDialog(false)} onSubmit={onSave} />
+      <StorageTypeFormDialog open={openDialog} initial={editing ?? undefined} onClose={() => setOpenDialog(false)} onSubmit={handleSave} />
 
       {/* Delete confirmation dialog */}
       <Dialog
@@ -292,7 +286,7 @@ export default function BuildingPage() {
           >
             <DeleteIcon sx={{ color: "error.main" }} />
           </Box>
-          Delete Building
+          Delete Storage Type
         </DialogTitle>
 
         <DialogContent>
@@ -302,7 +296,7 @@ export default function BuildingPage() {
                 Are you sure you want to delete <strong>"{deleteDialog.name}"</strong>? This action cannot be undone.
               </>
             ) : (
-              "Are you sure you want to delete this building? This action cannot be undone."
+              "Are you sure you want to delete this storage type? This action cannot be undone."
             )}
           </DialogContentText>
         </DialogContent>

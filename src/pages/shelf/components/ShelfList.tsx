@@ -10,20 +10,17 @@ export default function ShelfList({
   list: ShelfType[];
   onEdit: (s: ShelfType) => void;
   onDelete: (id: number) => void;
+  loading?: boolean;
 }) {
   return (
-    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2,justifyContent: "center", }}>
+    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: list.length <= 2 ? "center" : "flex-start" }}>
       {list.map((shelf) => (
         <Box
           key={shelf.shelfTypeId}
           sx={{
-            flex: {
-              xs: "1 1 100%",
-              sm: "1 1 calc(50% - 16px)",
-              md: "1 1 calc(50% - 16px)",
-            },
+            flex: { xs: "1 1 100%", sm: "1 1 calc(50% - 16px)", md: "1 1 calc(33.333% - 16px)" },
             minWidth: 280,
-            maxWidth: 400,
+            maxWidth: 420,
           }}
         >
           <ShelfCard shelf={shelf} onEdit={onEdit} onDelete={onDelete} />

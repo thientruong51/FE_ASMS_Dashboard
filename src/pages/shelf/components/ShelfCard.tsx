@@ -1,20 +1,33 @@
-import  { useEffect, useRef, useState, Suspense } from "react";
-import { Box, Button, Paper, Typography, CircularProgress } from "@mui/material";
+import React, { useEffect, useRef, useState, Suspense } from "react";
+import {
+  Card,
+  CardContent,
+  CardActions,
+  Typography,
+  IconButton,
+  Box,
+  Chip,
+  Stack,
+  CircularProgress,
+  Avatar,
+  Button,
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ShelvesIcon from '@mui/icons-material/Shelves';
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
-import type { ShelfType } from "./types";
-
+import type { ShelfType } from "../components/types";
 
 function GLBModelFit({ url }: { url: string }) {
   const gltf = useGLTF(url, true);
-  const groupRef = useRef<THREE.Group | null>(null);
-  const { camera } = useThree(); 
+  const { scene } = gltf;
+  const { camera } = useThree();
 
-  useEffect(() => {
-    if (!gltf || !gltf.scene) return;
-    const scene = gltf.scene;
-
+  React.useEffect(() => {
+    if (!scene) return;
     scene.updateWorldMatrix(true, true);
 
     const box = new THREE.Box3().setFromObject(scene);
@@ -28,42 +41,35 @@ function GLBModelFit({ url }: { url: string }) {
     scene.position.z += -center.z;
 
     const maxSize = Math.max(size.x, size.y, size.z) || 1;
-    const fitOffset = 1.2; 
+    const fitOffset = 1.4;
 
     let distance = maxSize * fitOffset * 1.5;
-
 
     if ((camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
       const pCam = camera as THREE.PerspectiveCamera;
       const fovRad = (pCam.fov * Math.PI) / 180;
       distance = (maxSize / 2) / Math.tan(fovRad / 2) * fitOffset;
     } else if ((camera as THREE.OrthographicCamera).isOrthographicCamera) {
-
       distance = maxSize * fitOffset * 1.2;
     }
 
     const dir = new THREE.Vector3();
-    camera.getWorldDirection(dir);
-    dir.normalize();
-
-    const newPos = new THREE.Vector3().copy(dir).multiplyScalar(-distance);
-    if (!isFinite(newPos.length())) {
-      newPos.set(0, 0, distance);
-    }
+    camera.getWorldDirection(dir).normalize();
+    const newPos = dir.multiplyScalar(-distance);
+    if (!isFinite(newPos.length())) newPos.set(0, 0, distance);
 
     camera.position.copy(newPos);
     camera.lookAt(0, 0, 0);
 
-    camera.near = Math.max(0.1, distance / 1000);
+    camera.near = Math.max(0.01, distance / 1000);
     camera.far = Math.max(camera.far, distance * 1000);
     camera.updateProjectionMatrix();
-  }, [gltf, camera, url]);
+  }, [scene, camera, url]);
 
-  return <primitive ref={groupRef as any} object={gltf.scene} />;
+  return <primitive object={scene} />;
 }
 
-
-function ShelfModelView({ url, visible }: { url: string; visible: boolean }) {
+function ShelfModelView({ url, visible }: { url?: string | null; visible: boolean }) {
   const controlsRef = useRef<any>(null);
 
   useEffect(() => {
@@ -71,46 +77,38 @@ function ShelfModelView({ url, visible }: { url: string; visible: boolean }) {
       try {
         controlsRef.current.target.set(0, 0, 0);
         controlsRef.current.update();
-      } catch {
-      }
+      } catch { }
     }
   }, [visible]);
 
   useEffect(() => {
+    if (!url) return;
     try {
       useGLTF.preload?.(url);
-    } catch {
-    }
+    } catch { }
   }, [url]);
 
-  if (!visible) return null;
+  if (!visible || !url) return null;
 
   return (
-    <Canvas
-      style={{ width: "100%", height: 240, background: "#f6f7f9" }}
-      gl={{ antialias: false }}
-      dpr={[1, 1.5]}
-    >
+    <Canvas style={{ width: "100%", height: 220, background: "linear-gradient(180deg,#f6f9fb,#f3f7fb)" }} gl={{ antialias: true }} dpr={[1, 1.5]}>
       <ambientLight intensity={0.9} />
       <directionalLight position={[5, 5, 5]} intensity={0.6} />
-
       <Suspense
         fallback={
           <Html center>
-            <Box sx={{ width: 240, height: 240, display: "grid", placeItems: "center" }}>
+            <Box sx={{ width: 220, height: 220, display: "grid", placeItems: "center" }}>
               <CircularProgress />
             </Box>
           </Html>
         }
       >
-        <GLBModelFit url={url} />
+        <GLBModelFit url={url!} />
       </Suspense>
-
-      <OrbitControls ref={controlsRef} enableZoom={true} autoRotate={false} />
+      <OrbitControls ref={controlsRef} enableZoom autoRotate={false} />
     </Canvas>
   );
 }
-
 
 export default function ShelfCard({
   shelf,
@@ -137,35 +135,92 @@ export default function ShelfCard({
           }
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0.05, rootMargin: "300px 0px 300px 0px" }
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
 
+  const hasModel = !!shelf.imageUrl && /\.(glb|gltf|obj)$/i.test(shelf.imageUrl ?? "");
+  const hasImage = !!shelf.imageUrl && /\.(jpe?g|png|webp|gif)$/i.test(shelf.imageUrl ?? "");
+
   return (
-    <Paper ref={ref} elevation={3} sx={{ p: 1, display: "flex", flexDirection: "column", height: "100%" }}>
-      <Box sx={{ height: 240, mb: 1 }}>
-        <ShelfModelView url={shelf.imageUrl} visible={visible} />
+    <Card
+      ref={ref}
+      variant="outlined"
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        borderRadius: 2,
+        boxShadow: 3,
+        overflow: "hidden",
+        transition: "all 0.35s ease",
+        cursor: "pointer",
+
+        "&:hover": {
+          boxShadow: "0 10px 36px rgba(0,0,0,0.18)",
+          transform: "translateY(-4px)",
+        },
+
+        "&:hover .card-image-overlay": {
+          opacity: 0.14,
+        },
+      }}
+    >
+
+      <Box sx={{ position: "relative", height: 220, overflow: "hidden" }}>
+        {hasModel ? (
+          <ShelfModelView url={shelf.imageUrl!} visible={visible} />
+        ) : hasImage ? (
+          <Box component="img" src={shelf.imageUrl!} alt={shelf.name} sx={{ width: "100%", height: 220, objectFit: "cover" }} />
+        ) : (
+          <Box display="flex" alignItems="center" justifyContent="center" height={220} bgcolor="grey.100">
+            <ShelvesIcon sx={{ fontSize: 56, color: "text.secondary" }} />
+          </Box>
+        )}
+
+        <Box sx={{ position: "absolute", left: 12, top: 12, zIndex: 3, display: "flex", gap: 1, alignItems: "center" }}>
+          <Avatar sx={{ bgcolor: "primary.main", width: 40, height: 40 }}>
+            <ShelvesIcon />
+          </Avatar>
+          <Box>
+           
+          </Box>
+        </Box>
       </Box>
 
-      <Box sx={{ flex: "1 1 auto", px: 1 }}>
-        <Typography variant="h6">{shelf.name}</Typography>
-        <Typography variant="body2">ID: {shelf.shelfTypeId}</Typography>
-        <Typography variant="body2">
-          Dimension: {shelf.length} x {shelf.width} x {shelf.height} m
-        </Typography>
-        <Typography variant="body2">Price: {shelf.price ? shelf.price.toLocaleString() : "N/A"}</Typography>
-      </Box>
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+          <Box>
+            <Typography variant="h6" noWrap>
+              {shelf.name}
+            </Typography>
 
-      <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
-        <Button variant="contained" size="small" onClick={() => onEdit(shelf)}>
-          Edit
-        </Button>
-        <Button variant="outlined" size="small" onClick={() => onDelete(shelf.shelfTypeId)}>
-          Delete
-        </Button>
-      </Box>
-    </Paper>
+          </Box>
+
+          <Stack direction="column" spacing={1} alignItems="flex-end">
+            <Chip size="small" label={`${shelf.length ?? 0}×${shelf.width ?? 0}×${shelf.height ?? 0} m`} />
+            {typeof shelf.price === "number" && <Chip size="small" label={`₫ ${shelf.price.toLocaleString()}`} />}
+          </Stack>
+        </Box>
+      </CardContent>
+
+      <CardActions sx={{ px: 1 }}>
+        <IconButton size="small" aria-label="edit" onClick={(e) => { e.stopPropagation(); onEdit(shelf); }}>
+          <EditIcon />
+        </IconButton>
+
+        <IconButton size="small" aria-label="delete" onClick={(e) => { e.stopPropagation(); onDelete(shelf.shelfTypeId); }}>
+          <DeleteIcon />
+        </IconButton>
+
+        <Box sx={{ flex: "1 0 auto", display: "flex", justifyContent: "flex-end", pr: 1 }}>
+          <Button size="small" startIcon={<VisibilityIcon />} onClick={(e) => { e.stopPropagation(); /* optional full preview */ }}>
+            View
+          </Button>
+        </Box>
+      </CardActions>
+    </Card>
   );
 }

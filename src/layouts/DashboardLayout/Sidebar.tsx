@@ -20,6 +20,7 @@ import ShelvesIcon from '@mui/icons-material/Shelves';
 import EngineeringIcon from "@mui/icons-material/Engineering";
 import WidgetsIcon from "@mui/icons-material/Widgets";
 import ApartmentIcon from '@mui/icons-material/Apartment';
+import WarehouseIcon from '@mui/icons-material/Warehouse';
 export default function Sidebar() {
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -36,7 +37,8 @@ export default function Sidebar() {
     { label: "Customers", icon: <PeopleIcon />, to: "/customers" },
     { label: "Staffs", icon: <EngineeringIcon />, to: "/staffs" },
     { label: "Buildings", icon: <ApartmentIcon />, to: "/buildings" },
-    { label: "Shelfs", icon: <ShelvesIcon />, to: "/shelfs" },
+    { label: "Storage Types", icon: <WarehouseIcon />, to: "/storage-types" },
+    { label: "Shelfs Types", icon: <ShelvesIcon />, to: "/shelfs" },
     { label: "Container Types", icon: <WidgetsIcon />, to: "/container-types" },
     { label: "Settings", icon: <SettingsIcon />, to: "/settings" },
     

@@ -7,6 +7,7 @@ import CustomerPage from "@/pages/customer/CustomerPage";
 import ShelfPage from "@/pages/shelf/ShelfPage";
 import BuildingPage from "@/pages/building/BuildingPage";
 import ContainerTypePage from "@/pages/container-type/ContainerTypePage";
+import StorageTypePage from "@/pages/storage-type/StorageTypePage";
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
     { path: "shelfs", element: <ShelfPage /> },
     { path: "buildings", element: <BuildingPage /> },
     { path: "container-types", element: <ContainerTypePage /> },
+    { path: "storage-types", element: <StorageTypePage /> },
     ],
   },
 ]);

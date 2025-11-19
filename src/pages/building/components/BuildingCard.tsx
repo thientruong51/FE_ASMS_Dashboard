@@ -9,17 +9,17 @@ import {
   Chip,
   Stack,
   CircularProgress,
-  Paper,
   Button,
+  Avatar,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import BusinessIcon from "@mui/icons-material/Business";
+import ApartmentIcon from "@mui/icons-material/Apartment";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
-import type { Building } from "./types";
-
+import type { Building } from "../components/types";
 
 function GLBModelFit({ url }: { url: string }) {
   const gltf = useGLTF(url);
@@ -80,22 +80,20 @@ function ModelView({ url, visible }: { url: string | null; visible: boolean }) {
       try {
         controlsRef.current.target.set(0, 0, 0);
         controlsRef.current.update();
-      } catch {
-      }
+      } catch {}
     }
   }, [visible]);
-
 
   if (!visible || !url) return null;
 
   return (
-    <Canvas style={{ width: "100%", height: 240, background: "#f6f7f9" }} gl={{ antialias: true }} dpr={[1, 1.5]}>
+    <Canvas style={{ width: "100%", height: 220, background: "linear-gradient(180deg,#f6f9fb,#f3f7fb)" }} gl={{ antialias: true }} dpr={[1, 1.5]}>
       <ambientLight intensity={0.9} />
       <directionalLight position={[5, 5, 5]} intensity={0.6} />
       <Suspense
         fallback={
           <Html center>
-            <Box sx={{ width: 240, height: 240, display: "grid", placeItems: "center" }}>
+            <Box sx={{ width: 220, height: 220, display: "grid", placeItems: "center" }}>
               <CircularProgress />
             </Box>
           </Html>
@@ -113,11 +111,17 @@ export default function BuildingCard({
   onEdit,
   onDelete,
   forceVisible = false,
+  selectable = false,
+  selected = false,
+  onSelect,
 }: {
   building: Building;
   onEdit: (b: Building) => void;
   onDelete: (id: number) => void;
-  forceVisible?: boolean; 
+  forceVisible?: boolean;
+  selectable?: boolean;
+  selected?: boolean;
+  onSelect?: (id: number) => void;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState<boolean>(!!forceVisible);
@@ -127,7 +131,7 @@ export default function BuildingCard({
   }, [forceVisible]);
 
   useEffect(() => {
-    if (visible) return;  
+    if (visible) return;
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
@@ -150,22 +154,44 @@ export default function BuildingCard({
   const hasImage = !!building.imageUrl && /\.(jpe?g|png|webp|gif)$/i.test(building.imageUrl ?? "");
 
   return (
-    <Card variant="outlined" sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <Paper ref={ref} square sx={{ height: 240, overflow: "hidden" }}>
+    <Card
+      variant="elevation"
+      elevation={selected ? 8 : 2}
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        transition: "transform 200ms, box-shadow 200ms",
+        border: selected ? "2px solid" : undefined,
+        borderColor: selected ? "primary.main" : undefined,
+        "&:hover": { transform: "translateY(-6px)" },
+        cursor: selectable ? "pointer" : "default",
+      }}
+      onClick={() => selectable && onSelect && onSelect(building.buildingId)}
+    >
+      <Box ref={ref} sx={{ position: "relative", overflow: "hidden", height: 220 }}>
         {hasModel ? (
           <ModelView url={building.imageUrl ?? null} visible={visible} />
         ) : hasImage ? (
-          <Box component="img" src={building.imageUrl ?? undefined} alt={building.name} style={{ width: "100%", height: 240, objectFit: "cover" }} />
+          <Box component="img" src={building.imageUrl ?? undefined} alt={building.name} sx={{ width: "100%", height: 220, objectFit: "cover" }} />
         ) : (
-          <Box display="flex" alignItems="center" justifyContent="center" height={240} bgcolor="grey.100">
-            <BusinessIcon sx={{ fontSize: 48, color: "text.secondary" }} />
+          <Box display="flex" alignItems="center" justifyContent="center" height={220} bgcolor="grey.100">
+            <ApartmentIcon sx={{ fontSize: 56, color: "text.secondary" }} />
           </Box>
         )}
-      </Paper>
+
+        {/* overlay header */}
+        <Box sx={{ position: "absolute", left: 12, top: 12, zIndex: 3, display: "flex", gap: 1, alignItems: "center" }}>
+          <Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36 }}>
+            <ApartmentIcon />
+          </Avatar>
+         
+        </Box>
+      </Box>
 
       <CardContent sx={{ flexGrow: 1 }}>
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-          <Box>
+          <Box sx={{ pr: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               {building.buildingCode ?? ""}
             </Typography>
@@ -195,15 +221,19 @@ export default function BuildingCard({
         )}
       </CardContent>
 
-      <CardActions>
-        <IconButton size="small" aria-label="edit" onClick={() => onEdit(building)}>
+      <CardActions sx={{ px: 1 }}>
+        <IconButton size="small" aria-label="edit" onClick={(e) => { e.stopPropagation(); onEdit(building); }}>
           <EditIcon />
         </IconButton>
-        <IconButton size="small" aria-label="delete" onClick={() => onDelete(building.buildingId)}>
+
+        <IconButton size="small" aria-label="delete" onClick={(e) => { e.stopPropagation(); onDelete(building.buildingId); }}>
           <DeleteIcon />
         </IconButton>
+
         <Box sx={{ flex: "1 0 auto", display: "flex", justifyContent: "flex-end", pr: 1 }}>
-          <Button size="small" onClick={() => { /* optional: open full viewer */ }}>View</Button>
+          <Button size="small" startIcon={<VisibilityIcon />} onClick={(e) => { e.stopPropagation(); /* optional: open viewer */ }}>
+            View
+          </Button>
         </Box>
       </CardActions>
     </Card>

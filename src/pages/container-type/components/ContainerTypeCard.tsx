@@ -11,15 +11,17 @@ import {
   CircularProgress,
   Paper,
   Button,
+  Tooltip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import WidgetsIcon from "@mui/icons-material/Widgets";
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, useGLTF, Html } from "@react-three/drei";
+import { OrbitControls, useGLTF, Html, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import type { ContainerType } from "./types";
 
+/** GLB fit helper (similar logic) */
 function GLBModelFit({ url }: { url: string }) {
   const gltf = useGLTF(url);
   const { scene } = gltf;
@@ -28,20 +30,19 @@ function GLBModelFit({ url }: { url: string }) {
   React.useEffect(() => {
     if (!scene) return;
     scene.updateWorldMatrix(true, true);
-
     const box = new THREE.Box3().setFromObject(scene);
     const size = new THREE.Vector3();
     const center = new THREE.Vector3();
     box.getSize(size);
     box.getCenter(center);
 
-    scene.position.x += -center.x;
-    scene.position.y += -center.y;
-    scene.position.z += -center.z;
+    scene.position.x -= center.x;
+    scene.position.y -= center.y;
+    scene.position.z -= center.z;
 
     const maxSize = Math.max(size.x || 1, size.y || 1, size.z || 1);
-    const fitOffset = 1.7;
-    let distance = maxSize * fitOffset * 1.5;
+    const fitOffset = 1.9;
+    let distance = maxSize * fitOffset * 1.4;
 
     if ((camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
       const pCam = camera as THREE.PerspectiveCamera;
@@ -65,40 +66,6 @@ function GLBModelFit({ url }: { url: string }) {
   }, [scene, camera, url]);
 
   return <primitive object={scene} />;
-}
-
-function ModelView({ url, visible }: { url: string | null; visible: boolean }) {
-  const controlsRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (controlsRef.current) {
-      try {
-        controlsRef.current.target.set(0, 0, 0);
-        controlsRef.current.update();
-      } catch {}
-    }
-  }, [visible]);
-
-  if (!visible || !url) return null;
-
-  return (
-    <Canvas style={{ width: "100%", height: 220, background: "#f6f7f9" }} gl={{ antialias: true }} dpr={[1, 1.5]}>
-      <ambientLight intensity={0.9} />
-      <directionalLight position={[5, 5, 5]} intensity={0.6} />
-      <Suspense
-        fallback={
-          <Html center>
-            <Box sx={{ width: 240, height: 220, display: "grid", placeItems: "center" }}>
-              <CircularProgress />
-            </Box>
-          </Html>
-        }
-      >
-        <GLBModelFit url={url} />
-      </Suspense>
-      <OrbitControls ref={controlsRef} enableZoom autoRotate={false} />
-    </Canvas>
-  );
 }
 
 export default function ContainerTypeCard({
@@ -133,7 +100,7 @@ export default function ContainerTypeCard({
           }
         }
       },
-      { threshold: 0.01, rootMargin: "400px 0px 400px 0px" }
+      { threshold: 0.01, rootMargin: "360px 0px 360px 0px" }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -143,26 +110,86 @@ export default function ContainerTypeCard({
   const hasImage = !!item.imageUrl && /\.(jpe?g|png|webp|gif)$/i.test(item.imageUrl ?? "");
 
   return (
-    <Card variant="outlined" sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <Paper ref={ref} square sx={{ height: 220, overflow: "hidden" }}>
-        {hasModel ? (
-          <ModelView url={item.imageUrl ?? null} visible={visible} />
-        ) : hasImage ? (
-          <Box component="img" src={item.imageUrl ?? undefined} alt={item.type} style={{ width: "100%", height: 220, objectFit: "cover" }} />
-        ) : (
-          <Box display="flex" alignItems="center" justifyContent="center" height={220} bgcolor="grey.100">
-            <WidgetsIcon sx={{ fontSize: 48, color: "text.secondary" }} />
+    <Card
+      variant="outlined"
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        borderRadius: 3,
+        overflow: "hidden",
+        transition: "transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms cubic-bezier(.2,.9,.2,1), border-color 220ms ease",
+        boxShadow: "0 8px 30px rgba(16,24,40,0.06)",
+        border: "1px solid rgba(16,24,40,0.04)",
+        // hover effect for card itself
+        "&:hover": {
+          transform: "translateY(-8px) scale(1.015)",
+          boxShadow: "0 18px 48px rgba(16,24,40,0.16)",
+          borderColor: "rgba(59,130,246,0.28)",
+        },
+        "&:hover .media": {
+          transform: "scale(1.03)",
+        },
+        ".media": {
+          transition: "transform 320ms cubic-bezier(.2,.9,.2,1)",
+          transformOrigin: "center center",
+        },
+      }}
+    >
+      <Paper ref={ref} square sx={{ height: 220, overflow: "hidden", position: "relative" }}>
+        <Box sx={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,#fbfdff,#f4f7fb)", zIndex: 0 }} />
+        {!visible && (
+          <Box sx={{ width: "100%", height: 220, display: "grid", placeItems: "center", zIndex: 1 }}>
+            <CircularProgress />
           </Box>
         )}
+
+        {visible && hasModel ? (
+          <Box className="media" sx={{ width: "100%", height: 220, zIndex: 1 }}>
+            <Canvas style={{ width: "100%", height: "100%",background: "linear-gradient(180deg,#f6f9fb,#f3f7fb)"  }} gl={{ antialias: true }} dpr={[1, 1.5]}>
+              <ambientLight intensity={0.45} />
+              <directionalLight position={[5, 5, 5]} intensity={0.35} />
+              <Suspense
+                fallback={
+                  <Html center>
+                    <Box sx={{ width: 220, height: 180, display: "grid", placeItems: "center" }}>
+                      <CircularProgress />
+                    </Box>
+                  </Html>
+                }
+              >
+                <GLBModelFit url={item.imageUrl!} />
+              </Suspense>
+              <OrbitControls enableZoom autoRotate={false} />
+              <Environment preset="warehouse" />
+            </Canvas>
+          </Box>
+        ) : visible && hasImage ? (
+          <Box
+            component="img"
+            src={item.imageUrl ?? undefined}
+            alt={item.type}
+            className="media"
+            sx={{ width: "100%", height: 220, objectFit: "cover", zIndex: 1 }}
+          />
+        ) : (
+          <Box display="flex" alignItems="center" justifyContent="center" height={220} bgcolor="grey.100" zIndex={1}>
+            <WidgetsIcon sx={{ fontSize: 46, color: "text.secondary" }} />
+          </Box>
+        )}
+
+        {/* small top-left id chip */}
+        <Chip
+          label={`#${item.containerTypeId}`}
+          size="small"
+          sx={{ position: "absolute", left: 12, top: 12, zIndex: 2, bgcolor: "background.paper", boxShadow: "0 6px 18px rgba(16,24,40,0.04)" }}
+        />
       </Paper>
 
       <CardContent sx={{ flexGrow: 1 }}>
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
           <Box>
-            <Typography variant="subtitle2" color="text.secondary">
-              {`ID: ${item.containerTypeId}`}
-            </Typography>
-            <Typography variant="h6" noWrap>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>
               {item.type}
             </Typography>
           </Box>
@@ -172,23 +199,26 @@ export default function ContainerTypeCard({
             {typeof item.price !== "undefined" && <Chip size="small" label={`${Number(item.price).toLocaleString()} VND`} />}
           </Stack>
         </Box>
-
-        {/* optional description area (if needed) */}
-        <Typography variant="body2" color="text.secondary" noWrap>
-          {item.imageUrl ?? ""}
-        </Typography>
       </CardContent>
 
-      <CardActions>
-        <IconButton size="small" aria-label="edit" onClick={() => onEdit(item)}>
-          <EditIcon />
-        </IconButton>
-        <IconButton size="small" aria-label="delete" onClick={() => onDelete(item.containerTypeId)}>
-          <DeleteIcon />
-        </IconButton>
-        <Box sx={{ flex: "1 0 auto", display: "flex", justifyContent: "flex-end", pr: 1 }}>
-          <Button size="small" onClick={() => {}}>View</Button>
-        </Box>
+      <CardActions sx={{ px: 1, pb: 1 }}>
+        <Tooltip title="Edit">
+          <IconButton size="small" aria-label="edit" onClick={() => onEdit(item)} sx={{ borderRadius: 2 }}>
+            <EditIcon />
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="Delete">
+          <IconButton size="small" aria-label="delete" onClick={() => onDelete(item.containerTypeId)} sx={{ borderRadius: 2 }}>
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+
+        <Box sx={{ flex: "1 0 auto" }} />
+
+        <Button size="small" variant="text">
+          View
+        </Button>
       </CardActions>
     </Card>
   );
