@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import shelfApi from "@/api/shelfApi";
+import shelfTypeApi from "@/api/shelfTypeApi";
 import type { ShelfType } from "./types";
 
 export default function useShelfTypes() {
@@ -10,7 +10,7 @@ export default function useShelfTypes() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await shelfApi.getShelfTypes();
+      const res = await shelfTypeApi.getShelfTypes();
       setData(res.data.data || []);
     } catch (err: any) {
       setError(err?.message || "Failed to fetch shelf types");

@@ -24,7 +24,7 @@ const FLOOR_CONFIG = {
   4: { usableTypes: ["D"] as BoxType[], stack: 2 }, 
 };
 
-const OFFSET_Y = -0.15; // hạ nhẹ xuống mặt sàn
+const OFFSET_Y = -0.35; // hạ nhẹ xuống mặt sàn
 const OFFSET_Z = -0.6; // đẩy vào trong lòng kệ
 
 
