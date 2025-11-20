@@ -1,5 +1,5 @@
 // src/pages/storage/widgets/BoxModel.tsx
-import React, { useMemo } from "react";
+import  { useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
