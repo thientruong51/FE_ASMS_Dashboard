@@ -19,9 +19,9 @@ import {
   CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import DoorSlidingIcon from "@mui/icons-material/DoorSliding";
 import WidgetsIcon from "@mui/icons-material/Widgets";
 import WarehouseIcon from "@mui/icons-material/Warehouse";
-import StorageIcon from "@mui/icons-material/Storage";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ContainerTypeList from "./components/ContainerTypeList";
 import ContainerTypeFormDialog from "./components/ContainerTypeFormDialog";
@@ -228,7 +228,7 @@ export default function ContainerTypePage() {
         {/* Tabs with icons */}
         <ToggleButtonGroup value={category} exclusive onChange={(_, v) => v && setCategory(v)} sx={{ borderRadius: 10, bgcolor: "#fff", p: 1 }}>
           <ToggleButton value="self" sx={{ px: 3 }}>
-            <StorageIcon sx={{ mr: 1 }} />
+            <DoorSlidingIcon sx={{ mr: 1 }} />
             Self Storage
           </ToggleButton>
 

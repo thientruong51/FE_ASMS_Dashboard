@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, TextField, Alert } from "@mui/material";
-import shelfApi from "@/api/shelfApi";
+import shelfTypeApi from "@/api/shelfTypeApi";
 import type { ShelfType } from "./types";
 
 export default function ShelfFormDialog({
@@ -73,10 +73,10 @@ export default function ShelfFormDialog({
       };
 
       if (form.shelfTypeId) {
-        const res = await shelfApi.updateShelf(form.shelfTypeId, payload);
+        const res = await shelfTypeApi.updateShelf(form.shelfTypeId, payload);
         onSaved(res.data.data || { ...payload, shelfTypeId: form.shelfTypeId });
       } else {
-        const res = await shelfApi.createShelf(payload);
+        const res = await shelfTypeApi.createShelf(payload);
         onSaved(res.data.data);
       }
 

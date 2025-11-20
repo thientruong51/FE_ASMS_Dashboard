@@ -1,10 +1,9 @@
+import  { useMemo, useState } from "react";
 import {
   Box,
   Typography,
   Card,
   CardContent,
-  Chip,
-  Divider,
   Button,
   Dialog,
   DialogTitle,
@@ -17,11 +16,16 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import { useState } from "react";
+import CloseIcon from "@mui/icons-material/Close";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import type { ContainerItem } from "@/api/containerApi";
+import ContainerDetailDialog from "./ContainerDetailDialog";
 
 type Props = {
-  shelfId: number;
+  shelfCode: string;
   floor: number;
+  containers?: ContainerItem[];
+  fetchOnMount?: boolean;
 };
 
 type OrderItem = {
@@ -29,191 +33,187 @@ type OrderItem = {
   customer: string;
   weight: string;
   status: "Active" | "Delivered" | "Pending";
+  containerCode?: string | null;
+  note?: string;
 };
 
-export default function ShelfFloorOrders({ shelfId, floor }: Props) {
-  // === STATE ===
-  const [orders, setOrders] = useState<OrderItem[]>([
-    { id: `ORD-${shelfId}-${floor}-1`, customer: "Alpha Co.", weight: "120 kg", status: "Active" },
-    { id: `ORD-${shelfId}-${floor}-2`, customer: "Beta Logistics", weight: "150 kg", status: "Pending" },
-  ]);
 
+export default function ShelfFloorOrders({ shelfCode, floor, containers = [] }: Props) {
+  const [orders, setOrders] = useState<OrderItem[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<OrderItem | null>(null);
+  const [formData, setFormData] = useState<OrderItem>({ id: "", customer: "", weight: "", status: "Active", containerCode: null, note: "" });
+  const [selectedContainer, setSelectedContainer] = useState<ContainerItem | null>(null);
 
-  const [formData, setFormData] = useState({
-    id: "",
-    customer: "",
-    weight: "",
-    status: "Active" as OrderItem["status"],
-  });
+  const containersOnThisFloor = useMemo(() => containers ?? [], [containers]);
 
-  // === CRUD HANDLERS ===
-  const handleOpenAdd = () => {
+  const openAdd = () => {
     setEditingOrder(null);
     setFormData({
-      id: `ORD-${shelfId}-${floor}-${orders.length + 1}`,
+      id: `ORD-${shelfCode}-${floor}-${orders.length + 1}`,
       customer: "",
       weight: "",
       status: "Active",
+      containerCode: containersOnThisFloor[0]?.containerCode ?? null,
+      note: "",
     });
     setDialogOpen(true);
   };
 
-  const handleOpenEdit = (order: OrderItem) => {
+  const openEdit = (order: OrderItem) => {
     setEditingOrder(order);
     setFormData(order);
     setDialogOpen(true);
   };
 
-  const handleSave = () => {
-    if (editingOrder) {
-      // update
-      setOrders((prev) =>
-        prev.map((o) => (o.id === editingOrder.id ? { ...formData } : o))
-      );
-    } else {
-      // create
-      setOrders((prev) => [...prev, { ...formData }]);
-    }
+  const saveOrder = () => {
+    if (editingOrder) setOrders((p) => p.map((o) => (o.id === editingOrder.id ? { ...formData } : o)));
+    else setOrders((p) => [...p, { ...formData }]);
     setDialogOpen(false);
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm("Delete this order?")) {
-      setOrders((prev) => prev.filter((o) => o.id !== id));
-    }
+  const deleteOrder = (id: string) => {
+    if (window.confirm("Delete this order?")) setOrders((p) => p.filter((o) => o.id !== id));
   };
 
-  // === UI HELPERS ===
-  const renderStatus = (status: OrderItem["status"]) => {
-    switch (status) {
-      case "Active":
-        return <Chip label="Active" color="success" size="small" />;
-      case "Delivered":
-        return <Chip label="Delivered" color="primary" size="small" />;
-      case "Pending":
-        return <Chip label="Pending" color="warning" size="small" />;
-      default:
-        return null;
-    }
+  const formatValue = (v: any) => {
+    if (v === null || v === undefined || v === "") return "-";
+    if (typeof v === "boolean") return v ? "Yes" : "No";
+    if (typeof v === "number") return v.toString();
+    return String(v);
   };
+
+  const pastelBg = (index: number) => (index % 2 === 0 ? "linear-gradient(180deg, #E8F6FF 0%, #E6F2FF 100%)" : "linear-gradient(180deg, #F5EAFB 0%, #F2E8FB 100%)");
 
   return (
     <Box>
-      {/* HEADER */}
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography fontWeight={600}>Orders on Floor {floor}</Typography>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={handleOpenAdd}
-        >
-          Add
-        </Button>
+        <Box>
+          <Typography fontWeight={600}>Orders on Floor {floor}</Typography>
+          <Typography fontSize={12} color="text.secondary">Shelf: {shelfCode} • Containers: {containersOnThisFloor.length}</Typography>
+        </Box>
+        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openAdd}>Add</Button>
       </Stack>
 
-      {/* LIST */}
-      {orders.length === 0 ? (
-        <Typography color="text.secondary" fontSize={14}>
-          No orders yet.
-        </Typography>
-      ) : (
-        orders.map((o, i) => (
-          <Card
-            key={o.id}
-            sx={{
-              mb: 1.5,
-              borderRadius: 2,
-              boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-              "&:hover": { boxShadow: "0 3px 10px rgba(0,0,0,0.15)" },
-            }}
-          >
-            <CardContent
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                py: 1.5,
-              }}
-            >
-              <Box>
-                <Typography fontSize={14} fontWeight={600}>
-                  {o.id}
-                </Typography>
-                <Typography fontSize={13} color="text.secondary">
-                  {o.customer}
-                </Typography>
-                <Typography fontSize={13} color="text.secondary">
-                  {o.weight}
-                </Typography>
-              </Box>
+      <Box display="flex" gap={2}>
+        {/* Left: orders list */}
+        <Box flex={1}>
+          {orders.length === 0 ? <Typography color="text.secondary">No orders yet.</Typography> : (
+            <Stack spacing={1}>
+              {orders.map((o) => (
+                <Card key={o.id} variant="outlined" sx={{ borderRadius: 2 }}>
+                  <CardContent sx={{ py: 1 }}>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between">
+                      <Box>
+                        <Typography fontSize={13} fontWeight={700}>{o.id}</Typography>
+                        <Typography fontSize={12} color="text.secondary">{o.customer} • {o.weight}</Typography>
+                        <Typography fontSize={12} color="text.secondary">{o.note}</Typography>
+                      </Box>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <IconButton size="small" onClick={() => openEdit(o)}><EditIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" color="error" onClick={() => deleteOrder(o.id)}><DeleteIcon fontSize="small" /></IconButton>
+                      </Stack>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
+            </Stack>
+          )}
+        </Box>
 
-              <Stack direction="row" alignItems="center" spacing={1}>
-                {renderStatus(o.status)}
-                <IconButton size="small" onClick={() => handleOpenEdit(o)}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-                <IconButton size="small" color="error" onClick={() => handleDelete(o.id)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Stack>
-            </CardContent>
-            {i !== orders.length - 1 && <Divider />}
-          </Card>
-        ))
-      )}
+        {/* Right: containers two-column card list (mimic design) */}
+        <Box width={420} maxHeight={640} overflow="auto" sx={{ pr: 1 }}>
+          <Typography fontWeight={600} fontSize={14} mb={1}>Containers (Floor {floor})</Typography>
 
-      {/* DIALOG ADD/EDIT */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle>
-          {editingOrder ? "Edit Order" : "Add New Order"}
-        </DialogTitle>
+          {/* container cards in two columns using flex-wrap */}
+          <Box display="flex" flexWrap="wrap" gap={1.25}>
+            {containersOnThisFloor.length === 0 && <Typography color="text.secondary">No containers.</Typography>}
+            {containersOnThisFloor.map((c: any, idx) => {
+              const cardWidth = `calc(50% - 6px)`; 
+
+
+              return (
+                <Box key={c.containerCode ?? idx} sx={{ width: cardWidth }}>
+                  <Card
+                    sx={{
+                      borderRadius: 2,
+                      minHeight: 96,
+                      display: "flex",
+                      alignItems: "stretch",
+                      background: pastelBg(idx),
+                      position: "relative",
+                    }}
+                    onClick={() => {
+                      setSelectedContainer({ ...(c as ContainerItem) });
+                    }}
+                  >
+                    <CardContent sx={{ width: "100%", py: 1, px: 1.25, cursor: "pointer" }}>
+                      {/* top row: lock icon + more icon */}
+                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography fontSize={12} fontWeight={700}>Container Code: {c.containerCode ?? "-"}</Typography>
+                        </Stack>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            alert(`Actions for ${c.containerCode ?? "-"}`);
+                          }}
+                        >
+                          <MoreVertIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+
+                      {/* middle: weight */}
+                      <Box mt={1} mb={0.25}>
+                        <Typography fontSize={13} fontWeight={600}>
+                         Weight: {typeof c.currentWeight === "number" ? `${c.currentWeight} kg` : formatValue(c.currentWeight)}
+                        </Typography>
+                        <Typography fontSize={12} color="text.secondary">
+                         Floor: {c.floorCode ?? "-"}
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Order add/edit dialog */}
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>{editingOrder ? "Edit Order" : "Add New Order"}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} mt={1}>
-            <TextField
-              label="Order ID"
-              value={formData.id}
-              onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-              fullWidth
-              disabled={!!editingOrder}
-            />
-            <TextField
-              label="Customer"
-              value={formData.customer}
-              onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Weight"
-              value={formData.weight}
-              onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Status"
-              select
-              SelectProps={{ native: true }}
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({ ...formData, status: e.target.value as OrderItem["status"] })
-              }
-              fullWidth
-            >
+            <TextField label="Order ID" value={formData.id} onChange={(e) => setFormData({ ...formData, id: e.target.value })} fullWidth disabled={!!editingOrder} />
+            <TextField label="Customer" value={formData.customer} onChange={(e) => setFormData({ ...formData, customer: e.target.value })} fullWidth />
+            <TextField label="Weight" value={formData.weight} onChange={(e) => setFormData({ ...formData, weight: e.target.value })} fullWidth />
+            <TextField label="Container (optional)" select SelectProps={{ native: true }} value={formData.containerCode ?? ""} onChange={(e) => setFormData({ ...formData, containerCode: e.target.value || null })}>
+              <option value="">— none —</option>
+              {containersOnThisFloor.map((c: any) => <option key={c.containerCode ?? c.id} value={c.containerCode ?? c.id}>{c.containerCode ?? c.id}</option>)}
+            </TextField>
+            <TextField label="Status" select SelectProps={{ native: true }} value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value as OrderItem["status"] })} fullWidth>
               <option value="Active">Active</option>
               <option value="Pending">Pending</option>
               <option value="Delivered">Delivered</option>
             </TextField>
+            <TextField label="Note" value={formData.note ?? ""} onChange={(e) => setFormData({ ...formData, note: e.target.value })} fullWidth multiline minRows={2} />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave}>
-            Save
-          </Button>
+          <Button onClick={() => setDialogOpen(false)} startIcon={<CloseIcon />}>Cancel</Button>
+          <Button variant="contained" onClick={saveOrder}>Save</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Reusable Container detail dialog (shared component) */}
+      <ContainerDetailDialog
+        open={!!selectedContainer}
+        container={selectedContainer}
+        onClose={() => setSelectedContainer(null)}
+      />
     </Box>
   );
 }

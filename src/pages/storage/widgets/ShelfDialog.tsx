@@ -1,39 +1,143 @@
+import  { useEffect, useState } from "react";
 import {
   Box,
   Typography,
-  IconButton,
-  Divider,
   DialogTitle,
   DialogContent,
+  CircularProgress,
+  IconButton,
+  Divider,
 } from "@mui/material";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import CloseIcon from "@mui/icons-material/Close";
+
+import type { ShelfItem } from "@/api/shelfApi";
+import { getShelf } from "@/api/shelfApi";
+import { getFloors, type FloorItem } from "@/api/floorApi";
+import { getContainers, type ContainerItem } from "@/api/containerApi";
+import { groupContainersByFloor } from "./helpers";
 import ShelfView from "./ShelfView/ShelfView";
 
 type Props = {
-  shelfId: number;
+  shelfCode: string;
   onClose: () => void;
 };
 
-export default function ShelfDialog({ shelfId, onClose }: Props) {
+export default function ShelfDialog({ shelfCode, onClose }: Props) {
+  const [shelf, setShelf] = useState<ShelfItem | null>(null);
+  const [floors, setFloors] = useState<FloorItem[]>([]);
+  const [containers, setContainers] = useState<ContainerItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        try {
+          const shelfResp = await getShelf(shelfCode);
+          const s = (shelfResp as any).data ?? (shelfResp as any);
+          if (mounted) setShelf(s);
+        } catch (err) {
+          console.warn("getShelf failed", err);
+        }
+
+        const floorsResp = await getFloors({ shelfCode, pageNumber: 1, pageSize: 100 });
+        const fl = (floorsResp as any).data ?? [];
+        const floorsArr: FloorItem[] = Array.isArray(fl) ? fl : [];
+        if (!mounted) return;
+        setFloors(floorsArr);
+
+        const pageSize = 100;
+        let allContainers: ContainerItem[] = [];
+
+        const fetchAllByShelfCode = async () => {
+          let page = 1;
+          while (true) {
+            const resp = await getContainers({ shelfCode, pageNumber: page, pageSize });
+            const arr = (resp as any).data ?? (resp as any);
+            if (!Array.isArray(arr)) break;
+            allContainers.push(...arr);
+            if (arr.length < pageSize) break;
+            page += 1;
+          }
+        };
+
+        const fetchAllByFloors = async (floorsList: FloorItem[]) => {
+          for (const f of floorsList) {
+            if (!f || !( (f as any).floorCode )) continue;
+            let page = 1;
+            while (true) {
+              const resp = await getContainers({ floorCode: (f as any).floorCode, pageNumber: page, pageSize });
+              const arr = (resp as any).data ?? (resp as any);
+              if (!Array.isArray(arr)) break;
+              allContainers.push(...arr);
+              if (arr.length < pageSize) break;
+              page += 1;
+            }
+          }
+        };
+
+        try {
+          await fetchAllByShelfCode();
+        } catch (errShelfFetch) {
+          console.warn("fetch by shelfCode failed, fallback to per-floor", errShelfFetch);
+          await fetchAllByFloors(floorsArr);
+        }
+
+        if (!mounted) return;
+
+        const uniq = new Map<string, ContainerItem>();
+        for (const c of allContainers) {
+          const key = String(c.containerCode ?? (c as any).id ?? JSON.stringify(c));
+          uniq.set(key, c);
+        }
+        const uniqContainers = Array.from(uniq.values());
+        setContainers(uniqContainers);
+      } catch (err: any) {
+        console.error("Failed to load shelf dialog data", err);
+        if (mounted) setError(err?.message ?? "Request failed");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, [shelfCode]);
+
+  const containersByFloor = groupContainersByFloor(containers, floors);
+
   return (
     <Box>
-      <DialogTitle
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Typography fontWeight={700} fontSize={16}>
-          Shelf #{shelfId + 1}
-        </Typography>
-        <IconButton onClick={onClose}>
-          <CloseRoundedIcon />
-        </IconButton>
+      <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Box>
+          <Typography fontWeight={700}>Shelf: {shelfCode}</Typography>
+          <Typography fontSize={12} color="text.secondary">{shelf?.status ?? "Active"}</Typography>
+        </Box>
+        <IconButton onClick={onClose}><CloseIcon /></IconButton>
       </DialogTitle>
+
       <Divider />
-      <DialogContent sx={{ pt: 2 }}>
-        <ShelfView shelfId={shelfId} />
+
+      <DialogContent dividers>
+        {loading ? (
+          <Box display="flex" gap={1} alignItems="center">
+            <CircularProgress size={18} />
+            <Typography>Loading shelf data...</Typography>
+          </Box>
+        ) : error ? (
+          <Typography color="error">Request failed: {error}</Typography>
+        ) : (
+          <ShelfView
+            shelfCode={shelfCode}
+            shelf={shelf}
+            floors={floors}
+            containersByFloor={containersByFloor}
+            onClose={onClose}
+          />
+        )}
       </DialogContent>
     </Box>
   );

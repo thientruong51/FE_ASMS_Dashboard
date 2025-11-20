@@ -4,14 +4,16 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
 export default function ShelfModel({
-  selectedFloor,
   onSelectFloor,
   setSelectedMesh,
-  onModelCenter,
+  onModelCenter, 
   orbitRef,
 }: any) {
-  const { scene } = useGLTF("/models/KE 1700X1070X6200.glb");
-  const ref = useRef<THREE.Group>(null);
+  const modelUrl = "/models/KE 1700X1070X6200.glb";
+  const gltf = useGLTF(modelUrl) as any;
+  const originalScene = gltf.scene as THREE.Object3D;
+
+  const pivotRef = useRef<THREE.Group | null>(null);
   const { camera, gl } = useThree();
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
@@ -29,7 +31,10 @@ export default function ShelfModel({
     pointer.y = -(offsetY / gl.domElement.clientHeight) * 2 + 1;
     raycaster.setFromCamera(pointer, camera);
 
-    const intersects = raycaster.intersectObject(ref.current!, true);
+    const root = pivotRef.current!;
+    if (!root) return;
+
+    const intersects = raycaster.intersectObject(root, true);
     if (intersects.length > 0) {
       const y = intersects[0].point.y;
       const floor = floorHeights.find((f) => y >= f.min && y < f.max);
@@ -40,40 +45,65 @@ export default function ShelfModel({
     }
   };
 
-  // căn camera giữa mô hình
   useEffect(() => {
-    if (ref.current) {
-      const box = new THREE.Box3().setFromObject(ref.current);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
-      const size = new THREE.Vector3();
-      box.getSize(size);
+    if (!pivotRef.current || !originalScene) return;
 
-      const scaleFactor = Math.max(size.x, size.y, size.z) > 20 ? 0.001 : 1;
-      ref.current.scale.setScalar(scaleFactor);
-
-      const newBox = new THREE.Box3().setFromObject(ref.current);
-      const newCenter = new THREE.Vector3();
-      newBox.getCenter(newCenter);
-      const distance = Math.max(size.x, size.y, size.z) * 1.2;
-      const cameraY = newCenter.y + size.y * 0.3;
-      const cameraZ = newCenter.z + distance;
-
-      camera.position.set(newCenter.x + distance * 0.4, cameraY, cameraZ);
-      camera.lookAt(newCenter);
-
-      if (orbitRef.current) {
-        orbitRef.current.target.copy(newCenter);
-        orbitRef.current.update();
-      }
-
-      onModelCenter(newCenter);
+    while (pivotRef.current.children.length) {
+      pivotRef.current.remove(pivotRef.current.children[0]);
     }
-  }, []);
 
-  return (
-    <group ref={ref} onClick={handleClick}>
-      <primitive object={scene} />
-    </group>
-  );
+    const sceneClone = originalScene.clone(true) as THREE.Object3D;
+
+    const boxBefore = new THREE.Box3().setFromObject(sceneClone);
+    const sizeBefore = boxBefore.getSize(new THREE.Vector3());
+    const scaleFactor = Math.max(sizeBefore.x, sizeBefore.y, sizeBefore.z) > 20 ? 0.001 : 1;
+    sceneClone.scale.setScalar(scaleFactor);
+
+    const scaledBox = new THREE.Box3().setFromObject(sceneClone);
+    const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
+    const scaledSize = scaledBox.getSize(new THREE.Vector3());
+
+    pivotRef.current.position.copy(scaledCenter);          
+    sceneClone.position.copy(new THREE.Vector3().sub(scaledCenter)); 
+
+    pivotRef.current.add(sceneClone);
+
+    const distance = Math.max(scaledSize.x, scaledSize.y, scaledSize.z) * 1.2 || 2;
+    const cameraY = scaledCenter.y + scaledSize.y * 0.3;
+    camera.position.set(scaledCenter.x + distance * 0.4, cameraY, scaledCenter.z + distance);
+    camera.lookAt(scaledCenter);
+
+    if (orbitRef?.current) {
+      orbitRef.current.target.copy(scaledCenter);
+      orbitRef.current.update();
+    }
+
+    const bounds = {
+      minX: scaledBox.min.x - scaledCenter.x + pivotRef.current.position.x,
+      maxX: scaledBox.max.x - scaledCenter.x + pivotRef.current.position.x,
+      minY: scaledBox.min.y - scaledCenter.y + pivotRef.current.position.y,
+      maxY: scaledBox.max.y - scaledCenter.y + pivotRef.current.position.y,
+      minZ: scaledBox.min.z - scaledCenter.z + pivotRef.current.position.z,
+      maxZ: scaledBox.max.z - scaledCenter.z + pivotRef.current.position.z,
+    };
+
+    const baseY = bounds.minY;
+
+    if (typeof onModelCenter === "function") {
+      onModelCenter({
+        center: { x: scaledCenter.x, y: scaledCenter.y, z: scaledCenter.z },
+        bounds,
+        baseY,
+        size: { x: scaledSize.x, y: scaledSize.y, z: scaledSize.z },
+      });
+    }
+
+    return () => {
+      if (pivotRef.current) {
+        while (pivotRef.current.children.length) pivotRef.current.remove(pivotRef.current.children[0]);
+      }
+    };
+  }, [originalScene]);
+
+  return <group ref={pivotRef} onClick={handleClick} />;
 }

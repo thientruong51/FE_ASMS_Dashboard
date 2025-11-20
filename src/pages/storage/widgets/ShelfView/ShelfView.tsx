@@ -1,93 +1,129 @@
+
+import  { useRef, useState } from "react";
 import {
   Box,
   Typography,
   Divider,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  Switch,
-  FormControlLabel,
 } from "@mui/material";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { Suspense, useRef, useState, useMemo } from "react";
-import * as THREE from "three";
+import { Suspense } from "react";
 import { EffectComposer, Outline } from "@react-three/postprocessing";
 
 import ShelfModel from "./ShelfModel";
-import BoxModel from "./BoxModel";
-import { getAllFloorsMock } from "./useBoxLayout";
-import type { BoxData } from "./types";
-import ShelfFloorDetail from "../ShelfFloorOrders";
+import ShelfFloorOrders from "../ShelfFloorOrders";
+import DebugAndAssigned from "../DebugAndAssigned";
+import ContainerDetailDialog from "../ContainerDetailDialog";
 
-export default function ShelfView({ shelfId }: { shelfId: number }) {
+import type { ShelfItem } from "@/api/shelfApi";
+import type { FloorItem } from "@/api/floorApi";
+import type { ContainerItem } from "@/api/containerApi";
+import type * as THREE from "three";
+
+export type ShelfViewProps = {
+  shelfCode: string;
+  shelf?: ShelfItem | null;
+  floors?: FloorItem[];
+  containersByFloor?: Record<string, ContainerItem[]>;
+  onClose?: () => void;
+};
+
+export default function ShelfView({
+  shelfCode,
+  floors = [],
+  containersByFloor = {},
+}: ShelfViewProps) {
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
   const [selectedMesh, setSelectedMesh] = useState<THREE.Object3D | null>(null);
-  const [modelCenter, setModelCenter] = useState<THREE.Vector3 | null>(null);
-  const [selectedBox, setSelectedBox] = useState<BoxData | null>(null);
-  const [mode, setMode] = useState<"static" | "random">("static"); // 👈 toggle mode
+  const [modelCenter] = useState<THREE.Vector3 | null>(null);
+  const [floorInfo, setFloorInfo] = useState<any | null>(null);
+
+  const [selectedContainer, setSelectedContainer] = useState<ContainerItem | null>(null);
+
+  const [containerOpenKey, setContainerOpenKey] = useState(0);
+
   const orbitRef = useRef<any>(null);
 
-  // ✅ lấy data theo mode hiện tại
-  const allFloors = useMemo(() => getAllFloorsMock(mode), [mode]);
+  const floorNumbers = Array.from(
+    new Set(floors.map((f) => Number(f.floorNumber)).filter((n) => !Number.isNaN(n) && n !== 0))
+  ).sort((a, b) => a - b);
+
+  const onSelectFloor = (floorNum: number) => {
+    setSelectedFloor(floorNum);
+  };
+
+ 
+  const openContainer = (c: ContainerItem | null) => {
+    if (!c) {
+      setSelectedContainer(null);
+      return;
+    }
+
+    setSelectedContainer({ ...(c as ContainerItem) });
+
+    setContainerOpenKey((prev) => prev + 1);
+  };
+
+  const activeContainers: ContainerItem[] = (() => {
+    if (!selectedFloor) return [];
+
+    const floorObj = floors.find((f) => Number(f.floorNumber) === Number(selectedFloor));
+    if (floorObj && (floorObj as any).floorCode) {
+      const code = (floorObj as any).floorCode as string;
+      if (containersByFloor[code] && containersByFloor[code].length > 0) {
+        return containersByFloor[code];
+      }
+    }
+
+    const tryKeys = [`F${selectedFloor}`, String(selectedFloor), "unknown"];
+    for (const k of tryKeys) {
+      if (containersByFloor[k] && containersByFloor[k].length > 0) {
+        return containersByFloor[k];
+      }
+    }
+
+    return [];
+  })();
 
   return (
     <Box sx={{ display: "flex", flexDirection: "row", gap: 3, mt: 2 }}>
-      {/* 🧱 BÊN TRÁI: KỆ 3D */}
       <Box sx={{ textAlign: "center" }}>
         <Typography fontWeight={600} mb={1}>
-          Shelf #{shelfId + 1}
+          Shelf: {shelfCode}
         </Typography>
 
-        {/* 🔘 Switch chọn chế độ mock */}
-        <FormControlLabel
-          control={
-            <Switch
-              checked={mode === "random"}
-              onChange={() => setMode(mode === "static" ? "random" : "static")}
-            />
-          }
-          label={mode === "static" ? "Static Data" : "Random Data"}
-          sx={{ mb: 1 }}
-        />
-
-        <Box
-          sx={{
-            width: 420,
-            height: 450,
-            bgcolor: "#f5f7fa",
-            borderRadius: 2,
-            overflow: "hidden",
-          }}
-        >
+        <Box sx={{ width: 520, height: 500, bgcolor: "#d8e2f0c0", borderRadius: 2, overflow: "hidden" }}>
           <Canvas camera={{ fov: 45 }}>
-            <ambientLight intensity={0.6} />
-            <directionalLight position={[5, 10, 5]} intensity={1.2} />
-            <Suspense fallback={null}>
-              <ShelfModel
-                selectedFloor={selectedFloor}
-                onSelectFloor={setSelectedFloor}
-                setSelectedMesh={setSelectedMesh}
-                onModelCenter={setModelCenter}
-                orbitRef={orbitRef}
-              />
+            <ambientLight intensity={0.75} />
+            <directionalLight position={[5, 12, 5]} intensity={1.9} />
 
-              {/* 📦 Render box theo tầng */}
-              {selectedFloor &&
-                allFloors[selectedFloor]?.map((b) => (
-                  <BoxModel
-                    key={b.id}
-                    type={b.type}
-                    position={b.position}
-                    onClick={() => setSelectedBox(b)}
+            <Suspense fallback={<group />}>
+              <group>
+                <ShelfModel
+                  selectedFloor={selectedFloor}
+                  onSelectFloor={onSelectFloor}
+                  setSelectedMesh={setSelectedMesh}
+                  onModelCenter={setFloorInfo}
+                  orbitRef={orbitRef}
+                />
+
+                {selectedFloor && (
+                  <DebugAndAssigned
+                    floors={floors}
+                    floorInfo={floorInfo}
+                    modelCenter={modelCenter}
+                    selectedFloor={selectedFloor}
+                    activeContainers={activeContainers}
+                    setSelectedContainer={openContainer}       
                   />
-                ))}
+                )}
+              </group>
             </Suspense>
 
             <EffectComposer multisampling={8}>
               <Outline
                 selection={selectedMesh ? [selectedMesh] : []}
-                edgeStrength={3}
+                edgeStrength={5}
                 pulseSpeed={0}
                 visibleEdgeColor={0x42a5f5}
                 hiddenEdgeColor={0x42a5f5}
@@ -101,7 +137,9 @@ export default function ShelfView({ shelfId }: { shelfId: number }) {
               enablePan
               makeDefault
               target={
-                modelCenter
+                floorInfo?.center
+                  ? [floorInfo.center.x, floorInfo.center.y, floorInfo.center.z]
+                  : modelCenter
                   ? [modelCenter.x, modelCenter.y, modelCenter.z]
                   : [0, 3, 0]
               }
@@ -109,17 +147,40 @@ export default function ShelfView({ shelfId }: { shelfId: number }) {
           </Canvas>
         </Box>
 
-        <Typography fontSize={13} fontWeight={600} mt={1}>
-          {selectedFloor ? `Selected: Floor ${selectedFloor}` : "Select a floor"}
-        </Typography>
+        <Box mt={1} display="flex" alignItems="center" justifyContent="center" gap={1}>
+       
+          <Typography fontSize={13} fontWeight={600}>
+            {selectedFloor ? `Selected: Floor ${selectedFloor}` : "Click a floor on the model"}
+          </Typography>
+        </Box>
+
+        <Box mt={1} display="flex" gap={1} justifyContent="center" flexWrap="wrap">
+          {floorNumbers.map((fn) => (
+            <Box
+              key={fn}
+              onClick={() => onSelectFloor(fn)}
+              sx={{
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                bgcolor: selectedFloor === fn ? "primary.main" : "background.paper",
+                color: selectedFloor === fn ? "white" : "text.primary",
+                cursor: "pointer",
+                fontSize: 13,
+                boxShadow: selectedFloor === fn ? 2 : "none",
+              }}
+            >
+              Floor {fn}
+            </Box>
+          ))}
+        </Box>
       </Box>
 
       <Divider orientation="vertical" flexItem />
 
-      {/* 🧾 BÊN PHẢI: PANEL DETAIL */}
-      <Box flex={1} minWidth={350}>
+      <Box flex={1} minWidth={380}>
         {selectedFloor ? (
-          <ShelfFloorDetail shelfId={shelfId} floor={selectedFloor} />
+          <ShelfFloorOrders shelfCode={shelfCode} floor={selectedFloor} containers={activeContainers} />
         ) : (
           <Box
             sx={{
@@ -131,32 +192,17 @@ export default function ShelfView({ shelfId }: { shelfId: number }) {
               fontSize: 14,
             }}
           >
-            Click a floor to view layout & orders
+            Click a floor to view containers & orders
           </Box>
         )}
       </Box>
 
-      {/* 🧩 POPUP: BOX DETAIL */}
-      <Dialog
-        open={!!selectedBox}
-        onClose={() => setSelectedBox(null)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>📦 Box Details</DialogTitle>
-        <DialogContent>
-          {selectedBox && (
-            <>
-              <Typography>ID: {selectedBox.id}</Typography>
-              <Typography>Type: {selectedBox.type}</Typography>
-              <Typography>Floor: {selectedBox.floor}</Typography>
-              <Typography>Product: {selectedBox.productName}</Typography>
-              <Typography>Quantity: {selectedBox.quantity}</Typography>
-              <Typography>Status: {selectedBox.status}</Typography>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <ContainerDetailDialog
+        key={containerOpenKey}
+        open={!!selectedContainer}
+        container={selectedContainer}
+        onClose={() => setSelectedContainer(null)}
+      />
     </Box>
   );
 }
