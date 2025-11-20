@@ -1,5 +1,3 @@
-// src/pages/storage/widgets/WeightBlock100.tsx
-import React from "react";
 import { Box, Typography } from "@mui/material";
 import type { ShelfItem } from "@/api/shelfApi";
 

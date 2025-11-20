@@ -1,14 +1,12 @@
-// src/pages/storage/widgets/ShelfModel.tsx
 import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
 export default function ShelfModel({
-  selectedFloor,
   onSelectFloor,
   setSelectedMesh,
-  onModelCenter, // will receive { center, bounds, baseY, size }
+  onModelCenter, 
   orbitRef,
 }: any) {
   const modelUrl = "/models/KE 1700X1070X6200.glb";
@@ -50,38 +48,26 @@ export default function ShelfModel({
   useEffect(() => {
     if (!pivotRef.current || !originalScene) return;
 
-    // clear previous children
     while (pivotRef.current.children.length) {
       pivotRef.current.remove(pivotRef.current.children[0]);
     }
 
-    // clone the model
     const sceneClone = originalScene.clone(true) as THREE.Object3D;
 
-    // Optional: rotate clone here if the GLB is authored rotated (do BEFORE bbox)
-    // sceneClone.rotateY(Math.PI / 2);
-
-    // scale heuristic
     const boxBefore = new THREE.Box3().setFromObject(sceneClone);
     const sizeBefore = boxBefore.getSize(new THREE.Vector3());
     const scaleFactor = Math.max(sizeBefore.x, sizeBefore.y, sizeBefore.z) > 20 ? 0.001 : 1;
     sceneClone.scale.setScalar(scaleFactor);
 
-    // compute bbox/center/size AFTER scale & rotate
     const scaledBox = new THREE.Box3().setFromObject(sceneClone);
     const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
     const scaledSize = scaledBox.getSize(new THREE.Vector3());
 
-    // --- IMPORTANT: place pivot at scaledCenter (world coords), and move clone so its center aligns to pivot origin
-    pivotRef.current.position.copy(scaledCenter);           // pivot world = model center (like original behavior)
-    sceneClone.position.copy(new THREE.Vector3().sub(scaledCenter)); // move clone so center becomes pivot origin
+    pivotRef.current.position.copy(scaledCenter);          
+    sceneClone.position.copy(new THREE.Vector3().sub(scaledCenter)); 
 
     pivotRef.current.add(sceneClone);
 
-    // DO NOT rotate pivot. If rotation needed, rotate sceneClone above (before computing bbox).
-    // pivotRef.current.rotation.set(0, Math.PI / 2, 0); // <-- keep commented
-
-    // set camera to view the model center nicely
     const distance = Math.max(scaledSize.x, scaledSize.y, scaledSize.z) * 1.2 || 2;
     const cameraY = scaledCenter.y + scaledSize.y * 0.3;
     camera.position.set(scaledCenter.x + distance * 0.4, cameraY, scaledCenter.z + distance);
@@ -92,9 +78,6 @@ export default function ShelfModel({
       orbitRef.current.update();
     }
 
-    // compute world bounds: scaledBox (local) shifted to world by scaledCenter
-    const worldMin = scaledBox.min.clone().add(new THREE.Vector3().sub(scaledCenter)).add(scaledCenter).sub(scaledCenter); // essentially scaledBox.min - scaledCenter + pivot world = scaledBox.min (local) + pivot position (scaledCenter) - scaledCenter => scaledBox.min
-    // simpler: because we put pivot at scaledCenter and moved clone by -scaledCenter, the world bounds are:
     const bounds = {
       minX: scaledBox.min.x - scaledCenter.x + pivotRef.current.position.x,
       maxX: scaledBox.max.x - scaledCenter.x + pivotRef.current.position.x,
@@ -106,7 +89,6 @@ export default function ShelfModel({
 
     const baseY = bounds.minY;
 
-    // send model center IN WORLD COORDS (scaledCenter) — this fixes ShelfView's floorCenter logic
     if (typeof onModelCenter === "function") {
       onModelCenter({
         center: { x: scaledCenter.x, y: scaledCenter.y, z: scaledCenter.z },
@@ -116,13 +98,11 @@ export default function ShelfModel({
       });
     }
 
-    // cleanup
     return () => {
       if (pivotRef.current) {
         while (pivotRef.current.children.length) pivotRef.current.remove(pivotRef.current.children[0]);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originalScene]);
 
   return <group ref={pivotRef} onClick={handleClick} />;

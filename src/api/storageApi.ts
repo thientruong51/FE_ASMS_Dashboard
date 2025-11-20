@@ -1,4 +1,3 @@
-// src/apis/storageApi.ts
 import axiosClient from "./axiosClient";
 
 export interface StorageRespItem {
@@ -12,7 +11,6 @@ export interface StorageRespItem {
   height?: number;
   status?: string;
   isActive?: boolean;
-  // ...other fields from backend
 }
 
 export interface StorageListResponse {

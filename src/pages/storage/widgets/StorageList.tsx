@@ -1,5 +1,4 @@
-// src/pages/storage/widgets/StorageList.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import  { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Card,
@@ -14,7 +13,7 @@ import {
   Autocomplete,
   IconButton,
 } from "@mui/material";
-import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import WarehouseIcon from '@mui/icons-material/Warehouse';
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import RoomOutlinedIcon from "@mui/icons-material/RoomOutlined";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
@@ -167,7 +166,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                       ...params.InputProps,
                       startAdornment: (
                         <InputAdornment position="start">
-                          <SearchRoundedIcon fontSize="small" />
+                         
                         </InputAdornment>
                       ),
                     }}
@@ -280,7 +279,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                   }}
                 >
                   <Box display="flex" alignItems="center" mb={1}>
-                    <LocalShippingIcon color="primary" sx={{ fontSize: 22 }} />
+                    <WarehouseIcon color="primary" sx={{ fontSize: 22 }} />
                     <Typography fontWeight={600} fontSize={14} sx={{ ml: 1, flex: 1 }}>
                       {v.storageCode}
                     </Typography>

@@ -1,5 +1,4 @@
-// src/pages/storage/widgets/TruckLoadCard.tsx
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import { Box, Card, CardContent, Typography, CircularProgress, Button, Dialog } from "@mui/material";
 import type { StorageRespItem } from "@/api/storageApi";
 import { getShelves, type ShelfItem } from "@/api/shelfApi";

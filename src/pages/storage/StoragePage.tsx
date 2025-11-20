@@ -3,7 +3,7 @@ import { Box } from "@mui/material";
 import StorageList from "./widgets/StorageList";
 import TruckLoadCard from "./widgets/TruckLoadCard";
 import OrderPanel from "./widgets/OrderPanel";
-import React, { useState } from "react";
+import  { useState } from "react";
 import type { StorageRespItem } from "@/api/storageApi";
 
 export default function StoragePage() {
@@ -21,13 +21,10 @@ export default function StoragePage() {
         alignItems: "stretch",
       }}
     >
-      {/* left panel: StorageList - truyền callback để chọn storage */}
       <StorageList onSelectStorage={(s) => setActiveStorage(s)} selectedStorage={activeStorage} />
 
-      {/* middle panel: TruckLoadCard - hiển thị theo activeStorage */}
       <TruckLoadCard storage={activeStorage} />
 
-      {/* right panel */}
       <OrderPanel />
     </Box>
   );

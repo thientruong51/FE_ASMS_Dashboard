@@ -1,4 +1,3 @@
-// src/apis/containerApi.ts
 import axiosClient from "./axiosClient";
 
 export type ContainerItem = {
@@ -6,7 +5,7 @@ export type ContainerItem = {
   positiony: number | null | undefined;
   positionz: number | null | undefined;
   containerCode: string;
-  floorCode?: string; // e.g. "BLD001-STR001-SH001-F1"
+  floorCode?: string; 
   isActive?: boolean;
   status?: string;
   maxWeight?: number;
@@ -14,9 +13,8 @@ export type ContainerItem = {
   positionX?: number | null;
   positionY?: number | null;
   positionZ?: number | null;
-  imageUrl?: string; // might be glb or image url
-  type?: string; // "A" | "B" | ...
-  // other fields...
+  imageUrl?: string; 
+  type?: string; 
 };
 
 export type ContainerListResponse = {
@@ -25,7 +23,6 @@ export type ContainerListResponse = {
   pagination?: any;
 };
 
-/** Lấy container trong 1 shelf (paging) */
 export async function getContainers(params?: Record<string, any>): Promise<ContainerListResponse> {
   const resp = await axiosClient.get<ContainerListResponse>("/api/Container", { params });
   return resp.data;

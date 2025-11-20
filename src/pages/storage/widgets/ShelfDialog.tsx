@@ -1,5 +1,4 @@
-// src/pages/storage/widgets/ShelfDialog.tsx
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -37,7 +36,6 @@ export default function ShelfDialog({ shelfCode, onClose }: Props) {
       setLoading(true);
       setError(null);
       try {
-        // fetch shelf detail (best-effort)
         try {
           const shelfResp = await getShelf(shelfCode);
           const s = (shelfResp as any).data ?? (shelfResp as any);
@@ -46,14 +44,12 @@ export default function ShelfDialog({ shelfCode, onClose }: Props) {
           console.warn("getShelf failed", err);
         }
 
-        // fetch floors
         const floorsResp = await getFloors({ shelfCode, pageNumber: 1, pageSize: 100 });
         const fl = (floorsResp as any).data ?? [];
         const floorsArr: FloorItem[] = Array.isArray(fl) ? fl : [];
         if (!mounted) return;
         setFloors(floorsArr);
 
-        // fetch containers: prefer shelfCode pagination; fallback to per-floor
         const pageSize = 100;
         let allContainers: ContainerItem[] = [];
 
@@ -93,7 +89,6 @@ export default function ShelfDialog({ shelfCode, onClose }: Props) {
 
         if (!mounted) return;
 
-        // dedupe
         const uniq = new Map<string, ContainerItem>();
         for (const c of allContainers) {
           const key = String(c.containerCode ?? (c as any).id ?? JSON.stringify(c));

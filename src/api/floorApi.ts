@@ -1,4 +1,3 @@
-// src/apis/floorApi.ts
 import axiosClient from "./axiosClient";
 
 export type FloorItem = {
@@ -24,23 +23,18 @@ export type FloorListResponse = {
   pagination?: any;
 };
 
-/**
- * Get floors, filtered by shelfCode (server supports ?shelfCode=...)
- */
+
 export async function getFloors(params?: Record<string, any>): Promise<FloorListResponse> {
   const resp = await axiosClient.get<FloorListResponse>("/api/Floor", { params });
   return resp.data;
 }
 
-/**
- * Optionally get a single floor by floorCode
- */
+
 export async function getFloor(floorCode: string): Promise<{ data: FloorItem } | FloorItem> {
   try {
     const resp = await axiosClient.get<{ data: FloorItem }>(`/api/Floor/${encodeURIComponent(floorCode)}`);
     return resp.data;
   } catch {
-    // fallback to query
     const resp = await axiosClient.get<FloorListResponse>("/api/Floor", { params: { floorCode } });
     const body = resp.data as any;
     if (Array.isArray(body.data) && body.data.length > 0) return { data: body.data[0] };
