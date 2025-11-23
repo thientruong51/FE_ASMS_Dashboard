@@ -161,6 +161,7 @@ export default function ShelfCard({
         "&:hover": {
           boxShadow: "0 10px 36px rgba(0,0,0,0.18)",
           transform: "translateY(-4px)",
+           borderColor: "primary.main",
         },
 
         "&:hover .card-image-overlay": {

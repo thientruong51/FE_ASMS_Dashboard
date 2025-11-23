@@ -21,7 +21,6 @@ import { OrbitControls, useGLTF, Html, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import type { ContainerType } from "./types";
 
-/** GLB fit helper (similar logic) */
 function GLBModelFit({ url }: { url: string }) {
   const gltf = useGLTF(url);
   const { scene } = gltf;
@@ -121,11 +120,11 @@ export default function ContainerTypeCard({
         transition: "transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms cubic-bezier(.2,.9,.2,1), border-color 220ms ease",
         boxShadow: "0 8px 30px rgba(16,24,40,0.06)",
         border: "1px solid rgba(16,24,40,0.04)",
-        // hover effect for card itself
         "&:hover": {
           transform: "translateY(-8px) scale(1.015)",
           boxShadow: "0 18px 48px rgba(16,24,40,0.16)",
-          borderColor: "rgba(59,130,246,0.28)",
+           borderColor: "primary.main",
+          
         },
         "&:hover .media": {
           transform: "scale(1.03)",

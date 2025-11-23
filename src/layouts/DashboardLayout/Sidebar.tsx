@@ -21,6 +21,9 @@ import EngineeringIcon from "@mui/icons-material/Engineering";
 import WidgetsIcon from "@mui/icons-material/Widgets";
 import ApartmentIcon from '@mui/icons-material/Apartment';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
+import BallotIcon from '@mui/icons-material/Ballot';
+import LiquorIcon from '@mui/icons-material/Liquor';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 export default function Sidebar() {
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -35,11 +38,14 @@ export default function Sidebar() {
     { label: "Shipments", icon: <LocalShippingIcon />, to: "/shipments" },
     { label: "Storage", icon: <InventoryIcon />, to: "/storage" },
     { label: "Customers", icon: <PeopleIcon />, to: "/customers" },
+    { label: "Employee Role", icon: <ManageAccountsIcon />, to: "/employee-roles" },
     { label: "Staffs", icon: <EngineeringIcon />, to: "/staffs" },
+    { label: "Services", icon: <BallotIcon />, to: "/services" },
     { label: "Buildings", icon: <ApartmentIcon />, to: "/buildings" },
     { label: "Storage Types", icon: <WarehouseIcon />, to: "/storage-types" },
     { label: "Shelfs Types", icon: <ShelvesIcon />, to: "/shelfs" },
     { label: "Container Types", icon: <WidgetsIcon />, to: "/container-types" },
+    { label: "Product Types", icon: <LiquorIcon />, to: "/product-types" },
     { label: "Settings", icon: <SettingsIcon />, to: "/settings" },
     
   ];
