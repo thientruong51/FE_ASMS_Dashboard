@@ -110,7 +110,7 @@ export default function StorageTypeCard({
         transition: "transform 0.28s ease, box-shadow 0.28s ease",
         transform: selected ? "translateY(-8px)" : "none",
         cursor: selectable ? "pointer" : "default",
-        "&:hover": { transform: "translateY(-8px)", boxShadow: "0 12px 40px rgba(16,24,40,0.08)" },
+        "&:hover": { transform: "translateY(-8px)", boxShadow: "0 12px 40px rgba(16,24,40,0.08)", borderColor: "primary.main", },
       }}
       onClick={() => selectable && onSelect && onSelect(item.storageTypeId)}
     >

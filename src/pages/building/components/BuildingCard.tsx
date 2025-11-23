@@ -155,20 +155,24 @@ export default function BuildingCard({
 
   return (
     <Card
-      variant="elevation"
-      elevation={selected ? 8 : 2}
-      sx={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        transition: "transform 200ms, box-shadow 200ms",
-        border: selected ? "2px solid" : undefined,
-        borderColor: selected ? "primary.main" : undefined,
-        "&:hover": { transform: "translateY(-6px)" },
-        cursor: selectable ? "pointer" : "default",
-      }}
-      onClick={() => selectable && onSelect && onSelect(building.buildingId)}
-    >
+  variant="elevation"
+  elevation={selected ? 8 : 2}
+  sx={{
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    transition: "transform 200ms, box-shadow 200ms, border-color 200ms",
+    border: selected ? "2px solid" : "2px solid transparent",
+    borderColor: selected ? "primary.main" : "transparent",
+    cursor: selectable ? "pointer" : "default",
+
+    "&:hover": {
+      transform: "translateY(-6px)",
+      borderColor: "primary.main",   
+    },
+  }}
+  onClick={() => selectable && onSelect && onSelect(building.buildingId)}
+>
       <Box ref={ref} sx={{ position: "relative", overflow: "hidden", height: 220 }}>
         {hasModel ? (
           <ModelView url={building.imageUrl ?? null} visible={visible} />
