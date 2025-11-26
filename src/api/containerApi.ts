@@ -1,20 +1,40 @@
 import axiosClient from "./axiosClient";
 
 export type ContainerItem = {
-  positionx: number | null | undefined;
-  positiony: number | null | undefined;
-  positionz: number | null | undefined;
   containerCode: string;
-  floorCode?: string; 
-  isActive?: boolean;
-  status?: string;
-  maxWeight?: number;
-  currentWeight?: number;
+
   positionX?: number | null;
   positionY?: number | null;
   positionZ?: number | null;
-  imageUrl?: string; 
+
+  positionx?: number | null;
+  positiony?: number | null;
+  positionz?: number | null;
+
+  floorCode?: string;
+
+  isActive?: boolean;
+  status?: string;
+
+  price?: number;
+  maxWeight?: number;
+  currentWeight?: number;
+
+  productTypeId?: number;
+
+  imageUrl?: string | null;
+  notes?: string | null;
+
   type?: string; 
+  serialNumber?: number; 
+  layer?: number;
+
+  containerAboveCode?: string | null;
+
+  lastOptimizedDate?: string | null;
+  optimizationScore?: number;
+
+  orderDetailId?: number | null;
 };
 
 export type ContainerListResponse = {
@@ -26,4 +46,16 @@ export type ContainerListResponse = {
 export async function getContainers(params?: Record<string, any>): Promise<ContainerListResponse> {
   const resp = await axiosClient.get<ContainerListResponse>("/api/Container", { params });
   return resp.data;
+}
+export async function updateContainerPosition(
+  containerCode: string,
+  params: { serialNumber?: number | null; layer?: number | null }
+): Promise<void> {
+
+  await axiosClient.patch(`/api/Container/${encodeURIComponent(containerCode)}/position`, null, {
+    params: {
+      ...(params.serialNumber !== undefined ? { serialNumber: params.serialNumber } : {}),
+      ...(params.layer !== undefined ? { layer: params.layer } : {}),
+    },
+  });
 }

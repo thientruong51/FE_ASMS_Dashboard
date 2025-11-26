@@ -1,6 +1,5 @@
 import  { useEffect, useState } from "react";
 import { Box, Card, CardContent, Typography, CircularProgress, Dialog } from "@mui/material";
-import BlockIcon from "@mui/icons-material/Block";
 import type { StorageRespItem } from "@/api/storageApi";
 import { getShelves, type ShelfItem } from "@/api/shelfApi";
 import WeightBlock100 from "./WeightBlock100";

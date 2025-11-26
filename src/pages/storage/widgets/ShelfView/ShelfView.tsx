@@ -1,5 +1,4 @@
-
-import  { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -44,6 +43,16 @@ export default function ShelfView({
 
   const orbitRef = useRef<any>(null);
 
+  // Local copy so we can update UI when child reloads data
+  const [localContainersByFloor, setLocalContainersByFloor] = useState<Record<string, ContainerItem[]>>(
+    () => ({ ...(containersByFloor ?? {}) })
+  );
+
+  // keep local copy in sync when parent prop changes
+  useEffect(() => {
+    setLocalContainersByFloor({ ...(containersByFloor ?? {}) });
+  }, [containersByFloor]);
+
   const floorNumbers = Array.from(
     new Set(floors.map((f) => Number(f.floorNumber)).filter((n) => !Number.isNaN(n) && n !== 0))
   ).sort((a, b) => a - b);
@@ -52,7 +61,6 @@ export default function ShelfView({
     setSelectedFloor(floorNum);
   };
 
- 
   const openContainer = (c: ContainerItem | null) => {
     if (!c) {
       setSelectedContainer(null);
@@ -64,21 +72,48 @@ export default function ShelfView({
     setContainerOpenKey((prev) => prev + 1);
   };
 
+  // helper to resolve a floor key used in containers map
+  const resolveFloorKeyForWrite = (floorNum: number) => {
+    const floorObj = floors.find((f) => Number(f.floorNumber) === Number(floorNum));
+    if (floorObj && (floorObj as any).floorCode) {
+      return (floorObj as any).floorCode as string;
+    }
+    // default fallback key
+    return `F${floorNum}`;
+  };
+
+  // callback to be passed to ShelfFloorOrders — child calls this with updated array for that floor
+  const handleContainersUpdated = (updatedList: ContainerItem[]) => {
+    if (!selectedFloor) return;
+    const key = resolveFloorKeyForWrite(selectedFloor);
+    setLocalContainersByFloor((prev) => ({ ...prev, [key]: updatedList }));
+  };
+
+  // --- Use serialNumber (number) for sorting (ascending) ---
   const activeContainers: ContainerItem[] = (() => {
     if (!selectedFloor) return [];
 
+    const sortBySerial = (arr: ContainerItem[]) => {
+      return [...arr].sort((a, b) => {
+        const sa = typeof a.serialNumber === "number" ? a.serialNumber : Number(a.serialNumber ?? 0);
+        const sb = typeof b.serialNumber === "number" ? b.serialNumber : Number(b.serialNumber ?? 0);
+        return (sa ?? 0) - (sb ?? 0);
+      });
+    };
+
     const floorObj = floors.find((f) => Number(f.floorNumber) === Number(selectedFloor));
+
     if (floorObj && (floorObj as any).floorCode) {
       const code = (floorObj as any).floorCode as string;
-      if (containersByFloor[code] && containersByFloor[code].length > 0) {
-        return containersByFloor[code];
+      if (localContainersByFloor[code]?.length) {
+        return sortBySerial(localContainersByFloor[code]);
       }
     }
 
     const tryKeys = [`F${selectedFloor}`, String(selectedFloor), "unknown"];
     for (const k of tryKeys) {
-      if (containersByFloor[k] && containersByFloor[k].length > 0) {
-        return containersByFloor[k];
+      if (localContainersByFloor[k]?.length) {
+        return sortBySerial(localContainersByFloor[k]);
       }
     }
 
@@ -114,7 +149,7 @@ export default function ShelfView({
                     modelCenter={modelCenter}
                     selectedFloor={selectedFloor}
                     activeContainers={activeContainers}
-                    setSelectedContainer={openContainer}       
+                    setSelectedContainer={openContainer}
                   />
                 )}
               </group>
@@ -148,7 +183,6 @@ export default function ShelfView({
         </Box>
 
         <Box mt={1} display="flex" alignItems="center" justifyContent="center" gap={1}>
-       
           <Typography fontSize={13} fontWeight={600}>
             {selectedFloor ? `Selected: Floor ${selectedFloor}` : "Click a floor on the model"}
           </Typography>
@@ -180,7 +214,12 @@ export default function ShelfView({
 
       <Box flex={1} minWidth={380}>
         {selectedFloor ? (
-          <ShelfFloorOrders shelfCode={shelfCode} floor={selectedFloor} containers={activeContainers} />
+          <ShelfFloorOrders
+            shelfCode={shelfCode}
+            floor={selectedFloor}
+            containers={activeContainers}
+            onContainersUpdated={handleContainersUpdated}
+          />
         ) : (
           <Box
             sx={{
