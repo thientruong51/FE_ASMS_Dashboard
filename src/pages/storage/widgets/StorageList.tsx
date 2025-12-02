@@ -1,4 +1,4 @@
-import  { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Card,
@@ -12,8 +12,10 @@ import {
   CircularProgress,
   Autocomplete,
   IconButton,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
-import WarehouseIcon from '@mui/icons-material/Warehouse';
+import WarehouseIcon from "@mui/icons-material/Warehouse";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import RoomOutlinedIcon from "@mui/icons-material/RoomOutlined";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
@@ -42,6 +44,9 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
   const [tab, setTab] = useState(0);
   const [searchText, setSearchText] = useState("");
 
+  const theme = useTheme();
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); // >=600
+  const isMdUp = useMediaQuery(theme.breakpoints.up("md")); // >=900
 
   useEffect(() => {
     let mounted = true;
@@ -125,19 +130,34 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
         bgcolor: "#fff",
         boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
         overflow: "hidden",
-        height: { xs: "80vh", sm: "100%" },
+        height: { xs: "auto", sm: "100%" },
         display: "flex",
         flexDirection: "column",
       }}
     >
-      <CardContent sx={{ p: 2.5, pb: 0, display: "flex", flexDirection: "column", height: "100%" }}>
+      <CardContent
+        sx={{
+          p: { xs: 2, sm: 2.5 },
+          pb: 0,
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
+      >
         {/* HEADER */}
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.2}>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={1.2}
+          flexDirection={isSmUp ? "row" : "column"}
+          gap={isSmUp ? 0 : 1}
+        >
           <Typography fontWeight={600} fontSize={15}>
             Storages
           </Typography>
 
-          <Box sx={{ width: 320 }}>
+          <Box sx={{ width: isSmUp ? 320 : "100%" }}>
             {loadingBuildings ? (
               <Box display="flex" alignItems="center" gap={1}>
                 <CircularProgress size={18} />
@@ -166,25 +186,33 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                       ...params.InputProps,
                       startAdornment: (
                         <InputAdornment position="start">
-                         
+                          <WarehouseIcon fontSize="small" color="action" />
                         </InputAdornment>
                       ),
                     }}
                   />
                 )}
                 clearOnEscape
+                fullWidth
               />
             )}
           </Box>
         </Box>
 
         {/* SUBHEADER */}
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5}>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={1.5}
+          flexDirection={isSmUp ? "row" : "column"}
+          gap={isSmUp ? 0 : 1}
+        >
           <Typography fontSize={13} fontWeight={600} color="text.secondary">
             {selectedBuilding ? `Showing storages for ${selectedBuilding.name ?? selectedBuilding.buildingCode}` : "Choose a building to load storages"}
           </Typography>
 
-          <Box display="flex" alignItems="center" gap={0.5}>
+          <Box display="flex" alignItems="center" gap={0.5} width={isSmUp ? "auto" : "100%"}>
             <TextField
               size="small"
               placeholder="Search storages..."
@@ -197,7 +225,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                   </InputAdornment>
                 ),
               }}
-              sx={{ width: 260 }}
+              sx={{ width: isSmUp ? 260 : "100%" }}
             />
             <IconButton size="small" disabled>
               <SearchRoundedIcon fontSize="small" />
@@ -219,7 +247,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
               textTransform: "none",
               fontSize: 13,
               fontWeight: 500,
-              px: 1.8,
+              px: 1.4,
               borderRadius: "8px",
               mr: 1,
             },
@@ -242,7 +270,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
             overflowY: "auto",
             pr: 1,
             pb: 1,
-            maxHeight: { xs: "calc(80vh - 200px)", sm: "none" },
+            maxHeight: { xs: "calc(70vh - 220px)", sm: "none" },
             "&::-webkit-scrollbar": { width: "6px" },
             "&::-webkit-scrollbar-thumb": { background: "#c1c1c1", borderRadius: "8px" },
           }}
@@ -271,16 +299,16 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                   onClick={() => onSelectStorage?.(v)}
                   sx={{
                     borderRadius: 2,
-                    p: 1.5,
+                    p: 1.25,
                     borderColor: (selectedStorage?.storageCode === v.storageCode) ? "#90caf9" : "#e0e0e0",
                     cursor: "pointer",
-                    transition: "0.2s",
+                    transition: "0.18s",
                     "&:hover": { borderColor: "#90caf9", bgcolor: "#f9fbff" },
                   }}
                 >
-                  <Box display="flex" alignItems="center" mb={1}>
-                    <WarehouseIcon color="primary" sx={{ fontSize: 22 }} />
-                    <Typography fontWeight={600} fontSize={14} sx={{ ml: 1, flex: 1 }}>
+                  <Box display="flex" alignItems="center" mb={1} gap={1}>
+                    <WarehouseIcon color="primary" sx={{ fontSize: 20 }} />
+                    <Typography fontWeight={600} fontSize={13} sx={{ ml: 0.8, flex: 1 }} noWrap>
                       {v.storageCode}
                     </Typography>
                     <Chip
@@ -295,36 +323,37 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                         fontWeight: 500,
                         background: "transparent",
                         height: 22,
+                        ml: 1,
                       }}
                     />
                   </Box>
 
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1}>
-                    <Box sx={{ flex: 1 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1} flexWrap="wrap">
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box display="flex" alignItems="center" mb={0.35}>
                         <FiberManualRecordIcon sx={{ fontSize: 8, color: "#64b5f6", mr: 1 }} />
-                        <Typography fontSize={13} color="text.secondary">
+                        <Typography fontSize={13} color="text.secondary" noWrap>
                           Type: {v.storageTypeName ?? "N/A"}
                         </Typography>
-                        <Typography fontSize={13} color="text.secondary" sx={{ ml: "auto" }}>
+                        <Typography fontSize={13} color="text.secondary" sx={{ ml: "auto" }} noWrap>
                           Active: {v.isActive ? "Yes" : "No"}
                         </Typography>
                       </Box>
 
-                      <Box display="flex" alignItems="center" mb={0.35}>
-                        <Typography fontSize={13} color="text.secondary">Dimensions:</Typography>
-                        <Typography fontSize={13} color="text.secondary" sx={{ ml: 1 }}>
+                      <Box display="flex" alignItems="center" mb={0.35} gap={1} flexWrap="wrap">
+                        <Typography fontSize={13} color="text.secondary" noWrap>
+                          Dimensions:
+                        </Typography>
+                        <Typography fontSize={13} color="text.secondary" noWrap>
                           {v.width ?? "-"} x {v.length ?? "-"} x {v.height ?? "-"}
                         </Typography>
                       </Box>
                     </Box>
-
-                   
                   </Box>
 
-                  <Box display="flex" alignItems="center" justifyContent="flex-end" mt={1}>
-                    <RoomOutlinedIcon sx={{ fontSize: 16, color: "text.secondary", mr: 0.5 }} />
-                    <Typography fontSize={13} color="text.secondary">
+                  <Box display="flex" alignItems="center" justifyContent="flex-end" mt={1} gap={0.5}>
+                    <RoomOutlinedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                    <Typography fontSize={13} color="text.secondary" noWrap>
                       {selectedBuilding?.address ?? ""}
                     </Typography>
                   </Box>
