@@ -7,6 +7,9 @@ import {
   InputAdornment,
   IconButton,
   useTheme,
+  useMediaQuery,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -14,14 +17,19 @@ import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import ViewModuleOutlinedIcon from "@mui/icons-material/ViewModuleOutlined";
 import ViewListOutlinedIcon from "@mui/icons-material/ViewListOutlined";
 import DragIndicatorOutlinedIcon from "@mui/icons-material/DragIndicatorOutlined";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Drawer from "@mui/material/Drawer";
 
 import { getOrders, getOrderDetails } from "@/api/orderApi";
+import { getProductTypes } from "@/api/productTypeApi";
+import { getServices } from "@/api/serviceApi";
 import OrderDetailDrawer from "./OrderDetailDrawer";
 
 export default function OrderPanel() {
   const theme = useTheme();
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); // >=600
+  const isMdUp = useMediaQuery(theme.breakpoints.up("md")); // >=900
+
   const [search, setSearch] = useState("");
   const [details, setDetails] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,9 +37,43 @@ export default function OrderPanel() {
   const [open, setOpen] = useState(false);
   const [selectedDetail, setSelectedDetail] = useState<any | null>(null);
 
-  const loadAllDetailsForFullOrders = async () => {
+  const [snackOpen, setSnackOpen] = useState(false);
+  const [snackMsg, setSnackMsg] = useState("");
+  const [snackSeverity, setSnackSeverity] = useState<"success" | "error" | "info">("success");
+
+  const loadAllDetailsForFullOrders = useCallback(async () => {
     setLoading(true);
     try {
+      // --- build lookups name -> id for product types and services ---
+      const productTypeNameToId: Record<string, number> = {};
+      const serviceNameToId: Record<string, number> = {};
+
+      try {
+        // getProductTypes returns ProductTypeListResponse
+        const ptResp = await getProductTypes({ pageSize: 1000 });
+        const pts = ptResp?.data ?? [];
+        pts.forEach((p: any) => {
+          const name = String(p.name ?? "").trim();
+          const id = p.productTypeId ?? (p.id as number | undefined);
+          if (name && id != null) productTypeNameToId[name] = id;
+        });
+      } catch (err) {
+        console.warn("getProductTypes failed", err);
+      }
+
+      try {
+        // getServices returns Service[]
+        const ss = await getServices();
+        ss.forEach((s: any) => {
+          const name = String(s.name ?? "").trim();
+          const id = s.serviceId ?? (s.id as number | undefined);
+          if (name && id != null) serviceNameToId[name] = id;
+        });
+      } catch (err) {
+        console.warn("getServices failed", err);
+      }
+
+      // 1) Lấy danh sách orders với style = "full"
       const ordersResp = await getOrders({
         pageNumber: 1,
         pageSize: 50,
@@ -39,19 +81,62 @@ export default function OrderPanel() {
       });
       const orders = ordersResp.data ?? [];
 
+      // 2) Với mỗi order, lấy details rồi filter isPlaced === null
       const detailsList = await Promise.all(
         orders.map(async (o) => {
           try {
-            const d = await getOrderDetails(o.orderCode);
-            return (d.data || []).map((item: any) => ({
-              ...item,
-              _orderCode: o.orderCode,
-              _orderStatus: o.status,
-              _orderPaymentStatus: o.paymentStatus,
-              _orderDepositDate: o.depositDate,
-              _orderReturnDate: o.returnDate,
-              _orderTotalPrice: o.totalPrice,
-            }));
+            const resp = await getOrderDetails(o.orderCode);
+            const items = resp.data ?? [];
+
+            const mapped = items.map((item: any) => {
+              // If backend already returned ids, prefer them
+              let productTypeIds: number[] =
+                Array.isArray(item.productTypeIds) && item.productTypeIds.length
+                  ? item.productTypeIds
+                  : [];
+
+              let serviceIds: number[] =
+                Array.isArray(item.serviceIds) && item.serviceIds.length ? item.serviceIds : [];
+
+              // If ids not provided, derive from names using lookups
+              const namesPT: string[] = Array.isArray(item.productTypeNames)
+                ? item.productTypeNames.map((n: any) => String(n).trim())
+                : [];
+
+              if (!productTypeIds.length && namesPT.length) {
+                productTypeIds = namesPT
+                  .map((nm) => productTypeNameToId[nm])
+                  .filter((v) => v != null) as number[];
+              }
+
+              const namesS: string[] = Array.isArray(item.serviceNames)
+                ? item.serviceNames.map((n: any) => String(n).trim())
+                : [];
+
+              if (!serviceIds.length && namesS.length) {
+                serviceIds = namesS
+                  .map((nm) => serviceNameToId[nm])
+                  .filter((v) => v != null) as number[];
+              }
+
+              return {
+                ...item,
+                // keep names as backup
+                productTypeNames: namesPT,
+                serviceNames: namesS,
+                productTypeIds, // may be []
+                serviceIds, // may be []
+                _orderCode: o.orderCode,
+                _orderStatus: o.status,
+                _orderPaymentStatus: o.paymentStatus,
+                _orderDepositDate: o.depositDate,
+                _orderReturnDate: o.returnDate,
+                _orderTotalPrice: o.totalPrice,
+              };
+            });
+
+            // chỉ giữ item có isPlaced === null
+            return mapped.filter((it: any) => it.isPlaced === false);
           } catch (err) {
             console.error("Error fetching details for", o.orderCode, err);
             return [];
@@ -59,18 +144,20 @@ export default function OrderPanel() {
         })
       );
 
+      // 3) Flatten và set state
       const flat = detailsList.flat();
       setDetails(flat);
     } catch (err) {
       console.error("Load orders error", err);
       setDetails([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     loadAllDetailsForFullOrders();
-  }, []);
+  }, [loadAllDetailsForFullOrders]);
 
   const handleOpenDetail = (detail: any) => {
     setSelectedDetail(detail);
@@ -84,10 +171,29 @@ export default function OrderPanel() {
       String(d.containerCode ?? "").toLowerCase().includes(q) ||
       String(d._orderCode ?? "").toLowerCase().includes(q) ||
       String(d.storageCode ?? "").toLowerCase().includes(q) ||
-      (Array.isArray(d.productTypeIds) && d.productTypeIds.join(",").includes(q)) ||
-      (Array.isArray(d.serviceIds) && d.serviceIds.join(",").includes(q));
+      (Array.isArray(d.productTypeIds) &&
+        d.productTypeIds.join(",").toLowerCase().includes(q)) ||
+      (Array.isArray(d.serviceIds) && d.serviceIds.join(",").toLowerCase().includes(q));
     return matches;
   });
+
+  const handleOnPlaced = (result: { success: boolean; data: any }) => {
+    if (result?.success) {
+      setSnackMsg("Placed successfully.");
+      setSnackSeverity("success");
+    } else {
+      const msg = (result?.data && (result.data.error || JSON.stringify(result.data))) || "Place failed.";
+      setSnackMsg(`Place failed: ${msg}`);
+      setSnackSeverity("error");
+    }
+    setSnackOpen(true);
+
+    // close drawer
+    setOpen(false);
+
+    // reload data
+    loadAllDetailsForFullOrders();
+  };
 
   return (
     <>
@@ -104,7 +210,7 @@ export default function OrderPanel() {
       >
         <CardContent
           sx={{
-            p: 2.5,
+            p: { xs: 2, sm: 2.5 },
             display: "flex",
             flexDirection: "column",
             flex: 1,
@@ -117,9 +223,11 @@ export default function OrderPanel() {
             alignItems="center"
             justifyContent="space-between"
             mb={1.2}
+            flexDirection={isSmUp ? "row" : "column"}
+            gap={1}
           >
             <Typography fontWeight={600} fontSize={15}>
-              Order 
+              Order
             </Typography>
           </Box>
 
@@ -149,9 +257,11 @@ export default function OrderPanel() {
             alignItems="center"
             justifyContent="space-between"
             mb={1.5}
+            flexDirection={isSmUp ? "row" : "column"}
+            gap={1}
           >
             <Typography fontSize={13} fontWeight={600} color="text.secondary">
-              Showing {filtered.length} Orders detail  {loading ? " (loading...)" : ""}
+              Showing {filtered.length} Orders detail {loading ? " (loading...)" : ""}
             </Typography>
 
             <Box display="flex" alignItems="center" gap={0.5}>
@@ -175,6 +285,7 @@ export default function OrderPanel() {
               gap: 1,
               overflowY: "auto",
               pr: 0.5,
+              maxHeight: { xs: "65vh", sm: "none" },
             }}
           >
             {filtered.map((d, i) => {
@@ -182,7 +293,12 @@ export default function OrderPanel() {
               return (
                 <Box
                   key={`${d.orderDetailId ?? i}-${i}`}
-                  sx={{ width: "calc(50% - 4px)" }}
+                  sx={{
+                    width: {
+                      xs: "100%", // responsive: mobile 1 column
+                      sm: "calc(50% - 4px)", // desktop/tablet 2 columns
+                    },
+                  }}
                   onClick={() => handleOpenDetail(d)}
                 >
                   <Card
@@ -221,22 +337,15 @@ export default function OrderPanel() {
                     </Typography>
 
                     <Box display="flex" gap={1} alignItems="center" mb={0.5}>
-                      
-
                       <Box>
                         <Typography fontSize={12} color="text.secondary">
-                          Order: <strong style={{ color: "inherit" }}>{d._orderCode}</strong>
+                          Order: <strong>{d._orderCode}</strong>
                         </Typography>
                         <Typography fontSize={12} color="text.secondary">
                           Status: {d._orderStatus ?? "-"}
                         </Typography>
-                        
                       </Box>
                     </Box>
-
-                  
-                    
-                    
                   </Card>
                 </Box>
               );
@@ -245,14 +354,14 @@ export default function OrderPanel() {
         </CardContent>
       </Card>
 
-      {/* Drawer chứa chi tiết */}
+      {/* Drawer */}
       <Drawer
         anchor="right"
         open={open}
         onClose={() => setOpen(false)}
         transitionDuration={300}
         PaperProps={{
-          sx: (theme) => ({
+          sx: {
             width: {
               xs: "100%",
               sm: "70%",
@@ -266,7 +375,6 @@ export default function OrderPanel() {
             boxShadow: "-6px 0 20px rgba(0,0,0,0.08)",
             overflowY: "auto",
             backgroundColor: theme.palette.background.paper,
-            scrollbarWidth: "thin",
             "&::-webkit-scrollbar": {
               width: "6px",
             },
@@ -274,11 +382,23 @@ export default function OrderPanel() {
               backgroundColor: "rgba(0,0,0,0.2)",
               borderRadius: 3,
             },
-          }),
+          },
         }}
       >
-        <OrderDetailDrawer data={selectedDetail} onClose={() => setOpen(false)} />
+        <OrderDetailDrawer data={selectedDetail} onClose={() => setOpen(false)} onPlaced={handleOnPlaced} />
       </Drawer>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackOpen}
+        autoHideDuration={5000}
+        onClose={() => setSnackOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSnackOpen(false)} severity={snackSeverity} sx={{ width: "100%" }}>
+          {snackMsg}
+        </Alert>
+      </Snackbar>
     </>
   );
 }

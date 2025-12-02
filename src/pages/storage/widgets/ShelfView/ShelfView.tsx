@@ -3,6 +3,8 @@ import {
   Box,
   Typography,
   Divider,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -32,13 +34,16 @@ export default function ShelfView({
   floors = [],
   containersByFloor = {},
 }: ShelfViewProps) {
+  const theme = useTheme();
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); // >=600
+  const isMdUp = useMediaQuery(theme.breakpoints.up("md")); // >=900
+
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
   const [selectedMesh, setSelectedMesh] = useState<THREE.Object3D | null>(null);
   const [modelCenter] = useState<THREE.Vector3 | null>(null);
   const [floorInfo, setFloorInfo] = useState<any | null>(null);
 
   const [selectedContainer, setSelectedContainer] = useState<ContainerItem | null>(null);
-
   const [containerOpenKey, setContainerOpenKey] = useState(0);
 
   const orbitRef = useRef<any>(null);
@@ -66,9 +71,7 @@ export default function ShelfView({
       setSelectedContainer(null);
       return;
     }
-
     setSelectedContainer({ ...(c as ContainerItem) });
-
     setContainerOpenKey((prev) => prev + 1);
   };
 
@@ -120,14 +123,44 @@ export default function ShelfView({
     return [];
   })();
 
+  // responsive sizes for canvas wrapper (keeps "large 3D viewer" feel on wider screens)
+  const canvasWidth = isMdUp ? 520 : isSmUp ? 540 : "100%";
+  const canvasHeight = isMdUp ? 500 : isSmUp ? 420 : 320;
+
   return (
-    <Box sx={{ display: "flex", flexDirection: "row", gap: 3, mt: 2 }}>
-      <Box sx={{ textAlign: "center" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: isMdUp ? "row" : "column",
+        gap: 3,
+        mt: 2,
+        alignItems: "flex-start",
+        width: "100%",
+      }}
+    >
+      {/* Left / Top block: title + 3D viewer + floor selector */}
+      <Box
+        sx={{
+          width: isMdUp ? canvasWidth : "100%",
+          flex: "0 0 auto",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
         <Typography fontWeight={600} mb={1}>
           Shelf: {shelfCode}
         </Typography>
 
-        <Box sx={{ width: 520, height: 500, bgcolor: "#d8e2f0c0", borderRadius: 2, overflow: "hidden" }}>
+        <Box
+          sx={{
+            width: isMdUp ? canvasWidth : "100%",
+            height: canvasHeight,
+            bgcolor: "#d8e2f0c0",
+            borderRadius: 2,
+            overflow: "hidden",
+          }}
+        >
           <Canvas camera={{ fov: 45 }}>
             <ambientLight intensity={0.75} />
             <directionalLight position={[5, 12, 5]} intensity={1.9} />
@@ -188,31 +221,63 @@ export default function ShelfView({
           </Typography>
         </Box>
 
-        <Box mt={1} display="flex" gap={1} justifyContent="center" flexWrap="wrap">
-          {floorNumbers.map((fn) => (
-            <Box
-              key={fn}
-              onClick={() => onSelectFloor(fn)}
-              sx={{
-                px: 1,
-                py: 0.5,
-                borderRadius: 1,
-                bgcolor: selectedFloor === fn ? "primary.main" : "background.paper",
-                color: selectedFloor === fn ? "white" : "text.primary",
-                cursor: "pointer",
-                fontSize: 13,
-                boxShadow: selectedFloor === fn ? 2 : "none",
-              }}
-            >
-              Floor {fn}
-            </Box>
-          ))}
+        {/* Floor buttons: scrollable on small screens */}
+        <Box
+          mt={1}
+          sx={{
+            width: "100%",
+            overflowX: { xs: "auto", md: "visible" },
+            px: { xs: 1, md: 0 },
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1,
+              flexWrap: { xs: "nowrap", md: "wrap" },
+              alignItems: "center",
+              pb: { xs: 1, md: 0 },
+            }}
+          >
+            {floorNumbers.map((fn) => (
+              <Box
+                key={fn}
+                onClick={() => onSelectFloor(fn)}
+                sx={{
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  bgcolor: selectedFloor === fn ? "primary.main" : "background.paper",
+                  color: selectedFloor === fn ? "white" : "text.primary",
+                  cursor: "pointer",
+                  fontSize: 13,
+                  boxShadow: selectedFloor === fn ? 2 : "none",
+                  flex: { xs: "0 0 auto", md: "initial" },
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Floor {fn}
+              </Box>
+            ))}
+          </Box>
         </Box>
       </Box>
 
-      <Divider orientation="vertical" flexItem />
+      {/* Divider: vertical on md+; horizontal separator is implied by column layout on small screens */}
+      {isMdUp ? (
+        <Divider orientation="vertical" flexItem />
+      ) : (
+        <Divider sx={{ width: "100%", my: 1 }} />
+      )}
 
-      <Box flex={1} minWidth={380}>
+      {/* Right / Bottom: Orders & containers panel */}
+      <Box
+        flex={1}
+        minWidth={{ md: 380 }}
+        sx={{
+          width: isMdUp ? "auto" : "100%",
+        }}
+      >
         {selectedFloor ? (
           <ShelfFloorOrders
             shelfCode={shelfCode}
@@ -223,12 +288,15 @@ export default function ShelfView({
         ) : (
           <Box
             sx={{
-              height: "100%",
+              height: isMdUp ? "100%" : 180,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "text.secondary",
               fontSize: 14,
+              borderRadius: 1,
+              bgcolor: "background.paper",
+              p: 2,
             }}
           >
             Click a floor to view containers & orders

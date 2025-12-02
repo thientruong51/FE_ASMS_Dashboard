@@ -14,6 +14,8 @@ import {
   Stack,
   Snackbar,
   Alert,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -47,6 +49,10 @@ export default function ShelfFloorOrders({
   containers = [],
   onContainersUpdated,
 }: Props) {
+  const theme = useTheme();
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); // >=600
+  const isMdUp = useMediaQuery(theme.breakpoints.up("md")); // >=900
+
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<OrderItem | null>(null);
@@ -105,7 +111,7 @@ export default function ShelfFloorOrders({
   };
 
   const deleteOrder = (id: string) => {
-    if (window.confirm) {
+    if (typeof window !== "undefined" && window.confirm) {
       if (!window.confirm("Delete this order?")) return;
     }
     setOrders((p) => p.filter((o) => o.id !== id));
@@ -155,7 +161,6 @@ export default function ShelfFloorOrders({
       notify("No edited containers to update.", "warning");
       return;
     }
-
 
     setConfirmOpen(false);
     setIsApplying(true);
@@ -335,13 +340,16 @@ export default function ShelfFloorOrders({
               display: "flex",
               flexWrap: "wrap",
               gap: 1.25,
-              maxHeight: 640,
+              maxHeight: isMdUp ? 640 : isSmUp ? 520 : 360,
               overflow: "auto",
               pr: 1,
             }}
           >
             {editedList.map((c, idx) => (
-              <Box key={c.containerCode ?? idx} sx={{ width: `calc(50% - 6px)` }}>
+              <Box
+                key={c.containerCode ?? idx}
+                sx={{ width: isSmUp ? `calc(50% - 6px)` : "100%" }}
+              >
                 {renderContainerCard(c, idx, true)}
               </Box>
             ))}
@@ -391,15 +399,15 @@ export default function ShelfFloorOrders({
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Box>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={1}>
+        <Box sx={{ minWidth: 0 }}>
           <Typography fontWeight={600}>Orders on Floor {floor}</Typography>
           <Typography fontSize={12} color="text.secondary">
             Shelf: {shelfCode} • Containers: {containersOnThisFloor.length}
           </Typography>
           {/* Show edited containers summary */}
           {Object.keys(editedContainers).length > 0 && (
-            <Typography fontSize={12} color="warning.main">
+            <Typography fontSize={12} color="warning.main" sx={{ wordBreak: "break-word", maxWidth: 560 }}>
               Edited: {Object.keys(editedContainers).join(", ")}
             </Typography>
           )}
@@ -421,12 +429,27 @@ export default function ShelfFloorOrders({
         </Stack>
       </Stack>
 
-      <Box display="flex" gap={2}>
+      <Box
+        display="flex"
+        gap={2}
+        flexDirection={isSmUp ? "row" : "column"}
+        alignItems="flex-start"
+      >
         {/* Left: edited containers (2-column grid + scroll) or orders */}
-        <Box flex={1}>{leftContent()}</Box>
+        <Box flex={1} minWidth={0}>
+          {leftContent()}
+        </Box>
 
         {/* Right: containers two-column card list */}
-        <Box width={420} maxHeight={640} overflow="auto" sx={{ pr: 1 }}>
+        <Box
+          sx={{
+            width: isSmUp ? 420 : "100%",
+            maxHeight: isMdUp ? 640 : isSmUp ? 520 : 360,
+            overflow: "auto",
+            pr: 1,
+            pt: isSmUp ? 0 : 1,
+          }}
+        >
           <Typography fontWeight={600} fontSize={14} mb={1}>
             Containers (Floor {floor})
           </Typography>
@@ -434,10 +457,12 @@ export default function ShelfFloorOrders({
           <Box display="flex" flexWrap="wrap" gap={1.25}>
             {containersOnThisFloor.length === 0 && <Typography color="text.secondary">No containers.</Typography>}
             {containersOnThisFloor.map((c: any, idx) => {
-              const cardWidth = `calc(50% - 6px)`;
               const isEdited = !!editedContainers[c.containerCode ?? ""];
               return (
-                <Box key={c.containerCode ?? idx} sx={{ width: cardWidth }}>
+                <Box
+                  key={c.containerCode ?? idx}
+                  sx={{ width: isSmUp ? `calc(50% - 6px)` : "100%" }}
+                >
                   {renderContainerCard(c, idx, isEdited)}
                 </Box>
               );

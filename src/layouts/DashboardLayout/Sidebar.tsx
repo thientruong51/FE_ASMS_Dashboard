@@ -24,6 +24,9 @@ import WarehouseIcon from '@mui/icons-material/Warehouse';
 import BallotIcon from '@mui/icons-material/Ballot';
 import LiquorIcon from '@mui/icons-material/Liquor';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import AssignmentAddIcon from '@mui/icons-material/AssignmentAdd';
+import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
 export default function Sidebar() {
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -35,10 +38,13 @@ export default function Sidebar() {
 
   const items = [
     { label: "Dashboard", icon: <DashboardIcon />, to: "/" },
-    { label: "Shipments", icon: <LocalShippingIcon />, to: "/shipments" },
-    { label: "Storage", icon: <InventoryIcon />, to: "/storage" },
+    { label: "Orders", icon: <AssignmentIcon />, to: "/orders" },
+    { label: "TrackingHistorys", icon: <AssignmentAddIcon />, to: "/trackingHistorys" },
+    { label: "Storages", icon: <InventoryIcon />, to: "/storages" },
     { label: "Customers", icon: <PeopleIcon />, to: "/customers" },
-    { label: "Employee Role", icon: <ManageAccountsIcon />, to: "/employee-roles" },
+    { label: "PaymentHistorys", icon: <RequestQuoteIcon />, to: "/paymentHistorys" },
+
+    { label: "Employee Roles", icon: <ManageAccountsIcon />, to: "/employee-roles" },
     { label: "Staffs", icon: <EngineeringIcon />, to: "/staffs" },
     { label: "Services", icon: <BallotIcon />, to: "/services" },
     { label: "Buildings", icon: <ApartmentIcon />, to: "/buildings" },
