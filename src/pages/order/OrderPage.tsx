@@ -23,21 +23,23 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import orderApi from "@/api/orderApi";
 import OrderDetailDrawer from "./components/OrderDetailDrawer";
+import { useTranslation } from "react-i18next";
 
-function ToolbarExtras({ onExport, onRefresh }: { onExport: () => void; onRefresh: () => void }) {
+function ToolbarExtras({ onExport, onRefresh, exportLabel, refreshLabel }: { onExport: () => void; onRefresh: () => void; exportLabel: string; refreshLabel: string }) {
   return (
     <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1, flexWrap: "wrap" }}>
       <Button startIcon={<DownloadIcon />} size="small" onClick={onExport}>
-        Export CSV
+        {exportLabel}
       </Button>
       <Button startIcon={<RefreshIcon />} size="small" onClick={onRefresh}>
-        Refresh
+        {refreshLabel}
       </Button>
     </Box>
   );
 }
 
 export default function OrderPage() {
+  const { t } = useTranslation("order");
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -70,8 +72,6 @@ export default function OrderPage() {
   useEffect(() => {
     fetchAllOrders();
   }, []);
-
-
 
   const looksLikeFullOrder = (o: any) => {
     if (!o) return false;
@@ -119,17 +119,17 @@ export default function OrderPage() {
 
   const fmtMoney = (v: any) => (v == null ? "-" : Number(v).toLocaleString());
 
-  const columns = useMemo<GridColDef<any, any, any>[]>(
-    () => [
+  const columns = useMemo<GridColDef<any, any, any>[]>(() => {
+    return [
       {
         field: "orderCode",
-        headerName: "OrderCode",
+        headerName: t("table.orderCode"),
         minWidth: 150,
         flex: 1,
         renderCell: (params: any) => (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography sx={{ fontWeight: 600 }}>{params.value}</Typography>
-            <Tooltip title="Copy orderCode">
+            <Tooltip title={t("actions.copyOrderCode")}>
               <IconButton
                 size="small"
                 onClick={(e) => {
@@ -143,18 +143,18 @@ export default function OrderPage() {
           </Box>
         ),
       },
-      { field: "customerCode", headerName: "Customer", minWidth: 120, flex: 0.9 },
+      { field: "customerCode", headerName: t("table.customer"), minWidth: 120, flex: 0.9 },
 
       {
         field: "status",
-        headerName: "Status",
+        headerName: t("table.status"),
         minWidth: 120,
         flex: 0.8,
         renderCell: (params: any) => <Chip label={String(params.value ?? "-")} size="small" />,
       },
       {
         field: "paymentStatus",
-        headerName: "Payment",
+        headerName: t("table.payment"),
         minWidth: 120,
         flex: 0.9,
         renderCell: (params: any) => (
@@ -167,17 +167,17 @@ export default function OrderPage() {
       },
       {
         field: "totalPrice",
-        headerName: "Total",
+        headerName: t("table.total"),
         minWidth: 110,
         flex: 0.8,
         renderCell: (params: any) => fmtMoney(params.value),
         type: "number",
       },
 
-      { field: "style", headerName: "Style", minWidth: 100, flex: 0.6 },
+      { field: "style", headerName: t("table.style"), minWidth: 100, flex: 0.6 },
       {
         field: "actions",
-        headerName: "Actions",
+        headerName: t("table.actions"),
         width: 140,
         sortable: false,
         renderCell: (params: any) => {
@@ -185,7 +185,7 @@ export default function OrderPage() {
           const isLoadingForThis = orderLoading && selectedOrderCode === code;
           return (
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-              <Tooltip title="View details">
+              <Tooltip title={t("actions.viewDetails")}>
                 <span>
                   <IconButton size="small" onClick={() => openDrawerFor(params.row)} disabled={isLoadingForThis}>
                     <VisibilityIcon fontSize="small" />
@@ -197,9 +197,8 @@ export default function OrderPage() {
           );
         },
       },
-    ],
-    [orderLoading, selectedOrderCode]
-  );
+    ];
+  }, [orderLoading, selectedOrderCode, t]);
 
   function filteredWithMemo(all: any[], s: string, _paymentFilter: string) {
     const q = (s ?? "").trim().toLowerCase();
@@ -249,7 +248,7 @@ export default function OrderPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `orders_export_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `${t("export.filenamePrefix")}_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -258,9 +257,9 @@ export default function OrderPage() {
     <Box sx={{ p: { xs: 2, sm: 3 }, overflowX: "hidden" }}>
       <Box mb={2}>
         <Typography variant="h4" fontWeight={700}>
-          Orders
+          {t("page.title")}
         </Typography>
-        <Typography color="text.secondary">Click an order to view details</Typography>
+        <Typography color="text.secondary">{t("page.subtitle")}</Typography>
       </Box>
 
       <Card sx={{ mb: 2, maxWidth: "100%", overflow: "visible" }}>
@@ -278,7 +277,7 @@ export default function OrderPage() {
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <TextField
-                placeholder="Search orderCode or customer..."
+                placeholder={t("page.searchPlaceholder")}
                 size="small"
                 fullWidth
                 value={search}
@@ -293,18 +292,12 @@ export default function OrderPage() {
               />
             </Box>
 
-          
-
             <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-             
-              <Button
-                variant="text"
-                onClick={() => setDensity(density === "standard" ? "compact" : "standard")}
-              >
-                Toggle density
+              <Button variant="text" onClick={() => setDensity(density === "standard" ? "compact" : "standard")}>
+                {t("actions.toggleDensity")}
               </Button>
               <Button startIcon={<DownloadIcon />} onClick={handleExportCsv}>
-                Export
+                {t("actions.export")}
               </Button>
             </Box>
           </Box>
@@ -313,7 +306,7 @@ export default function OrderPage() {
 
       <Card sx={{ maxWidth: "100%", overflow: "visible" }}>
         <CardContent>
-          <ToolbarExtras onExport={handleExportCsv} onRefresh={fetchAllOrders} />
+          <ToolbarExtras onExport={handleExportCsv} onRefresh={fetchAllOrders} exportLabel={t("actions.exportCsv")} refreshLabel={t("actions.refresh")} />
 
           {isSm ? (
             <Stack spacing={2}>
@@ -331,7 +324,7 @@ export default function OrderPage() {
                         startIcon={<VisibilityIcon />}
                         disabled={orderLoading && selectedOrderCode === o.orderCode}
                       >
-                        Details
+                        {t("actions.details")}
                       </Button>
                       {orderLoading && selectedOrderCode === o.orderCode && <CircularProgress size={18} />}
                     </Box>
@@ -351,7 +344,7 @@ export default function OrderPage() {
                   getRowId={(r: any) => r.orderCode}
                   sx={{
                     border: "none",
-                    minWidth: 800, 
+                    minWidth: 700,
                     "& .MuiDataGrid-virtualScroller": {
                       overflow: "auto",
                     },

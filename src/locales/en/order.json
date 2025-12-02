@@ -1,0 +1,84 @@
+{
+  "page": {
+    "title": "Orders",
+    "subtitle": "Click an order to view details",
+    "searchPlaceholder": "Search orderCode or customer...",
+    "clickToView": "Click an order to view details",
+    "noItems": "No items",
+    "itemsCount": "{{count}} item",
+    "itemsCount_plural": "{{count}} items"
+  },
+
+  "tabs": {
+    "order": "Order",
+    "customer": "Customer"
+  },
+
+  "labels": {
+    "order": "Order",
+    "orderId": "Order ID",
+    "orderDate": "Order Date",
+    "depositDate": "Deposit Date",
+    "returnDate": "Return Date",
+    "payment": "Payment",
+    "unpaid": "Unpaid",
+    "total": "Total",
+    "items": "Items",
+    "orderInformation": "Order Information",
+    "customerInformation": "Customer Information",
+    "code": "Code",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "noItems": "No items",
+    "loading": "Loading...",
+    "loadingItems": "Loading items..."
+  },
+
+  "item": {
+    "services": "Services",
+    "qty": "Qty",
+    "placed": "Placed",
+    "unplaced": "Unplaced",
+    "container": "Container",
+    "storage": "Storage",
+    "floor": "Floor"
+  },
+
+  "actions": {
+    "locate": "Locate",
+    "close": "Close",
+    "markPaid": "Mark as Paid",
+    "details": "Details",
+    "export": "Export",
+    "toggleDensity": "Toggle density",
+    "exportCsv": "Export CSV",
+    "refresh": "Refresh",
+    "viewDetails": "View details",
+    "copyOrderCode": "Copy orderCode"
+  },
+
+  "table": {
+    "orderCode": "OrderCode",
+    "customer": "Customer",
+    "status": "Status",
+    "payment": "Payment",
+    "total": "Total",
+    "style": "Style",
+    "actions": "Actions",
+    "noRolesFound": "No roles found"
+  },
+
+  "messages": {
+    "loadFailed": "Load failed",
+    "fetchOrdersFailed": "Failed to load orders",
+    "fetchOrderFailed": "Failed to load order",
+    "noRolesFound": "No roles found",
+    "copySuccess": "Copied to clipboard"
+  },
+
+  "export": {
+    "filenamePrefix": "orders_export"
+  }
+}

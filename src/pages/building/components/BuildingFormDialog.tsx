@@ -1,4 +1,4 @@
-import  { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -18,6 +18,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import type { Building } from "./types";
+import { useTranslation } from "react-i18next";
 
 const STATUS_OPTIONS = ["Ready", "Maintenance", "Closed", "Draft", "Other"];
 
@@ -32,6 +33,8 @@ export default function BuildingFormDialog({
   onClose: () => void;
   onSubmit: (payload: Partial<Building>) => Promise<void> | void;
 }) {
+  const { t } = useTranslation("building");
+
   const [buildingCode, setBuildingCode] = useState("");
   const [name, setName] = useState("");
   const [area, setArea] = useState("");
@@ -76,8 +79,8 @@ export default function BuildingFormDialog({
 
   function validate() {
     const e: typeof errors = {};
-    if (!buildingCode.trim()) e.buildingCode = "Required";
-    if (!name.trim()) e.name = "Required";
+    if (!buildingCode.trim()) e.buildingCode = t("form.required");
+    if (!name.trim()) e.name = t("form.required");
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -104,13 +107,12 @@ export default function BuildingFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{initial ? "Edit Building" : "Create Building"}</DialogTitle>
+      <DialogTitle>{initial ? t("form.editTitle") : t("form.createTitle")}</DialogTitle>
 
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
-
           <TextField
-            label="Building Code"
+            label={t("form.buildingCode")}
             value={buildingCode}
             onChange={(e) => setBuildingCode(e.target.value)}
             error={!!errors.buildingCode}
@@ -120,7 +122,7 @@ export default function BuildingFormDialog({
           />
 
           <TextField
-            label="Name"
+            label={t("form.name")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             error={!!errors.name}
@@ -130,7 +132,7 @@ export default function BuildingFormDialog({
           />
 
           <TextField
-            label="Area"
+            label={t("form.area")}
             value={area}
             onChange={(e) => setArea(e.target.value)}
             placeholder="100 / 150 / m²"
@@ -138,18 +140,18 @@ export default function BuildingFormDialog({
           />
 
           <FormControl fullWidth>
-            <InputLabel>Status</InputLabel>
-            <Select value={status} label="Status" onChange={(e) => setStatus(e.target.value)}>
+            <InputLabel>{t("form.status")}</InputLabel>
+            <Select value={status} label={t("form.status")} onChange={(e) => setStatus(e.target.value)}>
               {STATUS_OPTIONS.map((s) => (
                 <MenuItem key={s} value={s}>
-                  {s}
+                  {t(`status.${s}`, s)}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
 
           <TextField
-            label="Address"
+            label={t("form.address")}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             fullWidth
@@ -158,7 +160,7 @@ export default function BuildingFormDialog({
           />
 
           <TextField
-            label="Image URL (img / .glb / .gltf)"
+            label={t("form.imageUrl")}
             value={imageUrl ?? ""}
             onChange={(e) => setImageUrl(e.target.value || null)}
             fullWidth
@@ -166,13 +168,12 @@ export default function BuildingFormDialog({
 
           <FormControlLabel
             control={<Switch checked={isActive} onChange={(_, v) => setIsActive(v)} />}
-            label={isActive ? "Active" : "Inactive"}
+            label={isActive ? t("form.active") : t("form.inactive")}
           />
 
-          {/* PREVIEW */}
           <Box>
             <Typography variant="subtitle2" mb={1}>
-              Preview
+              {t("form.preview")}
             </Typography>
 
             <Paper
@@ -186,24 +187,20 @@ export default function BuildingFormDialog({
                 textAlign: "center",
               }}
             >
-              {!imageUrl && <Typography color="text.secondary">No preview</Typography>}
+              {!imageUrl && <Typography color="text.secondary">{t("form.noPreview")}</Typography>}
 
               {imageUrl && isImageUrl && (
-                <img
-                  src={imageUrl}
-                  alt="preview"
-                  style={{ maxWidth: "100%", maxHeight: 200, objectFit: "contain" }}
-                />
+                <img src={imageUrl} alt="preview" style={{ maxWidth: "100%", maxHeight: 200, objectFit: "contain" }} />
               )}
 
               {imageUrl && !isImageUrl && isModelUrl && (
                 <Typography>
-                  3D model detected <br /> ({imageUrl.substring(imageUrl.lastIndexOf(".") + 1)})
+                  {t("form.modelDetected", { ext: imageUrl.substring(imageUrl.lastIndexOf(".") + 1) })}
                 </Typography>
               )}
 
               {imageUrl && !isImageUrl && !isModelUrl && (
-                <Typography color="text.secondary">URL provided (not previewable)</Typography>
+                <Typography color="text.secondary">{t("form.urlNotPreviewable")}</Typography>
               )}
             </Paper>
           </Box>
@@ -212,10 +209,10 @@ export default function BuildingFormDialog({
 
       <DialogActions>
         <Button onClick={onClose} disabled={submitting}>
-          Cancel
+          {t("form.cancel")}
         </Button>
         <Button variant="contained" onClick={handleSubmit} disabled={submitting}>
-          {submitting ? <CircularProgress size={20} /> : "Save"}
+          {submitting ? <CircularProgress size={20} /> : t("form.save")}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,5 +1,4 @@
-// src/pages/order/components/OrderDetailDrawer.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import  { useEffect, useMemo, useState } from "react";
 import {
   Drawer,
   Box,
@@ -20,10 +19,10 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
-import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 import PaymentOutlinedIcon from "@mui/icons-material/PaymentOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import orderApi, { type OrderDetailItem } from "@/api/orderApi"; // chỉnh path nếu cần
+import orderApi, { type OrderDetailItem } from "@/api/orderApi";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   orderCode: string | null;
@@ -40,12 +39,13 @@ function a11yProps(index: number) {
 }
 
 export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull }: Props) {
-  const [tabIndex, setTabIndex] = useState(0); // 0 = Order, 1 = Customer
+  const { t } = useTranslation("order");
+
+  const [tabIndex, setTabIndex] = useState(0); 
   const [loading, setLoading] = useState(false);
   const [details, setDetails] = useState<OrderDetailItem[]>([]);
   const [meta, setMeta] = useState<{ success?: boolean; message?: string }>({});
 
-  // Normalized safe order object
   const order = orderFull ?? {};
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
         console.error("getOrderDetails failed", err);
         if (!mounted) return;
         setDetails([]);
-        setMeta({ success: false, message: (err as any)?.message ?? "Request failed" });
+        setMeta({ success: false, message: (err as any)?.message ?? t("messages.loadFailed") });
       } finally {
         if (mounted) setLoading(false);
       }
@@ -75,9 +75,8 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
     return () => {
       mounted = false;
     };
-  }, [open, orderCode]);
+  }, [open, orderCode, t]);
 
-  // Helpers
   const joinIfArray = (v: any): string | null => {
     if (Array.isArray(v)) return v.join(", ");
     if (typeof v === "string" && v.trim()) return v;
@@ -96,7 +95,6 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
     }
   };
 
-  // Header derived values
   const headerCustomer = useMemo(
     () => order?.customerName ?? order?.customer ?? order?.customerCode ?? null,
     [order]
@@ -107,7 +105,6 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
   const headerTotal = useMemo(() => (order?.totalPrice != null ? order.totalPrice : null), [order]);
 
   useEffect(() => {
-    // when order changes open drawer, reset to Order tab
     if (open) setTabIndex(0);
   }, [open]);
 
@@ -126,24 +123,24 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
               <ArrowBackIosNewRoundedIcon sx={{ fontSize: 16 }} />
             </IconButton>
             <Box>
-              <Typography fontWeight={800} sx={{ fontSize: 18 }}>
-                Order {orderCode ?? ""}
+              <Typography fontWeight={700} sx={{ fontSize: 18 }}>
+                {t("labels.order")} {orderCode ?? ""}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13 }}>
-                Chi tiết đơn hàng
+                {t("page.clickToView")}
               </Typography>
             </Box>
           </Box>
 
           <Box display="flex" alignItems="center" gap={1}>
             {/* Tabs control icons for quick access */}
-            <Tooltip title="Order">
+            <Tooltip title={t("tabs.order")}>
               <IconButton size="small" color={tabIndex === 0 ? "primary" : "default"} onClick={() => setTabIndex(0)}>
                 <ReceiptLongRoundedIcon />
               </IconButton>
             </Tooltip>
 
-            <Tooltip title="Customer">
+            <Tooltip title={t("tabs.customer")}>
               <IconButton size="small" color={tabIndex === 1 ? "primary" : "default"} onClick={() => setTabIndex(1)}>
                 <PersonOutlineRoundedIcon />
               </IconButton>
@@ -160,8 +157,8 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
         {/* Tabs */}
         <Box sx={{ px: 2 }}>
           <Tabs value={tabIndex} onChange={(_, v) => setTabIndex(v)} aria-label="order tabs">
-            <Tab label="Order" {...a11yProps(0)} />
-            <Tab label="Customer" {...a11yProps(1)} />
+            <Tab label={t("tabs.order")} {...a11yProps(0)} />
+            <Tab label={t("tabs.customer")} {...a11yProps(1)} />
           </Tabs>
         </Box>
 
@@ -176,7 +173,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                 {headerCustomer ? String(headerCustomer).slice(0, 2).toUpperCase() : "OD"}
               </Avatar>
               <Box sx={{ minWidth: 0 }}>
-                <Typography fontWeight={800} sx={{ fontSize: 16, lineHeight: 1 }}>
+                <Typography fontWeight={700} sx={{ fontSize: 16, lineHeight: 1 }}>
                   {headerCustomer ?? orderCode}
                 </Typography>
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5, flexWrap: "wrap" }}>
@@ -199,9 +196,9 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
               {has(headerTotal) && (
                 <>
                   <Typography variant="caption" color="text.secondary">
-                    Total
+                    {t("labels.total")}
                   </Typography>
-                  <Typography fontWeight={800} sx={{ fontSize: 18 }}>
+                  <Typography fontWeight={700} sx={{ fontSize: 18 }}>
                     {fmtMoney(headerTotal)}
                   </Typography>
                 </>
@@ -209,12 +206,12 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
               <Box sx={{ mt: 1 }}>
                 {has(headerDepositDate) && (
                   <Typography variant="body2" color="text.secondary">
-                    <strong>Deposit:</strong> {fmtDate(headerDepositDate)}
+                    <strong>{t("labels.depositDate")}:</strong> {fmtDate(headerDepositDate)}
                   </Typography>
                 )}
                 {has(headerReturnDate) && (
                   <Typography variant="body2" color="text.secondary">
-                    <strong>Return:</strong> {fmtDate(headerReturnDate)}
+                    <strong>{t("labels.returnDate")}:</strong> {fmtDate(headerReturnDate)}
                   </Typography>
                 )}
               </Box>
@@ -227,7 +224,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
           {tabIndex === 0 && (
             <Box role="tabpanel" id="order-tabpanel-0" aria-labelledby="order-tab-0">
               <Typography fontWeight={700} sx={{ mb: 1 }}>
-                Order Information
+                {t("labels.orderInformation")}
               </Typography>
 
               <Card variant="outlined" sx={{ borderRadius: 2, mb: 2 }}>
@@ -235,42 +232,42 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                   <Stack spacing={1}>
                     {has(order.orderCode) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>Order ID</Box>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.orderId")}</Box>
                         <Box sx={{ flex: 1 }}>{order.orderCode}</Box>
                       </Box>
                     )}
 
                     {has(order.orderDate) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>Order Date</Box>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.orderDate")}</Box>
                         <Box sx={{ flex: 1 }}>{fmtDate(order.orderDate)}</Box>
                       </Box>
                     )}
 
                     {has(order.depositDate) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>Deposit Date</Box>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.depositDate")}</Box>
                         <Box sx={{ flex: 1 }}>{fmtDate(order.depositDate)}</Box>
                       </Box>
                     )}
 
                     {has(order.returnDate) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>Return Date</Box>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.returnDate")}</Box>
                         <Box sx={{ flex: 1 }}>{fmtDate(order.returnDate)}</Box>
                       </Box>
                     )}
 
                     {has(order.paymentStatus) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>Payment</Box>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.payment")}</Box>
                         <Box sx={{ flex: 1 }}>{order.paymentStatus}</Box>
                       </Box>
                     )}
 
                     {has(order.unpaidAmount) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>Unpaid</Box>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.unpaid")}</Box>
                         <Box sx={{ flex: 1, color: "error.main", fontWeight: 700 }}>{fmtMoney(order.unpaidAmount)}</Box>
                       </Box>
                     )}
@@ -311,17 +308,17 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
               <Box sx={{ mt: 1 }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
                   <Typography variant="h6" fontWeight={700}>
-                    Items
+                    {t("labels.items")}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {loading ? "Loading..." : `${details.length} item${details.length !== 1 ? "s" : ""}`}
+                    {loading ? t("labels.loading") : t("page.itemsCount", { count: details.length })}
                   </Typography>
                 </Box>
 
                 {loading ? (
-                  <Typography color="text.secondary">Loading items...</Typography>
+                  <Typography color="text.secondary">{t("labels.loadingItems")}</Typography>
                 ) : details.length === 0 ? (
-                  <Typography color="text.secondary">No items</Typography>
+                  <Typography color="text.secondary">{t("labels.noItems")}</Typography>
                 ) : (
                   <Stack spacing={1}>
                     {details.map((d) => {
@@ -331,27 +328,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                         <Card key={d.orderDetailId} variant="outlined" sx={{ borderRadius: 2 }}>
                           <CardContent sx={{ display: "flex", gap: 2, alignItems: "center", p: 1.25 }}>
                             {/* thumbnail */}
-                            <Box
-                              sx={{
-                                width: 88,
-                                height: 88,
-                                borderRadius: 1.5,
-                                overflow: "hidden",
-                                bgcolor: "#fafafa",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0,
-                              }}
-                            >
-                              {d.image ? (
-                                <img src={String(d.image)} alt={productNames ?? `item-${d.orderDetailId}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                              ) : (
-                                <Box sx={{ textAlign: "center", px: 1 }}>
-                                  <LocalShippingOutlinedIcon sx={{ fontSize: 28, color: "text.secondary" }} />
-                                </Box>
-                              )}
-                            </Box>
+                            
 
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
@@ -361,24 +338,24 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                                   </Typography>
                                   {serviceNames && (
                                     <Typography variant="caption" color="text.secondary" noWrap>
-                                      Services: {serviceNames}
+                                      {t("item.services")}: {serviceNames}
                                     </Typography>
                                   )}
                                 </Box>
 
                                 <Box sx={{ textAlign: "right", flexShrink: 0 }}>
-                                  <Typography fontWeight={800}>{fmtMoney(d.subTotal ?? d.price)}</Typography>
+                                  <Typography fontWeight={700}>{fmtMoney(d.subTotal ?? d.price)}</Typography>
                                   <Typography variant="caption" color="text.secondary">
-                                    {d.quantity != null ? `Qty: ${d.quantity}` : ""}
+                                    {d.quantity != null ? `${t("item.qty")}: ${d.quantity}` : ""}
                                   </Typography>
                                 </Box>
                               </Box>
 
                               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1, alignItems: "center" }}>
-                                {d.isPlaced != null && <Chip size="small" label={d.isPlaced ? "Placed" : "Unplaced"} color={d.isPlaced ? "success" : "default"} />}
-                                {has(d.containerCode) && <Chip size="small" label={`Container: ${d.containerCode}`} />}
-                                {has(d.storageCode) && <Chip size="small" label={`Storage: ${d.storageCode}`} />}
-                                {has(d.floorCode) && <Chip size="small" label={`Floor: ${d.floorCode}`} />}
+                                {d.isPlaced != null && <Chip size="small" label={d.isPlaced ? t("item.placed") : t("item.unplaced")} color={d.isPlaced ? "success" : "default"} />}
+                                {has(d.containerCode) && <Chip size="small" label={`${t("item.container")}: ${d.containerCode}`} />}
+                                {has(d.storageCode) && <Chip size="small" label={`${t("item.storage")}: ${d.storageCode}`} />}
+                                {has(d.floorCode) && <Chip size="small" label={`${t("item.floor")}: ${d.floorCode}`} />}
                               </Box>
                             </Box>
                           </CardContent>
@@ -403,7 +380,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
           {tabIndex === 1 && (
             <Box role="tabpanel" id="order-tabpanel-1" aria-labelledby="order-tab-1">
               <Typography fontWeight={700} sx={{ mb: 1 }}>
-                Customer Information
+                {t("labels.customerInformation")}
               </Typography>
 
               <Card variant="outlined" sx={{ borderRadius: 2 }}>
@@ -411,35 +388,35 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                   <Stack spacing={1}>
                     {has(order.customerCode) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>Code</Box>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.code")}</Box>
                         <Box sx={{ flex: 1, fontWeight: 700 }}>{order.customerCode}</Box>
                       </Box>
                     )}
 
                     {has(order.customerName) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>Name</Box>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.name")}</Box>
                         <Box sx={{ flex: 1 }}>{order.customerName}</Box>
                       </Box>
                     )}
 
                     {has(order.phoneContact) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>Phone</Box>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.phone")}</Box>
                         <Box sx={{ flex: 1 }}>{order.phoneContact}</Box>
                       </Box>
                     )}
 
                     {has(order.customerEmail) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>Email</Box>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.email")}</Box>
                         <Box sx={{ flex: 1 }}>{order.customerEmail}</Box>
                       </Box>
                     )}
 
                     {has(order.customerAddress) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>Address</Box>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.address")}</Box>
                         <Box sx={{ flex: 1 }}>{order.customerAddress}</Box>
                       </Box>
                     )}
@@ -469,16 +446,16 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
         <Box sx={{ p: 2, borderTop: "1px solid #f0f0f0", display: "flex", gap: 1, justifyContent: "space-between", alignItems: "center" }}>
           <Box>
             <Button variant="outlined" size="small" startIcon={<PlaceOutlinedIcon />}>
-              Locate
+              {t("actions.locate")}
             </Button>
           </Box>
 
           <Box sx={{ display: "flex", gap: 1 }}>
             <Button variant="outlined" onClick={onClose}>
-              Close
+              {t("actions.close")}
             </Button>
             <Button variant="contained" color="success">
-              Mark as Paid
+              {t("actions.markPaid")}
             </Button>
           </Box>
         </Box>

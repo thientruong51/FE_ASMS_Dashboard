@@ -171,7 +171,7 @@ export default function StorageTypeCard({
             <Typography variant="subtitle2" color="text.secondary">
               {`ID: ${item.storageTypeId}`}
             </Typography>
-            <Typography variant="h6" noWrap sx={{ fontWeight: 800 }}>
+            <Typography variant="h6" noWrap sx={{ fontWeight: 700 }}>
               {item.name}
             </Typography>
           </Box>

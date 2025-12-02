@@ -1,4 +1,4 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import BuildingCard from "./BuildingCard";
 import type { Building } from "./types";
@@ -34,6 +34,7 @@ export default function BuildingList({
         useGLTF.preload?.(u);
         newSet.add(u);
       } catch {
+        // ignore preload errors
       }
     });
 

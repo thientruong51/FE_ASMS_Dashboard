@@ -104,7 +104,7 @@ export default function ServicePage() {
           <Box sx={{ position: "relative", zIndex: 2, p: { xs: 2, md: 3 } }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Box>
-                <Typography variant="h5" fontWeight={800}>Services</Typography>
+                <Typography variant="h5" fontWeight={700}>Services</Typography>
                 <Typography color="text.secondary">Manage available services and room packages</Typography>
               </Box>
 

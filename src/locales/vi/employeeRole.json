@@ -1,0 +1,45 @@
+{
+  "page": {
+    "title": "Vai trò nhân viên",
+    "subtitle": "Quản lý vai trò nhân viên",
+    "create": "Tạo",
+    "searchPlaceholder": "Tìm theo tên hoặc id...",
+    "filterAll": "Tất cả",
+    "filterActive": "Hoạt động",
+    "filterInactive": "Không hoạt động",
+    "noRolesFound": "Không tìm thấy vai trò"
+  },
+
+  "table": {
+    "id": "ID",
+    "name": "Tên",
+    "active": "Hoạt động",
+    "actions": "Hành động"
+  },
+
+  "form": {
+    "createTitle": "Tạo vai trò nhân viên",
+    "editTitle": "Chỉnh sửa vai trò nhân viên",
+    "name": "Tên",
+    "active": "Hoạt động",
+    "required": "Tên vai trò là bắt buộc",
+    "save": "Lưu",
+    "saving": "Đang lưu...",
+    "cancel": "Hủy"
+  },
+
+  "dialog": {
+    "deleteConfirm": "Bạn có chắc muốn xóa vai trò này?",
+    "deleteConfirmWithName": "Bạn có chắc muốn xóa \"{{name}}\"?",
+    "delete": "Xóa",
+    "deleting": "Đang xóa..."
+  },
+
+  "messages": {
+    "loadFailed": "Tải thất bại",
+    "saved": "Đã lưu",
+    "deleted": "Đã xóa",
+    "deleteFailed": "Xóa thất bại",
+    "fetchFailed": "Lấy danh sách thất bại"
+  }
+}

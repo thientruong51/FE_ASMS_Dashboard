@@ -1,0 +1,56 @@
+{
+  "page": {
+    "title": "Tòa nhà",
+    "subtitle": "Quản lý tòa nhà — có hỗ trợ xem 3D",
+    "create": "Tạo tòa nhà",
+    "total": "Tổng: {{count}}",
+    "category": "Danh mục: {{cat}}",
+    "tabs": { "self": "Kho tự quản", "warehouse": "Nhà kho" }
+  },
+  "card": {
+    "active": "Đang hoạt động",
+    "inactive": "Ngừng hoạt động",
+    "area": "Diện tích: {{area}}",
+    "view": "Xem",
+    "edit": "Sửa",
+    "delete": "Xóa"
+  },
+  "form": {
+    "createTitle": "Tạo tòa nhà",
+    "editTitle": "Chỉnh sửa tòa nhà",
+    "buildingCode": "Mã tòa nhà",
+    "name": "Tên",
+    "area": "Diện tích",
+    "address": "Địa chỉ",
+    "status": "Trạng thái",
+    "imageUrl": "Đường dẫn ảnh (img / .glb / .gltf)",
+    "active": "Đang hoạt động",
+    "inactive": "Ngừng hoạt động",
+    "preview": "Xem trước",
+    "noPreview": "Không có xem trước",
+    "modelDetected": "Phát hiện mô hình 3D ({{ext}})",
+    "urlNotPreviewable": "URL không thể xem trước",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "required": "Bắt buộc",
+    "saving": "Đang lưu..."
+  },
+  "status": { "Ready": "Sẵn sàng", "Maintenance": "Bảo trì", "Closed": "Đóng cửa", "Draft": "Nháp", "Other": "Khác" },
+  "delete": {
+    "title": "Xóa tòa nhà",
+    "confirm": "Bạn có chắc muốn xóa tòa nhà này? Hành động này không thể hoàn tác.",
+    "confirmWithName": "Bạn có chắc muốn xóa \"{{name}}\"? Hành động này không thể hoàn tác.",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "deleting": "Đang xóa..."
+  },
+  "notify": {
+    "created": "Tạo thành công",
+    "updated": "Cập nhật thành công",
+    "deleted": "Xóa thành công",
+    "loadFailed": "Không tải được danh sách tòa nhà",
+    "saveFailed": "Lỗi khi lưu dữ liệu",
+    "deleteFailed": "Xóa thất bại"
+  },
+  "buttons": { "create": "Tạo", "edit": "Sửa", "delete": "Xóa", "view": "Xem" }
+}

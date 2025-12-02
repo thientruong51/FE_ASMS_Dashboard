@@ -206,7 +206,7 @@ export default function StorageTypePage() {
                   <WarehouseIcon />
                 </Avatar>
                 <Box>
-                  <Typography variant="h5" fontWeight={800}>
+                  <Typography variant="h5" fontWeight={700}>
                     Storage Types
                   </Typography>
                   <Typography color="text.secondary">Manage room and warehouse dimensions — 3D preview if available</Typography>

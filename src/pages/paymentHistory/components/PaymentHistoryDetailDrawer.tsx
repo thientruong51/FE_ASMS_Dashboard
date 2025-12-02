@@ -1,5 +1,4 @@
-// src/pages/PaymentHistory/components/PaymentHistoryDetailDrawer.tsx
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import {
   Drawer,
   Box,
@@ -26,17 +25,14 @@ type Props = {
 
 export default function PaymentHistoryDetailDrawer({ code, open, onClose, item }: Props) {
   const [loading, setLoading] = useState(false);
-  // explicit state type
   const [data, setData] = useState<paymentApi.PaymentHistoryItem | null>(item ?? null);
 
   useEffect(() => {
-    // if parent passed item we prefer it (and keep it typed)
     if (item) {
       setData(item);
       return;
     }
 
-    // if no code or not open, clear
     if (!open || !code) {
       setData(null);
       return;
@@ -46,9 +42,7 @@ export default function PaymentHistoryDetailDrawer({ code, open, onClose, item }
     (async () => {
       setLoading(true);
       try {
-        // getPaymentHistory is typed to return PaymentHistoryItem (see api file)
         const resp = await paymentApi.getPaymentHistory(code);
-        // resp should be PaymentHistoryItem according to our api typings
         if (!mounted) return;
         setData(resp ?? null);
       } catch (err) {
@@ -67,7 +61,6 @@ export default function PaymentHistoryDetailDrawer({ code, open, onClose, item }
 
   const has = (v: any) => v !== null && v !== undefined && v !== "";
 
-  // safe render helpers
   const formatNumber = (v: any) => (v == null ? "-" : Number(v).toLocaleString());
 
   return (
@@ -79,7 +72,7 @@ export default function PaymentHistoryDetailDrawer({ code, open, onClose, item }
               <ArrowBackIosNewRoundedIcon sx={{ fontSize: 16 }} />
             </IconButton>
             <Box>
-              <Typography fontWeight={800} sx={{ fontSize: 18 }}>
+              <Typography fontWeight={700} sx={{ fontSize: 18 }}>
                 Payment {code ?? ""}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13 }}>
@@ -113,14 +106,13 @@ export default function PaymentHistoryDetailDrawer({ code, open, onClose, item }
               <Typography variant="caption" color="text.secondary">
                 Amount
               </Typography>
-              <Typography fontWeight={800}>{data?.amount != null ? formatNumber(data.amount) : "-"}</Typography>
+              <Typography fontWeight={700}>{data?.amount != null ? formatNumber(data.amount) : "-"}</Typography>
             </Box>
           </Box>
 
           <Card variant="outlined" sx={{ mb: 2 }}>
             <CardContent>
               <Stack spacing={1}>
-                {/* Use has(...) to avoid rendering empty fields */}
                 {has(data?.paymentHistoryCode) && (
                   <Box sx={{ display: "flex", gap: 2 }}>
                     <Box sx={{ width: 160, color: "text.secondary" }}>Code</Box>
@@ -156,7 +148,6 @@ export default function PaymentHistoryDetailDrawer({ code, open, onClose, item }
                   </Box>
                 )}
 
-                {/* If there are any other keys, show them defensively */}
                 {data &&
                   Object.keys(data)
                     .filter((k) => !["paymentHistoryCode", "orderCode", "paymentMethod", "paymentPlatform", "amount"].includes(k))

@@ -142,7 +142,7 @@ export default function ShelfPage() {
                   <ShelvesIcon />
                 </Avatar>
                 <Box>
-                  <Typography variant="h5" fontWeight={800}>
+                  <Typography variant="h5" fontWeight={700}>
                     Shelf Types
                   </Typography>
                   <Typography color="text.secondary">Manage shelf templates — 3D preview when available</Typography>

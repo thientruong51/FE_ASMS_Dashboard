@@ -60,7 +60,7 @@ export default function ProductTypePage() {
           <Box sx={{ position: "relative", zIndex: 2, p: { xs: 2, md: 3 } }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Box>
-                <Typography variant="h5" fontWeight={800}>Product Types</Typography>
+                <Typography variant="h5" fontWeight={700}>Product Types</Typography>
                 <Typography color="text.secondary">Manage your product types </Typography>
               </Box>
 

@@ -1,4 +1,4 @@
-import  { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   TextField,
@@ -7,16 +7,22 @@ import {
   Avatar,
   Typography,
   useMediaQuery,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  Divider,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import LogoutIcon from "@mui/icons-material/Logout";
+import PersonIcon from "@mui/icons-material/Person";
 import { useDispatch } from "react-redux";
 import { toggleSidebar } from "@/features/ui/uiSlice";
 import { getEmployeeRoles } from "@/api/employeeRoleApi";
+import authApi, { clearAuthStorage, getRefreshToken } from "@/api/auth";
 
 function parseJwt(token?: string | null) {
   if (!token) return null;
@@ -48,11 +54,15 @@ export default function Topbar() {
   const [rolesMap, setRolesMap] = useState<Record<number, string>>({});
   const [user, setUser] = useState<{ name?: string; username?: string; role?: string } | null>(null);
 
+  // Menu state for avatar
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
+
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const resp = await getEmployeeRoles({ pageSize: 1000 }); 
+        const resp = await getEmployeeRoles({ pageSize: 1000 });
         const arr = resp?.data ?? [];
         if (!mounted) return;
         const m: Record<number, string> = {};
@@ -81,7 +91,6 @@ export default function Topbar() {
 
       const name = payload.Name ?? payload.name ?? payload.fullName ?? payload.UserName ?? null;
       const username = payload.UserName ?? payload.username ?? null;
-
 
       let roleName: string | undefined;
       const roleId = payload.EmployeeRoleId ?? payload.employeeRoleId ?? payload.RoleId ?? null;
@@ -114,7 +123,7 @@ export default function Topbar() {
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
-  }, [rolesMap]); 
+  }, [rolesMap]);
 
   const displayName = useMemo(() => {
     if (!user) return "User";
@@ -127,6 +136,33 @@ export default function Topbar() {
   }, [user]);
 
   const initials = getInitials(user?.name ?? user?.username ?? "");
+
+  // handlers for avatar menu
+  const handleAvatarClick = (e: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(e.currentTarget);
+  };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    try {
+      const refreshToken = getRefreshToken() ?? localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        // try to notify server (best-effort)
+        await authApi.logout({ refreshToken }).catch(() => {
+          // ignore server error, we still clear local storage
+        });
+      }
+    } catch (err) {
+      // ignore
+    } finally {
+      clearAuthStorage();
+      handleMenuClose();
+      // navigate to login page (adjust path if your app uses different route)
+      window.location.href = "/login";
+    }
+  };
 
   return (
     <Box
@@ -151,27 +187,22 @@ export default function Topbar() {
           </IconButton>
         )}
 
-        {!isMobile && (
-          <TextField
-            placeholder="Search by User id, User Name, Date etc"
-            size="small"
-            sx={{
-              maxWidth: 320,
-              width: "100%",
-              backgroundColor: "#f8f9fb",
-              borderRadius: 1,
-              flexShrink: 1,
-              minWidth: 0,
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
-        )}
+        {/* <-- Logo replaces the search */}
+        <Box
+          component="img"
+          src="https://res.cloudinary.com/dkfykdjlm/image/upload/v1762190185/LOGO-remove_1_o1wgk2.png"
+          alt="Logo"
+          sx={{
+            height: { xs: 32, sm: 40 },
+            cursor: "pointer",
+            userSelect: "none",
+            display: "block",
+          }}
+          onClick={() => {
+            // navigate to home (adjust if you use react-router)
+            window.location.href = "/";
+          }}
+        />
       </Box>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
@@ -184,12 +215,24 @@ export default function Topbar() {
         </IconButton>
 
         {isMobile ? (
-          <Avatar sx={{ bgcolor: "#f1f1f1" }}>
+          <Avatar
+            sx={{ bgcolor: "#f1f1f1", cursor: "pointer" }}
+            onClick={handleAvatarClick}
+            aria-controls={menuOpen ? "topbar-avatar-menu" : undefined}
+            aria-haspopup="true"
+            aria-expanded={menuOpen ? "true" : undefined}
+          >
             {initials ? <Typography variant="body2">{initials}</Typography> : <AccountCircleIcon color="action" />}
           </Avatar>
         ) : (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
-            <Avatar sx={{ bgcolor: "#e6f7f2", color: "#075" }}>
+            <Avatar
+              sx={{ bgcolor: "#e6f7f2", color: "#075", cursor: "pointer" }}
+              onClick={handleAvatarClick}
+              aria-controls={menuOpen ? "topbar-avatar-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={menuOpen ? "true" : undefined}
+            >
               {initials ? <Typography variant="body2">{initials}</Typography> : <AccountCircleIcon color="action" />}
             </Avatar>
 
@@ -204,6 +247,34 @@ export default function Topbar() {
           </Box>
         )}
       </Box>
+
+      <Menu
+        id="topbar-avatar-menu"
+        anchorEl={anchorEl}
+        open={menuOpen}
+        onClose={handleMenuClose}
+        onClick={handleMenuClose}
+        PaperProps={{
+          elevation: 3,
+          sx: {
+            mt: "6px",
+            minWidth: 100,
+          },
+        }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      >
+       
+        <Divider />
+        
+
+        <MenuItem onClick={handleLogout}>
+          <ListItemIcon>
+            <LogoutIcon fontSize="small" />
+          </ListItemIcon>
+          Logout
+        </MenuItem>
+      </Menu>
     </Box>
   );
 }

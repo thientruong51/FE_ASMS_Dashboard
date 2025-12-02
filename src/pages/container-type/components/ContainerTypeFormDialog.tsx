@@ -1,4 +1,5 @@
-import  { useEffect, useMemo, useState } from "react";
+// src/components/ContainerTypeFormDialog.tsx
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -12,6 +13,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import type { ContainerType } from "./types";
+import { useTranslation } from "react-i18next";
 
 export default function ContainerTypeFormDialog({
   open,
@@ -24,6 +26,8 @@ export default function ContainerTypeFormDialog({
   onClose: () => void;
   onSubmit: (payload: Partial<ContainerType>) => Promise<void> | void;
 }) {
+  const { t } = useTranslation("containerType");
+
   const [type, setType] = useState("");
   const [length, setLength] = useState("");
   const [width, setWidth] = useState("");
@@ -64,7 +68,7 @@ export default function ContainerTypeFormDialog({
 
   function validate() {
     const e: typeof errors = {};
-    if (!type.trim()) e.type = "Required";
+    if (!type.trim()) e.type = t("form.required");
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -90,12 +94,12 @@ export default function ContainerTypeFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{initial ? "Edit Container Type" : "Create Container Type"}</DialogTitle>
+      <DialogTitle>{initial ? t("form.editTitle") : t("form.createTitle")}</DialogTitle>
 
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
           <TextField
-            label="Type"
+            label={t("form.type")}
             value={type}
             onChange={(e) => setType(e.target.value)}
             error={!!errors.type}
@@ -105,32 +109,32 @@ export default function ContainerTypeFormDialog({
           />
 
           <Box display="flex" gap={1}>
-            <TextField label="Length (m)" value={length} onChange={(e) => setLength(e.target.value)} fullWidth />
-            <TextField label="Width (m)" value={width} onChange={(e) => setWidth(e.target.value)} fullWidth />
-            <TextField label="Height (m)" value={height} onChange={(e) => setHeight(e.target.value)} fullWidth />
+            <TextField label={t("form.length")} value={length} onChange={(e) => setLength(e.target.value)} fullWidth />
+            <TextField label={t("form.width")} value={width} onChange={(e) => setWidth(e.target.value)} fullWidth />
+            <TextField label={t("form.height")} value={height} onChange={(e) => setHeight(e.target.value)} fullWidth />
           </Box>
 
-          <TextField label="Image / Model URL (.jpg | .png | .glb | .gltf)" value={imageUrl ?? ""} onChange={(e) => setImageUrl(e.target.value || null)} fullWidth />
+          <TextField label={t("form.imageUrl")} value={imageUrl ?? ""} onChange={(e) => setImageUrl(e.target.value || null)} fullWidth />
 
-          <TextField label="Price" value={price} onChange={(e) => setPrice(e.target.value)} fullWidth />
+          <TextField label={t("form.price")} value={price} onChange={(e) => setPrice(e.target.value)} fullWidth />
 
           <Box>
             <Typography variant="subtitle2" mb={1}>
-              Preview
+              {t("form.preview")}
             </Typography>
 
             <Paper variant="outlined" sx={{ p: 2, minHeight: 140, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {!imageUrl && <Typography color="text.secondary">No preview</Typography>}
+              {!imageUrl && <Typography color="text.secondary">{t("form.noPreview")}</Typography>}
 
-              {imageUrl && isImageUrl && (
-                <img src={imageUrl} alt="preview" style={{ maxWidth: "100%", maxHeight: 200, objectFit: "contain" }} />
-              )}
+              {imageUrl && isImageUrl && <img src={imageUrl} alt="preview" style={{ maxWidth: "100%", maxHeight: 200, objectFit: "contain" }} />}
 
               {imageUrl && !isImageUrl && isModelUrl && (
-                <Typography>3D model detected ({imageUrl.substring(imageUrl.lastIndexOf(".") + 1)})</Typography>
+                <Typography>
+                  {t("form.modelDetected", { ext: imageUrl.substring(imageUrl.lastIndexOf(".") + 1) })}
+                </Typography>
               )}
 
-              {imageUrl && !isImageUrl && !isModelUrl && <Typography color="text.secondary">URL provided (not previewable)</Typography>}
+              {imageUrl && !isImageUrl && !isModelUrl && <Typography color="text.secondary">{t("form.urlNotPreviewable")}</Typography>}
             </Paper>
           </Box>
         </Box>
@@ -138,10 +142,10 @@ export default function ContainerTypeFormDialog({
 
       <DialogActions>
         <Button onClick={onClose} disabled={submitting}>
-          Cancel
+          {t("form.cancel")}
         </Button>
         <Button variant="contained" onClick={handleSubmit} disabled={submitting}>
-          {submitting ? <CircularProgress size={20} /> : "Save"}
+          {submitting ? <CircularProgress size={20} /> : t("form.save")}
         </Button>
       </DialogActions>
     </Dialog>

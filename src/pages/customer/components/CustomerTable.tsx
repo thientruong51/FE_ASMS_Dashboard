@@ -1,12 +1,13 @@
-import { Box, Stack, Typography, Chip, IconButton } from "@mui/material";
+import React from "react";
+import { Stack, Typography, Chip, IconButton, Box } from "@mui/material";
 import { DataGrid, type GridColDef, type GridRenderCellParams, type GridPaginationModel } from "@mui/x-data-grid";
 import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-import type { Customer } from "./customer.types";
+import type { Customer } from "../components/customer.types";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   rows: Customer[];
@@ -20,47 +21,49 @@ type Props = {
 const getRowId = (row: any) => row.id ?? row.customerId ?? JSON.stringify(row);
 
 export default function CustomerTable({ rows, rowCount, paginationModel, onPaginationModelChange, onEdit, onDelete }: Props) {
+  const { t } = useTranslation("customer");
+
   const columns: GridColDef[] = [
     {
       field: "customerCode",
-      headerName: "Code",
+      headerName: t("table.code"),
       flex: 0.6,
       minWidth: 110,
       renderCell: (params: GridRenderCellParams) => (
         <Stack direction="row" alignItems="center" spacing={1}>
           <PersonIcon sx={{ color: "primary.main", fontSize: 18 }} />
-          <Typography fontWeight={600}>{params.value}</Typography>
+          <Typography fontWeight={600}>{params.value || "-"}</Typography>
         </Stack>
       ),
     },
-    { field: "name", headerName: "Full name", flex: 1, minWidth: 150 },
+    { field: "name", headerName: t("table.fullName"), flex: 1, minWidth: 150 },
     {
       field: "email",
-      headerName: "Email",
+      headerName: t("table.email"),
       flex: 1.2,
       minWidth: 180,
       renderCell: (params: GridRenderCellParams) => (
         <Stack direction="row" alignItems="center" spacing={1}>
           <EmailIcon sx={{ fontSize: 16 }} />
-          <Typography fontSize={13}>{params.value}</Typography>
+          <Typography fontSize={13}>{params.value || "-"}</Typography>
         </Stack>
       ),
     },
     {
       field: "phone",
-      headerName: "Phone",
+      headerName: t("table.phone"),
       flex: 0.7,
       minWidth: 120,
       renderCell: (params: GridRenderCellParams) => (
         <Stack direction="row" alignItems="center" spacing={1}>
           <PhoneIcon sx={{ fontSize: 16 }} />
-          <Typography fontSize={13}>{params.value}</Typography>
+          <Typography fontSize={13}>{params.value || "-"}</Typography>
         </Stack>
       ),
     },
     {
       field: "address",
-      headerName: "Address",
+      headerName: t("table.address"),
       flex: 1.4,
       minWidth: 160,
       renderCell: (params: GridRenderCellParams) => (
@@ -71,14 +74,16 @@ export default function CustomerTable({ rows, rowCount, paginationModel, onPagin
     },
     {
       field: "isActive",
-      headerName: "Status",
+      headerName: t("table.status"),
       flex: 0.5,
       minWidth: 100,
-      renderCell: (params: GridRenderCellParams) => <Chip label={params.value ? "Active" : "Inactive"} size="small" color={params.value ? "success" : "default"} />,
+      renderCell: (params: GridRenderCellParams) => (
+        <Chip label={params.value ? t("table.active") : t("table.inactive")} size="small" color={params.value ? "success" : "default"} />
+      ),
     },
     {
       field: "actions",
-      headerName: "Actions",
+      headerName: t("table.actions"),
       flex: 0.5,
       minWidth: 110,
       sortable: false,

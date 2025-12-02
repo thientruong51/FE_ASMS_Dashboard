@@ -322,7 +322,7 @@ export default function TrackingHistoryDetailDrawer({
               </IconButton>
               <Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography fontWeight={800} sx={{ fontSize: 18 }}>
+                  <Typography fontWeight={700} sx={{ fontSize: 18 }}>
                     {headerTitle}
                   </Typography>
                   {loading && <CircularProgress size={16} />}

@@ -66,46 +66,61 @@ export default function LoginPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
       sx={{
-        maxHeight: "100vh",
+        minHeight: "100vh",
         width: "100%",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         backgroundImage: `url(${BG_WAVE})`,
         backgroundRepeat: "no-repeat",
-        backgroundPosition: "right center",
-        backgroundSize: "cover",
-        p: { xs: 2, md: 10 },
+        backgroundPosition: { xs: "center top", sm: "right center" },
+        backgroundSize: { xs: "contain", sm: "cover" },
+        p: { xs: 2, md: 6 },
+        boxSizing: "border-box",
       }}
     >
-      {/* BIGGER CENTER CARD */}
+      {/* CENTER CARD */}
       <Box
         sx={{
-          width: { xs: "100%", sm: 880, md: 1580 },
-          minWidth: "100vh",
-          borderRadius: 4,
+          width: { xs: "100%", sm: 880, md: 1100 },
+          maxWidth: "100%",
+          borderRadius: 3,
           overflow: "hidden",
           display: "grid",
-          gridTemplateColumns: isSm ? "1fr" : "1fr 1fr",
+          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+          boxShadow: 3,
         }}
       >
-        {/* LEFT SIDE - illustration + logo */}
+        {/* LEFT SIDE - illustration + logo (ẩn trên mobile nhỏ) */}
         <Box
           sx={{
-            p: { xs: 4, md: 8 },
-            display: "flex",
+            p: { xs: 3, md: 6 },
+            display: { xs: "none", sm: "flex" },
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
             textAlign: "center",
+            minHeight: { sm: 360, md: 440 },
+            bgcolor: { sm: "transparent" },
           }}
         >
-          <Box component="img" src={LOGO} alt="Logo" sx={{ width: 200, mb: 2, mr:50 }} />
-          <Typography variant="h3" fontWeight={700} sx={{ mb: 1 }}>
+          <Box
+            component="img"
+            src={LOGO}
+            alt="Logo"
+            sx={{
+              width: { sm: 160, md: 220 },
+              mb: { sm: 2, md: 3 },
+              mr: {  md: 30 },
+              alignSelf: "center",
+            }}
+          />
+
+          <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
             {t("welcome") ?? "Welcome"}
           </Typography>
 
-          <Typography variant="h6" sx={{ color: "text.secondary", maxWidth: 300, mb: 3 }}>
+          <Typography variant="body1" sx={{ color: "text.secondary", maxWidth: 360, mb: 3 }}>
             {t("subtitle") ?? "Welcome back!"}
           </Typography>
 
@@ -113,7 +128,9 @@ export default function LoginPage() {
             component="img"
             src={ILLUSTRATION}
             sx={{
-              width: { xs: 200, md: 490 },
+              width: { sm: 280, md: 500 },
+              mt: 2,
+              userSelect: "none",
             }}
           />
         </Box>
@@ -121,33 +138,55 @@ export default function LoginPage() {
         {/* RIGHT SIDE - login form */}
         <Box
           sx={{
-            p: { xs: 4, md: 8 },
+            p: { xs: 4, sm: 6 },
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            minHeight: { xs: "auto", sm: 360 },
+            ml:{md:7},
+            bgcolor: "background.paper",
           }}
         >
           <Box sx={{ width: "100%", maxWidth: 420 }}>
-            <Stack spacing={3}>
-              <Typography variant="h4" fontWeight={700}>
-                {t("login") ?? "Đăng nhập"}
-              </Typography>
+            <Stack spacing={2.5}>
+              <Box display="flex" flexDirection="column" gap={0.5}>
+                {/* On mobile show small logo above form */}
+                {isSm && (
+                  <Box display="flex" justifyContent="center" mb={1}>
+                    <Box
+                      component="img"
+                      src={LOGO}
+                      alt="Logo"
+                      sx={{ width: 120, height: "auto" }}
+                    />
+                  </Box>
+                )}
+
+                <Typography variant={isSm ? "h5" : "h4"} fontWeight={700} textAlign={isSm ? "center" : "left"}>
+                  {t("login") ?? "Đăng nhập"}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }} textAlign={isSm ? "center" : "left"}>
+                  {t("subtitle") ?? "Welcome back!"}
+                </Typography>
+              </Box>
 
               <TextField
-                size="medium"
+                size={isSm ? "small" : "medium"}
                 fullWidth
                 label={t("username") ?? "Username"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
               />
 
               <TextField
-                size="medium"
+                size={isSm ? "small" : "medium"}
                 fullWidth
                 label={t("password") ?? "Password"}
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
 
               {err && (
@@ -162,9 +201,9 @@ export default function LoginPage() {
                 onClick={handleLogin}
                 disabled={loading}
                 sx={{
-                  py: 1.4,
-                  borderRadius: 3,
-                  fontSize: 16,
+                  py: 1.25,
+                  borderRadius: 2,
+                  fontSize: 15,
                   bgcolor: "#3CBD96",
                   ":hover": { bgcolor: "#2E9E7C" },
                 }}
@@ -172,16 +211,14 @@ export default function LoginPage() {
                 {loading ? <CircularProgress size={20} color="inherit" /> : (t("loginButton") ?? "Login")}
               </Button>
 
-              <Box display="flex" justifyContent="space-between">
-                <Link component="button" variant="body2">
+              <Box display="flex" justifyContent="space-between" flexWrap="wrap" gap={1}>
+                <Link component="button" variant="body2" onClick={() => navigate("/forgot")}>
                   {t("forgot") ?? "Forgot?"}
                 </Link>
-                <Link component="button" variant="body2">
-                  {t("register") ?? "Register"}
-                </Link>
+               
               </Box>
 
-              <Typography variant="caption" textAlign="center" sx={{ color: "text.secondary" }}>
+              <Typography variant="caption" textAlign="center" sx={{ color: "text.secondary", mt: 1 }}>
                 © {new Date().getFullYear()} ASMS
               </Typography>
             </Stack>

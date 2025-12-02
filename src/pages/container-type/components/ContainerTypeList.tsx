@@ -1,4 +1,5 @@
-import  { useEffect, useState } from "react";
+// src/components/ContainerTypeList.tsx
+import React, { useEffect, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import ContainerTypeCard from "./ContainerTypeCard";
 import type { ContainerType } from "./types";
@@ -33,6 +34,7 @@ export default function ContainerTypeList({
         useGLTF.preload?.(u);
         newSet.add(u);
       } catch {
+        // ignore preload errors
       }
     });
     setPreloadedUrls(newSet);
@@ -59,7 +61,6 @@ export default function ContainerTypeList({
         <Box
           key={t.containerTypeId}
           sx={{
-
             flex: {
               xs: "1 1 100%",
               sm: "1 1 calc(50% - 16px)",
@@ -70,12 +71,7 @@ export default function ContainerTypeList({
             maxWidth: 420,
           }}
         >
-          <ContainerTypeCard
-            item={t}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            forceVisible={!!(typeof t.imageUrl === "string" && preloadedUrls.has(t.imageUrl))}
-          />
+          <ContainerTypeCard item={t} onEdit={onEdit} onDelete={onDelete} forceVisible={!!(typeof t.imageUrl === "string" && preloadedUrls.has(t.imageUrl))} />
         </Box>
       ))}
     </Box>

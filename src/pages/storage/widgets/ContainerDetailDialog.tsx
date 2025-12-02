@@ -281,7 +281,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
               {/* Info */}
               <Stack flex={1} spacing={0.75} sx={{ minWidth: 0 }}>
                 <Typography
-                  fontWeight={800}
+                  fontWeight={700}
                   fontSize={isSmUp ? 18 : 16}
                   sx={{
                     display: "-webkit-box",

@@ -1,0 +1,63 @@
+{
+  "page": {
+    "title": "Loại thùng",
+    "subtitle": "Quản lý mẫu thùng — xem trước 3D nếu có",
+    "create": "Tạo",
+    "count": "Số lượng: {{count}}",
+    "category": "Danh mục: {{cat}}",
+    "tabs": {
+      "self": "Kho tự quản",
+      "warehouse": "Nhà kho"
+    }
+  },
+
+  "card": {
+    "view": "Xem",
+    "edit": "Sửa",
+    "delete": "Xóa",
+    "dimensions": "{{l}}×{{w}}×{{h}} m",
+    "price": "{{price}} VND"
+  },
+
+  "form": {
+    "createTitle": "Tạo loại thùng",
+    "editTitle": "Chỉnh sửa loại thùng",
+    "type": "Loại",
+    "length": "Dài (m)",
+    "width": "Rộng (m)",
+    "height": "Cao (m)",
+    "imageUrl": "Đường dẫn ảnh / mô hình (.jpg | .png | .glb | .gltf)",
+    "price": "Giá",
+    "preview": "Xem trước",
+    "noPreview": "Không có xem trước",
+    "modelDetected": "Phát hiện mô hình 3D ({{ext}})",
+    "urlNotPreviewable": "URL đã cung cấp (không thể xem trước)",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "required": "Bắt buộc",
+    "saving": "Đang lưu..."
+  },
+
+  "delete": {
+    "title": "Xóa loại thùng",
+    "confirm": "Bạn có chắc muốn xóa loại thùng này? Hành động này không thể hoàn tác.",
+    "confirmWithName": "Bạn có chắc muốn xóa \"{{name}}\"? Hành động này không thể hoàn tác.",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "deleting": "Đang xóa..."
+  },
+
+  "messages": {
+    "fetchFailed": "Lấy danh sách thất bại",
+    "createSuccess": "Tạo thành công",
+    "updateSuccess": "Cập nhật thành công",
+    "deleteSuccess": "Xóa thành công",
+    "saveFailed": "Lỗi khi lưu",
+    "deleteFailed": "Xóa thất bại"
+  },
+
+  "tooltips": {
+    "edit": "Sửa",
+    "delete": "Xóa"
+  }
+}
