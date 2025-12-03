@@ -1,6 +1,7 @@
 import { Paper, Box, Typography, Divider, Stack, Button } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import EditIcon from "@mui/icons-material/Edit";
+import { useTranslation } from "react-i18next";
 import type { ProductTypeItem } from "@/api/productTypeApi";
 
 const DEFAULT_COLOR = "#10B981";
@@ -12,12 +13,12 @@ export default function ProductTypeCard({
   item: ProductTypeItem;
   onEdit: (p: ProductTypeItem) => void;
 }) {
+  const { t } = useTranslation("productTypePage");
+
   const features = (item.description ?? "")
     .split("+")
     .map((s) => s.trim())
     .filter(Boolean);
-
-
 
   return (
     <Paper
@@ -52,7 +53,7 @@ export default function ProductTypeCard({
             letterSpacing: ".5px",
           }}
         >
-          Product Type
+          {t("productTypeLabel")}
         </Typography>
 
         <Typography variant="h6" sx={{ mt: 1, fontWeight: 700 }}>
@@ -68,19 +69,18 @@ export default function ProductTypeCard({
         <Divider sx={{ my: 2, opacity: 0.1 }} />
 
         <Stack spacing={1}>
-          {/* You can show additional meta here if needed */}
           <Box display="flex" gap={2} alignItems="center">
             <Typography variant="body2" sx={{ fontWeight: 700 }}>
-              Flags:
+              {t("flagsLabel")}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {item.isFragile ? "Fragile" : "Not fragile"}
+              {item.isFragile ? t("fragile") : t("notFragile")}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               •
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {item.canStack ? "Can stack" : "No stack"}
+              {item.canStack ? t("canStack") : t("noStack")}
             </Typography>
           </Box>
 
@@ -99,11 +99,13 @@ export default function ProductTypeCard({
         </Stack>
       </Box>
 
-      {/* Button */}
       <Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>
         <Button
           startIcon={<EditIcon />}
-          onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(item);
+          }}
           variant="contained"
           sx={{
             textTransform: "none",
@@ -121,7 +123,7 @@ export default function ProductTypeCard({
             },
           }}
         >
-          Edit
+          {t("edit")}
         </Button>
       </Box>
     </Paper>

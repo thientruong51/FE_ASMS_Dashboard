@@ -1,5 +1,4 @@
-// src/components/ContainerTypeList.tsx
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import ContainerTypeCard from "./ContainerTypeCard";
 import type { ContainerType } from "./types";

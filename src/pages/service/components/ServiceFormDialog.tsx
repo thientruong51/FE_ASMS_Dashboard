@@ -1,18 +1,20 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box, CircularProgress } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import type { Service } from "@/api/serviceApi";
 
 export default function ServiceFormDialog({
   open,
   initial,
   onClose,
-  onSubmit,
+  onSubmit
 }: {
   open: boolean;
   initial?: Service | null;
   onClose: () => void;
   onSubmit: (payload: Partial<Service>) => Promise<void> | void;
 }) {
+  const { t } = useTranslation("servicePage");
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -36,7 +38,7 @@ export default function ServiceFormDialog({
       await onSubmit({
         name: name.trim(),
         price: Number(parseFloat(price) || 0),
-        description: description || undefined,
+        description: description || undefined
       });
       onClose();
     } finally {
@@ -46,13 +48,13 @@ export default function ServiceFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{initial ? "Edit Service" : "Create Service"}</DialogTitle>
+      <DialogTitle>{initial ? t("editDialogTitle") : t("createDialogTitle")}</DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
-          <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
-          <TextField label="Price" value={price} onChange={(e) => setPrice(e.target.value)} fullWidth />
+          <TextField label={t("name")} value={name} onChange={(e) => setName(e.target.value)} fullWidth />
+          <TextField label={t("price")} value={price} onChange={(e) => setPrice(e.target.value)} fullWidth />
           <TextField
-            label="Description (use + to separate features)"
+            label={t("description")}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             fullWidth
@@ -63,9 +65,11 @@ export default function ServiceFormDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} disabled={submitting}>Cancel</Button>
+        <Button onClick={onClose} disabled={submitting}>
+          {t("cancel")}
+        </Button>
         <Button variant="contained" onClick={handleSave} disabled={submitting}>
-          {submitting ? <CircularProgress size={20} /> : "Save"}
+          {submitting ? <CircularProgress size={20} /> : t("save")}
         </Button>
       </DialogActions>
     </Dialog>

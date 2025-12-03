@@ -1,6 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Box, Stack, TextField, MenuItem, Button, FormControlLabel, Switch, Typography, Divider } from "@mui/material";
+import {
+  Box,
+  Stack,
+  TextField,
+  MenuItem,
+  Button,
+  FormControlLabel,
+  Switch,
+  Typography,
+  Divider
+} from "@mui/material";
 import type { Employee, EmployeeRole, Building } from "../../../types/staff";
+import { useTranslation } from "react-i18next";
 
 interface StaffFormProps {
   employee: Employee | null;
@@ -29,11 +40,7 @@ export function TwoColRow(props: { children: React.ReactNode; gap?: number | str
 }
 
 function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffFormProps) {
-
-  useEffect(() => {
-   
-    return () => {  };
-  }, []);
+  const { t } = useTranslation("staffPage");
 
   const [formData, setFormData] = useState({
     employeeCode: "",
@@ -46,7 +53,7 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
     username: "",
     password: "",
     status: "Active",
-    isActive: true,
+    isActive: true
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -64,7 +71,7 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
         username: employee.username ?? "",
         password: "",
         status: employee.status ?? "Active",
-        isActive: employee.isActive ?? true,
+        isActive: employee.isActive ?? true
       });
     } else {
       setFormData({
@@ -78,7 +85,7 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
         username: "",
         password: "",
         status: "Active",
-        isActive: true,
+        isActive: true
       });
     }
   }, [employee]);
@@ -99,15 +106,15 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
 
   const validate = useCallback(() => {
     const newErrors: Record<string, string> = {};
-    if (!formData.employeeCode.trim()) newErrors.employeeCode = "Employee code is required";
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.employeeRoleId && !formData.roleName.trim()) newErrors.employeeRoleId = "Role is required";
-    if (!formData.username.trim()) newErrors.username = "Username is required";
-    if (!employee && !formData.password.trim()) newErrors.password = "Password is required for new employee";
-    if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) newErrors.phone = "Invalid phone number (10-11 digits)";
+    if (!formData.employeeCode.trim()) newErrors.employeeCode = t("required", { field: t("employeeCode") });
+    if (!formData.name.trim()) newErrors.name = t("required", { field: t("fullName") });
+    if (!formData.employeeRoleId && !formData.roleName.trim()) newErrors.employeeRoleId = t("required", { field: t("roleLabel") });
+    if (!formData.username.trim()) newErrors.username = t("required", { field: t("username") });
+    if (!employee && !formData.password.trim()) newErrors.password = t("required", { field: t("password") });
+    if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) newErrors.phone = t("invalidPhone");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [formData, employee]);
+  }, [formData, employee, t]);
 
   const handleSubmit = useCallback(() => {
     if (!validate()) return;
@@ -122,7 +129,7 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
       username: formData.username,
       password: formData.password || undefined,
       status: formData.status,
-      isActive: formData.isActive,
+      isActive: formData.isActive
     };
     onSave(dataToSave);
   }, [formData, onSave, validate]);
@@ -201,14 +208,14 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
       <Stack spacing={3}>
         <Box>
           <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-            Basic Information
+            {t("title")}
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
           <Stack spacing={2}>
             <TwoColRow>
               <TextField
-                label="Employee Code"
+                label={t("employeeCode")}
                 value={formData.employeeCode}
                 onChange={(e) => handleChange("employeeCode", e.target.value)}
                 fullWidth
@@ -218,7 +225,7 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
                 disabled={!!employee}
               />
               <TextField
-                label="Full Name"
+                label={t("fullName")}
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 fullWidth
@@ -231,10 +238,8 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
             <TwoColRow>
               <TextField
                 select
-                label="Role"
-                value={
-                  formData.employeeRoleId ? String(formData.employeeRoleId) : formData.roleName ?? ""
-                }
+                label={t("roleLabel")}
+                value={formData.employeeRoleId ? String(formData.employeeRoleId) : formData.roleName ?? ""}
                 onChange={(e) => handleRoleSelect(String(e.target.value))}
                 fullWidth
                 required
@@ -242,20 +247,20 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
                 helperText={errors.employeeRoleId}
               >
                 <MenuItem value="">
-                  <em>None</em>
+                  <em>{t("filterAllRoles")}</em>
                 </MenuItem>
                 {roleOptions}
               </TextField>
 
               <TextField
                 select
-                label="Building"
+                label={t("buildingLabel")}
                 value={formData.buildingId ?? ""}
                 onChange={(e) => handleChange("buildingId", e.target.value ? Number(e.target.value) : undefined)}
                 fullWidth
               >
                 <MenuItem value="">
-                  <em>None</em>
+                  <em>{t("filterAllRoles")}</em>
                 </MenuItem>
                 {buildingOptions}
               </TextField>
@@ -265,14 +270,14 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
 
         <Box>
           <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-            Contact Information
+            {t("contact")}
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
           <Stack spacing={2}>
             <TwoColRow>
               <TextField
-                label="Phone"
+                label={t("phone")}
                 value={formData.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
                 fullWidth
@@ -284,21 +289,21 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
             </TwoColRow>
 
             <Box>
-              <TextField label="Address" value={formData.address} onChange={(e) => handleChange("address", e.target.value)} fullWidth multiline rows={2} />
+              <TextField label={t("address")} value={formData.address} onChange={(e) => handleChange("address", e.target.value)} fullWidth multiline rows={2} />
             </Box>
           </Stack>
         </Box>
 
         <Box>
           <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-            Account Information
+            {t("account")}
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
           <Stack spacing={2}>
             <TwoColRow>
               <TextField
-                label="Username"
+                label={t("username")}
                 value={formData.username}
                 onChange={(e) => handleChange("username", e.target.value)}
                 fullWidth
@@ -307,14 +312,14 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
                 helperText={errors.username}
               />
               <TextField
-                label="Password"
+                label={t("password")}
                 type="password"
                 value={formData.password}
                 onChange={(e) => handleChange("password", e.target.value)}
                 fullWidth
                 required={!employee}
                 error={!!errors.password}
-                helperText={errors.password || (employee ? "Leave blank to keep current" : "")}
+                helperText={errors.password || (employee ? t("leaveBlankKeep") : "")}
               />
             </TwoColRow>
 
@@ -331,7 +336,7 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
                     color="success"
                   />
                 }
-                label={<Typography variant="body2">{formData.isActive ? "Active" : "Inactive"}</Typography>}
+                label={<Typography variant="body2">{formData.isActive ? t("statusActive") : t("statusInactive")}</Typography>}
               />
             </Box>
           </Stack>
@@ -340,13 +345,13 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
         <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" }, justifyContent: "flex-end", pt: 2 }}>
           <Box sx={{ width: { xs: "100%", sm: "auto" } }}>
             <Button onClick={onCancel} variant="outlined" fullWidth>
-              Cancel
+              {t("cancel")}
             </Button>
           </Box>
 
           <Box sx={{ width: { xs: "100%", sm: "auto" } }}>
             <Button onClick={handleSubmit} variant="contained" fullWidth>
-              {employee ? "Update" : "Create"}
+              {employee ? t("update") : t("create")}
             </Button>
           </Box>
         </Box>

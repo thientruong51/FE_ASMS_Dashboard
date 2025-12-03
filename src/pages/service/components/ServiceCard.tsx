@@ -1,35 +1,34 @@
 import { Paper, Box, Typography, Stack, Button, Divider } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import EditIcon from "@mui/icons-material/Edit";
+import { useTranslation } from "react-i18next";
 import type { Service } from "../../../api/serviceApi";
 
-
 const PACKAGE_COLOR_THEME = {
-  basic: { hex: "#10B981", textContrast: "#fff" }, 
-  business: { hex: "#F59E0B", textContrast: "#000" }, 
-  premium: { hex: "#8B5CF6", textContrast: "#fff" }, 
+  basic: { hex: "#10B981", textContrast: "#fff" },
+  business: { hex: "#F59E0B", textContrast: "#000" },
+  premium: { hex: "#8B5CF6", textContrast: "#fff" }
 };
 
 const PACKAGE_KEYWORDS: Record<string, string[]> = {
   basic: ["basic"],
   business: ["business"],
-  premium: ["premium"],
+  premium: ["premium"]
 };
 
-
 const ADDON_COLOR_THEME: Record<string, { hex: string; textContrast?: string }> = {
-  shipping: { hex: "#06B6D4", textContrast: "#fff" }, 
+  shipping: { hex: "#06B6D4", textContrast: "#fff" },
   protecting: { hex: "#06B6D4", textContrast: "#fff" },
-  packaging: { hex: "#F97316", textContrast: "#fff" }, 
-  delivery: { hex: "#059669", textContrast: "#fff" }, 
-  default: { hex: "#10B981", textContrast: "#fff" }, 
+  packaging: { hex: "#F97316", textContrast: "#fff" },
+  delivery: { hex: "#059669", textContrast: "#fff" },
+  default: { hex: "#10B981", textContrast: "#fff" }
 };
 
 const ADDON_KEYWORDS: Record<string, string[]> = {
   shipping: ["shipping", "ship"],
   protecting: ["protect", "protecting", "protection"],
-  packaging: ["pack", "packaging", "packaging"],
-  delivery: ["delivery", "deliver"],
+  packaging: ["pack", "packaging"],
+  delivery: ["delivery", "deliver"]
 };
 
 function findAddonGroup(name: string): string | null {
@@ -42,7 +41,6 @@ function findAddonGroup(name: string): string | null {
   }
   return null;
 }
-
 
 function pickPalette(item: Service) {
   const name = (item.name ?? "").toLowerCase();
@@ -72,15 +70,15 @@ function pickPalette(item: Service) {
       border: `${picked.hex}22`,
       textContrast: picked.textContrast ?? "#fff",
       highlighted: false,
-      type: "addon",
+      type: "addon"
     };
   }
 
   return { color: "#6B7280", border: "#e5e7eb", textContrast: "#fff", highlighted: false, type: "generic" };
 }
 
-
 export default function ServiceCard({ item, onEdit }: { item: Service; onEdit: (s: Service) => void }) {
+  const { t } = useTranslation("servicePage");
   const palette = pickPalette(item);
 
   const features = (item.description ?? "")
@@ -88,7 +86,7 @@ export default function ServiceCard({ item, onEdit }: { item: Service; onEdit: (
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const priceLabel = item.price && item.price > 0 ? `${Number(item.price).toLocaleString()} VND` : "Contact us";
+  const priceLabel = item.price && item.price > 0 ? `${Number(item.price).toLocaleString()} VND` : t("contactUs");
 
   const isAddon = palette.type === "addon";
 
@@ -108,13 +106,13 @@ export default function ServiceCard({ item, onEdit }: { item: Service; onEdit: (
         backgroundColor: "white",
         transition: "all 0.22s cubic-bezier(.12,.62,.4,.92)",
         cursor: "pointer",
-
         "&:hover": {
           transform: "translateY(-6px)",
           boxShadow: `0 12px 30px ${palette.color}33`,
-          borderColor: palette.color,
-        },
+          borderColor: palette.color
+        }
       }}
+      onClick={() => onEdit(item)}
     >
       <Box>
         <Typography
@@ -122,10 +120,10 @@ export default function ServiceCard({ item, onEdit }: { item: Service; onEdit: (
           sx={{
             color: palette.color,
             fontWeight: 700,
-            letterSpacing: ".5px",
+            letterSpacing: ".5px"
           }}
         >
-          {isAddon ? "ADD-ON" : "PACKAGE"}
+          {isAddon ? t("addonTag") : t("packageTag")}
         </Typography>
 
         <Typography variant="h6" sx={{ mt: 1, fontWeight: 900 }}>
@@ -141,7 +139,7 @@ export default function ServiceCard({ item, onEdit }: { item: Service; onEdit: (
         <Divider sx={{ my: 2, opacity: 0.1 }} />
 
         <Typography variant="h6" sx={{ fontSize: 16, opacity: 0.7 }}>
-          Price:
+          {t("priceTitle")}
         </Typography>
 
         <Stack spacing={1}>
@@ -164,11 +162,13 @@ export default function ServiceCard({ item, onEdit }: { item: Service; onEdit: (
         </Stack>
       </Box>
 
-      {/* Button */}
       <Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>
         <Button
           startIcon={<EditIcon />}
-          onClick={() => onEdit(item)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(item);
+          }}
           variant={palette.highlighted ? "contained" : "outlined"}
           sx={{
             textTransform: "none",
@@ -182,11 +182,11 @@ export default function ServiceCard({ item, onEdit }: { item: Service; onEdit: (
             transition: "all .22s ease",
             "&:hover": {
               bgcolor: palette.highlighted ? palette.color : `${palette.color}15`,
-              borderColor: palette.color,
-            },
+              borderColor: palette.color
+            }
           }}
         >
-          Edit
+          {t("edit")}
         </Button>
       </Box>
     </Paper>

@@ -1,4 +1,3 @@
-import React from "react";
 import { Box } from "@mui/material";
 import ProductTypeCard from "./ProductTypeCard";
 import type { ProductTypeItem } from "@/api/productTypeApi";

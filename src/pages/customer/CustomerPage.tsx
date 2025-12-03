@@ -1,5 +1,4 @@
-// src/pages/CustomerPage.tsx
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Box, Typography, Card, CardContent, CircularProgress, Snackbar, Alert } from "@mui/material";
 import type { GridPaginationModel } from "@mui/x-data-grid";
 

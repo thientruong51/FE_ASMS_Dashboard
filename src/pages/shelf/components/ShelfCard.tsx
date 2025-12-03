@@ -10,16 +10,17 @@ import {
   Stack,
   CircularProgress,
   Avatar,
-  Button,
+  Button
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ShelvesIcon from '@mui/icons-material/Shelves';
+import ShelvesIcon from "@mui/icons-material/Shelves";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { ShelfType } from "../components/types";
+import { useTranslation } from "react-i18next";
 
 function GLBModelFit({ url }: { url: string }) {
   const gltf = useGLTF(url, true);
@@ -77,7 +78,7 @@ function ShelfModelView({ url, visible }: { url?: string | null; visible: boolea
       try {
         controlsRef.current.target.set(0, 0, 0);
         controlsRef.current.update();
-      } catch { }
+      } catch {}
     }
   }, [visible]);
 
@@ -85,7 +86,7 @@ function ShelfModelView({ url, visible }: { url?: string | null; visible: boolea
     if (!url) return;
     try {
       useGLTF.preload?.(url);
-    } catch { }
+    } catch {}
   }, [url]);
 
   if (!visible || !url) return null;
@@ -113,7 +114,7 @@ function ShelfModelView({ url, visible }: { url?: string | null; visible: boolea
 export default function ShelfCard({
   shelf,
   onEdit,
-  onDelete,
+  onDelete
 }: {
   shelf: ShelfType;
   onEdit: (s: ShelfType) => void;
@@ -121,6 +122,7 @@ export default function ShelfCard({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
+  const { t } = useTranslation("shelfPage");
 
   useEffect(() => {
     const el = ref.current;
@@ -157,19 +159,16 @@ export default function ShelfCard({
         overflow: "hidden",
         transition: "all 0.35s ease",
         cursor: "pointer",
-
         "&:hover": {
           boxShadow: "0 10px 36px rgba(0,0,0,0.18)",
           transform: "translateY(-4px)",
-           borderColor: "primary.main",
+          borderColor: "primary.main"
         },
-
         "&:hover .card-image-overlay": {
-          opacity: 0.14,
-        },
+          opacity: 0.14
+        }
       }}
     >
-
       <Box sx={{ position: "relative", height: 220, overflow: "hidden" }}>
         {hasModel ? (
           <ShelfModelView url={shelf.imageUrl!} visible={visible} />
@@ -185,9 +184,6 @@ export default function ShelfCard({
           <Avatar sx={{ bgcolor: "primary.main", width: 40, height: 40 }}>
             <ShelvesIcon />
           </Avatar>
-          <Box>
-           
-          </Box>
         </Box>
       </Box>
 
@@ -197,7 +193,6 @@ export default function ShelfCard({
             <Typography variant="h6" noWrap>
               {shelf.name}
             </Typography>
-
           </Box>
 
           <Stack direction="column" spacing={1} alignItems="flex-end">
@@ -218,7 +213,7 @@ export default function ShelfCard({
 
         <Box sx={{ flex: "1 0 auto", display: "flex", justifyContent: "flex-end", pr: 1 }}>
           <Button size="small" startIcon={<VisibilityIcon />} onClick={(e) => { e.stopPropagation(); /* optional full preview */ }}>
-            View
+            {t("preview")}
           </Button>
         </Box>
       </CardActions>

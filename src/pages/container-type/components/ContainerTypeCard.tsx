@@ -1,4 +1,3 @@
-// src/components/ContainerTypeCard.tsx
 import React, { useEffect, useRef, useState, Suspense } from "react";
 import {
   Card,

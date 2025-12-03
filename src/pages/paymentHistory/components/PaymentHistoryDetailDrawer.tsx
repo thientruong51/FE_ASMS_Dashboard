@@ -1,4 +1,4 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Drawer,
   Box,
@@ -14,6 +14,7 @@ import {
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import PaymentIcon from "@mui/icons-material/Payment";
+import { useTranslation } from "react-i18next";
 import * as paymentApi from "@/api/paymentHistoryApi";
 
 type Props = {
@@ -24,6 +25,8 @@ type Props = {
 };
 
 export default function PaymentHistoryDetailDrawer({ code, open, onClose, item }: Props) {
+  const { t } = useTranslation("paymentHistory");
+
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<paymentApi.PaymentHistoryItem | null>(item ?? null);
 
@@ -73,10 +76,10 @@ export default function PaymentHistoryDetailDrawer({ code, open, onClose, item }
             </IconButton>
             <Box>
               <Typography fontWeight={700} sx={{ fontSize: 18 }}>
-                Payment {code ?? ""}
+                {t("drawer.title", { code: code ?? "" })}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13 }}>
-                Payment history detail
+                {t("drawer.subtitle")}
               </Typography>
             </Box>
           </Box>
@@ -99,12 +102,12 @@ export default function PaymentHistoryDetailDrawer({ code, open, onClose, item }
             <Box>
               <Typography fontWeight={700}>{data?.paymentMethod ?? "-"}</Typography>
               <Typography variant="caption" color="text.secondary">
-                Platform: {data?.paymentPlatform ?? "-"}
+                {t("drawer.platform")}: {data?.paymentPlatform ?? "-"}
               </Typography>
             </Box>
             <Box sx={{ ml: "auto", textAlign: "right" }}>
               <Typography variant="caption" color="text.secondary">
-                Amount
+                {t("drawer.amount")}
               </Typography>
               <Typography fontWeight={700}>{data?.amount != null ? formatNumber(data.amount) : "-"}</Typography>
             </Box>
@@ -115,35 +118,35 @@ export default function PaymentHistoryDetailDrawer({ code, open, onClose, item }
               <Stack spacing={1}>
                 {has(data?.paymentHistoryCode) && (
                   <Box sx={{ display: "flex", gap: 2 }}>
-                    <Box sx={{ width: 160, color: "text.secondary" }}>Code</Box>
+                    <Box sx={{ width: 160, color: "text.secondary" }}>{t("fields.code")}</Box>
                     <Box sx={{ flex: 1 }}>{data!.paymentHistoryCode}</Box>
                   </Box>
                 )}
 
                 {has(data?.orderCode) && (
                   <Box sx={{ display: "flex", gap: 2 }}>
-                    <Box sx={{ width: 160, color: "text.secondary" }}>Order</Box>
+                    <Box sx={{ width: 160, color: "text.secondary" }}>{t("fields.order")}</Box>
                     <Box sx={{ flex: 1 }}>{data!.orderCode}</Box>
                   </Box>
                 )}
 
                 {has(data?.paymentMethod) && (
                   <Box sx={{ display: "flex", gap: 2 }}>
-                    <Box sx={{ width: 160, color: "text.secondary" }}>Method</Box>
+                    <Box sx={{ width: 160, color: "text.secondary" }}>{t("fields.method")}</Box>
                     <Box sx={{ flex: 1 }}>{data!.paymentMethod}</Box>
                   </Box>
                 )}
 
                 {has(data?.paymentPlatform) && (
                   <Box sx={{ display: "flex", gap: 2 }}>
-                    <Box sx={{ width: 160, color: "text.secondary" }}>Platform</Box>
+                    <Box sx={{ width: 160, color: "text.secondary" }}>{t("fields.platform")}</Box>
                     <Box sx={{ flex: 1 }}>{data!.paymentPlatform}</Box>
                   </Box>
                 )}
 
                 {has(data?.amount) && (
                   <Box sx={{ display: "flex", gap: 2 }}>
-                    <Box sx={{ width: 160, color: "text.secondary" }}>Amount</Box>
+                    <Box sx={{ width: 160, color: "text.secondary" }}>{t("fields.amount")}</Box>
                     <Box sx={{ flex: 1 }}>{formatNumber(data!.amount)}</Box>
                   </Box>
                 )}
@@ -165,16 +168,15 @@ export default function PaymentHistoryDetailDrawer({ code, open, onClose, item }
             </CardContent>
           </Card>
 
-          {/* Loading / empty states */}
-          {loading && <Typography color="text.secondary">Loading...</Typography>}
-          {!loading && !data && <Typography color="text.secondary">No data available</Typography>}
+          {loading && <Typography color="text.secondary">{t("drawer.loading")}</Typography>}
+          {!loading && !data && <Typography color="text.secondary">{t("drawer.noData")}</Typography>}
         </Box>
 
         <Box sx={{ p: 2, borderTop: "1px solid #f0f0f0", display: "flex", gap: 1, justifyContent: "space-between", alignItems: "center" }}>
           <Box />
           <Box sx={{ display: "flex", gap: 1 }}>
             <Button variant="outlined" onClick={onClose}>
-              Close
+              {t("actions.close")}
             </Button>
           </Box>
         </Box>

@@ -1,0 +1,47 @@
+{
+  "page": {
+    "title": "Payment History",
+    "subtitle": "List of payment events",
+    "searchPlaceholder": "Search code / order / method..."
+  },
+
+  "drawer": {
+    "title": "Payment {{code}}",
+    "subtitle": "Payment history detail",
+    "platform": "Platform",
+    "amount": "Amount",
+    "noData": "No data available",
+    "loading": "Loading..."
+  },
+
+  "fields": {
+    "code": "Code",
+    "order": "Order",
+    "method": "Method",
+    "platform": "Platform",
+    "amount": "Amount"
+  },
+
+  "actions": {
+    "close": "Close",
+    "details": "Details",
+    "exportCsv": "Export CSV",
+    "refresh": "Refresh",
+    "toggleDensity": "Toggle density",
+    "export": "Export"
+  },
+
+  "table": {
+    "code": "Code",
+    "order": "Order",
+    "method": "Method",
+    "platform": "Platform",
+    "amount": "Amount",
+    "actions": "Actions"
+  },
+
+  "messages": {
+    "loadFailed": "Load failed",
+    "exportFilenamePrefix": "payment_history_export"
+  }
+}

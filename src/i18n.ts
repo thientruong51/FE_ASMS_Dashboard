@@ -15,8 +15,26 @@ import employeeRoleEn from "./locales/en/employeeRole.json";
 import employeeRoleVi from "./locales/vi/employeeRole.json";
 import orderEn from "./locales/en/order.json";
 import orderVi from "./locales/vi/order.json";
-
-
+import paymentEn from "./locales/en/paymentHistory.json";
+import paymentVi from "./locales/vi/paymentHistory.json";
+import enProductTypePage from "./locales/en/productTypePage.json";
+import viProductTypePage from "./locales/vi/productTypePage.json";
+import enServicePage from "./locales/en/servicePage.json";
+import viServicePage from "./locales/vi/servicePage.json";
+import enShelfPage from "./locales/en/shelfPage.json";
+import viShelfPage from "./locales/vi/shelfPage.json";
+import enStaffPage from "./locales/en/staffPage.json";
+import viStaffPage from "./locales/vi/staffPage.json";
+import enStorageTypePage from "./locales/en/storageTypePage.json";
+import viStorageTypePage from "./locales/vi/storageTypePage.json";
+import enTracking from "./locales/en/trackingHistoryPage.json";
+import viTracking from "./locales/vi/trackingHistoryPage.json";
+import enTopbar from "./locales/en/topbar.json";
+import viTopbar from "./locales/vi/topbar.json";
+import enSidebar from "./locales/en/sidebar.json";
+import viSidebar from "./locales/vi/sidebar.json";
+import enStoragePage from "./locales/en/storagePage.json";
+import viStoragePage from "./locales/vi/storagePage.json";
 i18n
   .use(initReactI18next)
   .init({
@@ -28,7 +46,17 @@ i18n
         containerType: containerEn,
         customer: customerEn,
         employeeRole: employeeRoleEn,
-        order: orderEn
+        order: orderEn,
+        paymentHistory: paymentEn,
+        productTypePage: enProductTypePage,
+        servicePage: enServicePage,
+        shelfPage: enShelfPage,
+        staffPage: enStaffPage,
+        storageTypePage: enStorageTypePage,
+        trackingHistoryPage: enTracking,
+        topbar: enTopbar,
+        sidebar: enSidebar,
+        storagePage: enStoragePage
       },
       vi: {
         auth: authVi,
@@ -37,7 +65,17 @@ i18n
         containerType: containerVi,
         customer: customerVi,
         employeeRole: employeeRoleVi,
-        order: orderVi
+        order: orderVi,
+        paymentHistory: paymentVi,
+        productTypePage: viProductTypePage,
+        servicePage: viServicePage,
+        shelfPage: viShelfPage,
+        staffPage: viStaffPage,
+        storageTypePage: viStorageTypePage,
+        trackingHistoryPage: viTracking,
+        topbar: viTopbar,
+        sidebar: viSidebar,
+        storagePage: viStoragePage
       }
     },
     lng: "vi", 

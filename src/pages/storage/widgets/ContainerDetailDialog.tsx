@@ -24,6 +24,8 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
+import { useTranslation } from "react-i18next";
+
 import type { ContainerItem } from "@/api/containerApi";
 import type { ContainerLocationLogItem } from "@/api/containerLocationLogApi";
 import containerLocationLogApi from "@/api/containerLocationLogApi";
@@ -47,6 +49,7 @@ const formatValue = (v: any) => {
 };
 
 export default function ContainerDetailDialog({ open, container, onClose, onSaveLocal, onNotify }: Props) {
+  const { t } = useTranslation("storagePage");
   const theme = useTheme();
   const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
 
@@ -125,13 +128,13 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
     const toCopy = text ?? "";
     try {
       if (!navigator.clipboard?.writeText) {
-        onNotify?.("Clipboard not available in this environment", "warning");
+        onNotify?.(t("clipboardUnavailable"), "warning");
         return;
       }
       await navigator.clipboard.writeText(String(toCopy));
-      onNotify?.("Copied to clipboard", "success");
+      onNotify?.(t("copiedToClipboard"), "success");
     } catch (err) {
-      onNotify?.("Copy failed", "error");
+      onNotify?.(t("copyFailed"), "error");
     }
   };
 
@@ -139,7 +142,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
     if (!container) return;
 
     if (!hasChanges) {
-      onNotify?.("No changes to save.", "info");
+      onNotify?.(t("noChangesToSave"), "info");
       return;
     }
 
@@ -151,7 +154,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
 
     onSaveLocal?.(updated);
 
-    onNotify?.("Saved locally — changes will be applied when you press Apply updates.", "info");
+    onNotify?.(t("savedLocallyInfo"), "info");
 
     onClose();
   };
@@ -173,14 +176,14 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
         setLogPage(data.currentPage ?? page);
         setLogTotalRecords(typeof data.totalRecords === "number" ? data.totalRecords : (data.items ? data.items.length : 0));
       } catch (err: any) {
-        setLogError(err?.message ?? "Failed to load logs");
+        setLogError(err?.message ?? t("copyFailed"));
         setLogs([]);
         setLogTotalRecords(0);
       } finally {
         setLogLoading(false);
       }
     },
-    [container?.containerCode, logPageSize]
+    [container?.containerCode, logPageSize, t]
   );
 
   React.useEffect(() => {
@@ -237,8 +240,8 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
           py: { xs: 1.25, sm: 1.5 },
         }}
       >
-        <Typography variant="h6">Container details</Typography>
-        <IconButton onClick={onClose} size="small" aria-label="close">
+        <Typography variant="h6">{t("containerDetails")}</Typography>
+        <IconButton onClick={onClose} size="small" aria-label={t("containerDetails")}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -247,7 +250,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
 
       <DialogContent dividers sx={{ p: { xs: 1.5, sm: 3 } }}>
         {!container ? (
-          <Box sx={{ py: 5, textAlign: "center", color: "text.secondary" }}>No container selected.</Box>
+          <Box sx={{ py: 5, textAlign: "center", color: "text.secondary" }}>{t("noContainerSelected")}</Box>
         ) : (
           <Stack spacing={2}>
             {/* Image + main info (side-by-side on sm+, stacked on xs) */}
@@ -295,17 +298,17 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                 </Typography>
 
                 <Stack direction="row" spacing={1} flexWrap="wrap">
-                  <Chip label={mainFields.status} size="small" />
-                  <Chip label={`Type: ${mainFields.type}`} size="small" />
-                  <Chip label={`SN: ${mainFields.serialNumber}`} size="small" />
+                  <Chip label={`${t("status")}: ${mainFields.status}`} size="small" />
+                  <Chip label={`${t("type")}: ${mainFields.type}`} size="small" />
+                  <Chip label={`${t("snLabel")}: ${mainFields.serialNumber}`} size="small" />
                 </Stack>
 
                 <Typography fontSize={13} color="text.secondary" sx={{ mt: 0.5 }}>
-                  Floor: {mainFields.floorCode}
+                  {t("floor")}: {mainFields.floorCode}
                 </Typography>
 
                 <Typography fontSize={13} color="text.secondary">
-                  Weight: {mainFields.weight}
+                  {t("weight")}: {mainFields.weight}
                 </Typography>
 
                 <Stack
@@ -325,13 +328,13 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                       flexShrink: 0,
                     }}
                   >
-                    Copy code
+                    {t("copyCode")}
                   </Button>
 
                   {/* Editable inputs for serialNumber & layer */}
                   <TextField
                     size="small"
-                    label="Serial Number"
+                    label={t("serialNumber")}
                     type="number"
                     value={serialNumber}
                     onChange={(e) => {
@@ -357,7 +360,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
             >
               {auxEntries.length === 0 ? (
                 <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>
-                  No additional data.
+                  {t("noAdditionalData")}
                 </Typography>
               ) : (
                 auxEntries.map(([k, v]) => (
@@ -389,12 +392,12 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
             {/* Location logs section */}
             <Box>
               <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-                <Typography variant="subtitle1">Location history</Typography>
+                <Typography variant="subtitle1">{t("locationHistory")}</Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Typography variant="caption" color="text.secondary">
-                    {logTotalRecords > 0 ? `${logTotalRecords} records` : ""}
+                    {logTotalRecords > 0 ? t("recordsCount", { count: logTotalRecords }) : ""}
                   </Typography>
-                  <Tooltip title="Refresh">
+                  <Tooltip title={t("refresh")}>
                     <IconButton
                       size="small"
                       onClick={() => {
@@ -416,7 +419,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                 <Typography color="error">{logError}</Typography>
               ) : logs.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  No location history found.
+                  {t("noLocationHistory")}
                 </Typography>
               ) : (
                 <>
@@ -426,7 +429,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                         key={l.containerLocationLogId}
                         secondaryAction={
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Tooltip title="Copy current floor">
+                            <Tooltip title={t("copyCode")}>
                               <IconButton size="small" onClick={() => handleCopy(l.currentFloor)}>
                                 <ContentCopyIcon fontSize="small" />
                               </IconButton>
@@ -448,12 +451,12 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                           secondary={
                             <Stack spacing={0.25}>
                               <Typography fontSize={12} color="text.secondary">
-                                {l.orderCode ? `Order: ${l.orderCode} • ` : ""}
-                                Updated: {formatDate(l.updatedDate)}
+                                {l.orderCode ? `${t("orderPrefix", { orderCode: l.orderCode })} • ` : ""}
+                                {t("updated", { date: formatDate(l.updatedDate) })}
                               </Typography>
                               {l.oldFloor ? (
                                 <Typography fontSize={12} color="text.secondary">
-                                  From: {l.oldFloor}
+                                  {t("fromFloor", { oldFloor: l.oldFloor })}
                                 </Typography>
                               ) : null}
                             </Stack>
@@ -471,10 +474,10 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                       onClick={handlePrevPage}
                       disabled={logPage <= 1}
                     >
-                      Prev
+                      {t("prev")}
                     </Button>
                     <Typography variant="body2" sx={{ minWidth: 88, textAlign: "center" }}>
-                      Page {logPage} of {Math.max(1, Math.ceil(logTotalRecords / logPageSize))}
+                      {t("pageOf", { page: logPage, total: Math.max(1, Math.ceil(logTotalRecords / logPageSize)) })}
                     </Typography>
                     <Button
                       size="small"
@@ -482,7 +485,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                       onClick={handleNextPage}
                       disabled={logPage >= Math.max(1, Math.ceil(logTotalRecords / logPageSize))}
                     >
-                      Next
+                      {t("next")}
                     </Button>
                   </Stack>
                 </>
@@ -498,7 +501,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                 disabled={!hasChanges}
                 fullWidth={!isSmUp}
               >
-                Save locally
+                {t("saveLocally")}
               </Button>
             </Stack>
           </Stack>

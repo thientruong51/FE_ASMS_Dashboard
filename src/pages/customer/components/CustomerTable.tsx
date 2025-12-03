@@ -1,4 +1,3 @@
-import React from "react";
 import { Stack, Typography, Chip, IconButton, Box } from "@mui/material";
 import { DataGrid, type GridColDef, type GridRenderCellParams, type GridPaginationModel } from "@mui/x-data-grid";
 import PersonIcon from "@mui/icons-material/Person";

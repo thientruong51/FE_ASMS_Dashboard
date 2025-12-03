@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import type { RootState } from "@/app/store";
 import { setSidebar } from "@/features/ui/uiSlice";
+import { useTranslation } from "react-i18next";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
@@ -27,7 +28,9 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssignmentAddIcon from '@mui/icons-material/AssignmentAdd';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
+
 export default function Sidebar() {
+  const { t } = useTranslation("sidebar");
   const theme = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -37,28 +40,26 @@ export default function Sidebar() {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const items = [
-    { label: "Dashboard", icon: <DashboardIcon />, to: "/" },
-    { label: "Orders", icon: <AssignmentIcon />, to: "/orders" },
-    { label: "TrackingHistorys", icon: <AssignmentAddIcon />, to: "/trackingHistorys" },
-    { label: "Storages", icon: <InventoryIcon />, to: "/storages" },
-    { label: "Customers", icon: <PeopleIcon />, to: "/customers" },
-    { label: "PaymentHistorys", icon: <RequestQuoteIcon />, to: "/paymentHistorys" },
-
-    { label: "Employee Roles", icon: <ManageAccountsIcon />, to: "/employee-roles" },
-    { label: "Staffs", icon: <EngineeringIcon />, to: "/staffs" },
-    { label: "Services", icon: <BallotIcon />, to: "/services" },
-    { label: "Buildings", icon: <ApartmentIcon />, to: "/buildings" },
-    { label: "Storage Types", icon: <WarehouseIcon />, to: "/storage-types" },
-    { label: "Shelfs Types", icon: <ShelvesIcon />, to: "/shelfs" },
-    { label: "Container Types", icon: <WidgetsIcon />, to: "/container-types" },
-    { label: "Product Types", icon: <LiquorIcon />, to: "/product-types" },
-    { label: "Settings", icon: <SettingsIcon />, to: "/settings" },
-    
+    { label: t("dashboard"), icon: <DashboardIcon />, to: "/" },
+    { label: t("orders"), icon: <AssignmentIcon />, to: "/orders" },
+    { label: t("trackingHistorys"), icon: <AssignmentAddIcon />, to: "/trackingHistorys" },
+    { label: t("storages"), icon: <InventoryIcon />, to: "/storages" },
+    { label: t("customers"), icon: <PeopleIcon />, to: "/customers" },
+    { label: t("paymentHistorys"), icon: <RequestQuoteIcon />, to: "/paymentHistorys" },
+    { label: t("employeeRoles"), icon: <ManageAccountsIcon />, to: "/employee-roles" },
+    { label: t("staffs"), icon: <EngineeringIcon />, to: "/staffs" },
+    { label: t("services"), icon: <BallotIcon />, to: "/services" },
+    { label: t("buildings"), icon: <ApartmentIcon />, to: "/buildings" },
+    { label: t("storageTypes"), icon: <WarehouseIcon />, to: "/storage-types" },
+    { label: t("shelfsTypes"), icon: <ShelvesIcon />, to: "/shelfs" },
+    { label: t("containerTypes"), icon: <WidgetsIcon />, to: "/container-types" },
+    { label: t("productTypes"), icon: <LiquorIcon />, to: "/product-types" },
+    { label: t("settings"), icon: <SettingsIcon />, to: "/settings" },
   ];
 
   const handleNavigate = (path: string) => {
     navigate(path);
-    if (isMobile) dispatch(setSidebar(false)); 
+    if (isMobile) dispatch(setSidebar(false));
   };
 
   const sidebarContent = (
@@ -86,9 +87,7 @@ export default function Sidebar() {
                 bgcolor: active ? "rgba(33,150,243,0.12)" : "transparent",
                 borderRadius: "12px",
                 transition: "0.25s",
-                "&:hover": {
-                  bgcolor: "rgba(33,150,243,0.1)",
-                },
+                "&:hover": { bgcolor: "rgba(33,150,243,0.1)" },
               }}
             >
               {item.icon}
@@ -99,7 +98,6 @@ export default function Sidebar() {
     </Box>
   );
 
-  // --- Mobile Drawer ---
   if (isMobile) {
     return (
       <Drawer
@@ -107,38 +105,15 @@ export default function Sidebar() {
         open={sidebarOpen}
         onClose={() => dispatch(setSidebar(false))}
         ModalProps={{ keepMounted: true }}
-        sx={{
-          zIndex: 2000,
-          "& .MuiDrawer-paper": {
-            width: 70,
-            boxSizing: "border-box",
-            bgcolor: "#fff",
-            borderRight: "1px solid #e5e7eb",
-            position: "fixed",
-            top: 0,
-            left: 0,
-            height: "100%",
-          },
-        }}
+        sx={{ zIndex: 2000, "& .MuiDrawer-paper": { width: 70, boxSizing: "border-box", bgcolor: "#fff", borderRight: "1px solid #e5e7eb", position: "fixed", top: 0, left: 0, height: "100%" } }}
       >
         {sidebarContent}
       </Drawer>
     );
   }
 
-  // --- Desktop Sidebar ---
   return (
-    <Box
-      sx={{
-        width: 70,
-        bgcolor: "#fff",
-        borderRight: "1px solid #e5e7eb",
-        position: "sticky",
-        top: 0,
-        height: "100vh",
-        zIndex: 100,
-      }}
-    >
+    <Box sx={{ width: 70, bgcolor: "#fff", borderRight: "1px solid #e5e7eb", position: "sticky", top: 0, height: "100vh", zIndex: 100 }}>
       {sidebarContent}
     </Box>
   );

@@ -1,4 +1,4 @@
-import  { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Box, Typography, Card, CardContent, useMediaQuery, useTheme, Chip, Stack } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import useStaffData from "@/hooks/useStaffData";
@@ -10,8 +10,11 @@ import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import type { Employee } from "../../types/staff";
+import { useTranslation } from "react-i18next";
+import { Box as MBox } from "@mui/system";
 
 export default function StaffPage() {
+  const { t } = useTranslation("staffPage");
   const theme = useTheme();
   const isSmDown = useMediaQuery(theme.breakpoints.down("sm"));
   const isMdDown = useMediaQuery(theme.breakpoints.down("md"));
@@ -49,7 +52,7 @@ export default function StaffPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this employee?")) return;
+    if (!window.confirm(t("confirmDeleteBody_plural"))) return;
     try {
       await remove(id);
       refresh();
@@ -87,7 +90,7 @@ export default function StaffPage() {
     () => [
       {
         field: "employeeCode",
-        headerName: "Employee Code",
+        headerName: t("employeeCode"),
         minWidth: 120,
         flex: 0.9,
         renderCell: (params: GridRenderCellParams) => (
@@ -97,84 +100,78 @@ export default function StaffPage() {
               {params.value}
             </Typography>
           </Box>
-        ),
+        )
       },
       {
         field: "name",
-        headerName: "Full Name",
+        headerName: t("fullName"),
         minWidth: 160,
         flex: 1.6,
-        renderCell: (params: GridRenderCellParams) => <Typography sx={{ fontSize: { xs: 13, sm: 14 } }}>{params.value || "-"}</Typography>,
+        renderCell: (params: GridRenderCellParams) => <Typography sx={{ fontSize: { xs: 13, sm: 14 } }}>{params.value || "-"}</Typography>
       },
       {
         field: "employeeRole",
-        headerName: "Role",
+        headerName: t("roleLabel"),
         minWidth: 140,
         flex: 1,
         renderCell: (params: GridRenderCellParams) => {
           const roleLabel = params.row.roleName ?? params.value?.name ?? "N/A";
           return <Chip label={roleLabel} size={isSmDown ? "small" : "small"} color="primary" variant="outlined" />;
-        },
+        }
       },
       {
         field: "building",
-        headerName: "Building",
+        headerName: t("buildingLabel"),
         minWidth: 120,
         flex: 0.9,
         renderCell: (params: GridRenderCellParams) => {
           const emp = params.row;
-          const bName =
-            emp.buildingName ??
-            emp.building?.name ??
-            buildingMap[String(emp.buildingId ?? "")] ??
-            "-";
+          const bName = emp.buildingName ?? emp.building?.name ?? buildingMap[String(emp.buildingId ?? "")] ?? "-";
           return <Typography sx={{ fontSize: { xs: 12, sm: 14 } }}>{bName}</Typography>;
-        },
+        }
       },
       {
         field: "phone",
-        headerName: "Phone",
+        headerName: t("phone"),
         minWidth: 120,
         flex: 0.9,
-        renderCell: (params: GridRenderCellParams) => <Typography sx={{ fontSize: { xs: 12, sm: 13 } }}>{params.value || "-"}</Typography>,
+        renderCell: (params: GridRenderCellParams) => <Typography sx={{ fontSize: { xs: 12, sm: 13 } }}>{params.value || "-"}</Typography>
       },
       {
         field: "username",
-        headerName: "Username",
+        headerName: t("username"),
         minWidth: 140,
         flex: 1,
-        renderCell: (params: GridRenderCellParams) => (
-          <Typography sx={{ fontSize: { xs: 12, sm: 13 }, fontFamily: "monospace" }}>{params.value || "-"}</Typography>
-        ),
+        renderCell: (params: GridRenderCellParams) => <Typography sx={{ fontSize: { xs: 12, sm: 13 }, fontFamily: "monospace" }}>{params.value || "-"}</Typography>
       },
       {
         field: "status",
-        headerName: "Status",
+        headerName: t("tableActions"),
         minWidth: 110,
         flex: 0.8,
         renderCell: (params: GridRenderCellParams) => {
           const isActive = params.row.isActive;
-          return <Chip label={isActive ? "Active" : "Inactive"} size="small" color={isActive ? "success" : "default"} sx={{ fontWeight: 500 }} />;
-        },
+          return <Chip label={isActive ? t("statusActive") : t("statusInactive")} size="small" color={isActive ? "success" : "default"} sx={{ fontWeight: 500 }} />;
+        }
       },
       {
         field: "actions",
-        headerName: "Actions",
+        headerName: t("tableActions"),
         width: 120,
         sortable: false,
         renderCell: (params: GridRenderCellParams) => (
           <Stack direction="row" spacing={0.5}>
-            <Box component="span" sx={{ cursor: "pointer" }} onClick={() => handleOpenEdit(params.row as Employee)}>
+            <MBox component="span" sx={{ cursor: "pointer" }} onClick={() => handleOpenEdit(params.row as Employee)} aria-label={t("edit")}>
               <EditIcon fontSize="small" />
-            </Box>
-            <Box component="span" sx={{ cursor: "pointer" }} onClick={() => handleDelete(params.row.id)}>
+            </MBox>
+            <MBox component="span" sx={{ cursor: "pointer" }} onClick={() => handleDelete(params.row.id)} aria-label={t("delete")}>
               <DeleteIcon fontSize="small" />
-            </Box>
+            </MBox>
           </Stack>
-        ),
-      },
+        )
+      }
     ],
-    [isSmDown, buildingMap]
+    [t, isSmDown, buildingMap]
   );
 
   const visibleOnSmall = ["employeeCode", "name", "phone", "actions"];
@@ -186,9 +183,9 @@ export default function StaffPage() {
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
       <Box mb={3}>
         <Typography variant="h4" fontWeight={700} gutterBottom>
-          Staff Management
+          {t("title")}
         </Typography>
-        <Typography color="text.secondary">Manage employees, roles, and assignments</Typography>
+        <Typography color="text.secondary">{t("subtitle")}</Typography>
       </Box>
 
       <Card sx={{ mb: 3, borderRadius: 2 }}>

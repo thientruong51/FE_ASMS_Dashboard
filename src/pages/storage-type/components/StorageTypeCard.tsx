@@ -9,6 +9,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Html, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import type { StorageType } from "./types";
+import { useTranslation } from "react-i18next";
 
 function GLBModelFit({ url }: { url: string }) {
   const gltf = useGLTF(url);
@@ -63,7 +64,7 @@ export default function StorageTypeCard({
   onDelete,
   selectable,
   selected,
-  onSelect,
+  onSelect
 }: {
   item: StorageType;
   onEdit?: (s: StorageType) => void;
@@ -74,6 +75,7 @@ export default function StorageTypeCard({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
+  const { t } = useTranslation("storageTypePage");
 
   useEffect(() => {
     if (!ref.current) return;
@@ -96,6 +98,9 @@ export default function StorageTypeCard({
   const hasModel = !!item.imageUrl && /\.(glb|gltf|obj)$/i.test(item.imageUrl ?? "");
   const hasImage = !!item.imageUrl && /\.(jpe?g|png|webp|gif)$/i.test(item.imageUrl ?? "");
 
+  const priceLabel = typeof item.price === "number" ? `${Number(item.price).toLocaleString()} đ` : t("priceNA");
+  const dims = t("dimensions", { l: (item.length ?? 0).toFixed(2), w: (item.width ?? 0).toFixed(2), h: (item.height ?? 0).toFixed(2) });
+
   return (
     <Card
       ref={ref}
@@ -110,7 +115,7 @@ export default function StorageTypeCard({
         transition: "transform 0.28s ease, box-shadow 0.28s ease",
         transform: selected ? "translateY(-8px)" : "none",
         cursor: selectable ? "pointer" : "default",
-        "&:hover": { transform: "translateY(-8px)", boxShadow: "0 12px 40px rgba(16,24,40,0.08)", borderColor: "primary.main", },
+        "&:hover": { transform: "translateY(-8px)", boxShadow: "0 12px 40px rgba(16,24,40,0.08)", borderColor: "primary.main" }
       }}
       onClick={() => selectable && onSelect && onSelect(item.storageTypeId)}
     >
@@ -147,10 +152,9 @@ export default function StorageTypeCard({
           </Box>
         )}
 
-        {/* gradient overlay + price badge */}
         <Box sx={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.0), rgba(2,6,23,0.08))", pointerEvents: "none" }} />
         <Chip
-          label={typeof item.price === "number" ? `${Number(item.price).toLocaleString()} đ` : "N/A"}
+          label={priceLabel}
           size="small"
           sx={{
             position: "absolute",
@@ -160,7 +164,7 @@ export default function StorageTypeCard({
             color: "#fff",
             fontWeight: 700,
             px: 1.5,
-            boxShadow: "0 6px 18px rgba(59,130,246,0.12)",
+            boxShadow: "0 6px 18px rgba(59,130,246,0.12)"
           }}
         />
       </Paper>
@@ -169,10 +173,13 @@ export default function StorageTypeCard({
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
           <Box>
             <Typography variant="subtitle2" color="text.secondary">
-              {`ID: ${item.storageTypeId}`}
+              {t("idLabel", { id: item.storageTypeId })}
             </Typography>
             <Typography variant="h6" noWrap sx={{ fontWeight: 700 }}>
               {item.name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              {dims}
             </Typography>
           </Box>
 
@@ -184,26 +191,24 @@ export default function StorageTypeCard({
         <Stack direction="row" spacing={2} alignItems="center" mb={1}>
           <Stack direction="row" alignItems="center" spacing={0.5}>
             <StraightenIcon fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary">{item.area ?? "-" } m²</Typography>
+            <Typography variant="body2" color="text.secondary">{t("area", { area: (item.area ?? 0).toFixed(2) })}</Typography>
           </Stack>
 
           <Stack direction="row" alignItems="center" spacing={0.5}>
             <HeightIcon fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary">{item.totalVolume ?? "-"} m³</Typography>
+            <Typography variant="body2" color="text.secondary">{t("volume", { vol: (item.totalVolume ?? 0).toFixed(2) })}</Typography>
           </Stack>
         </Stack>
-
-        
       </CardContent>
 
       <CardActions sx={{ px: 1 }}>
         {onEdit && (
-          <IconButton size="small" aria-label="edit" onClick={(e) => { e.stopPropagation(); onEdit(item); }}>
+          <IconButton size="small" aria-label={t("edit")} onClick={(e) => { e.stopPropagation(); onEdit(item); }}>
             <EditIcon fontSize="small" />
           </IconButton>
         )}
         {onDelete && (
-          <IconButton size="small" aria-label="delete" onClick={(e) => { e.stopPropagation(); onDelete(item.storageTypeId); }}>
+          <IconButton size="small" aria-label={t("delete")} onClick={(e) => { e.stopPropagation(); onDelete(item.storageTypeId); }}>
             <DeleteIcon fontSize="small" />
           </IconButton>
         )}

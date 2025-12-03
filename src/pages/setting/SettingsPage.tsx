@@ -485,34 +485,9 @@ const SettingsPage: React.FC = () => {
                 </TextField>
               </Box>
 
-              <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", md: "row" } }}>
-                <TextField
-                  label={t("fields.notificationEmail")}
-                  value={notificationEmail}
-                  onChange={(e) => setNotificationEmail(e.target.value)}
-                  fullWidth
-                  size="small"
-                />
-              </Box>
+          
 
-              <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 1 }}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  sx={{
-                    bgcolor: primary,
-                    color: "#fff",
-                    px: 4,
-                    py: 1,
-                    borderRadius: 3,
-                    textTransform: "none",
-                    boxShadow: "0 6px 18px rgba(60,189,150,0.14)",
-                    "&:hover": { bgcolor: primary },
-                  }}
-                >
-                  {t("actions.save")}
-                </Button>
-              </Box>
+      
             </Stack>
           </form>
         </Paper>

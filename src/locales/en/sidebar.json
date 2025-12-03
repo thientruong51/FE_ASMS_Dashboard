@@ -1,0 +1,17 @@
+{
+  "dashboard": "Dashboard",
+  "orders": "Orders",
+  "trackingHistorys": "Tracking History",
+  "storages": "Storages",
+  "customers": "Customers",
+  "paymentHistorys": "Payment History",
+  "employeeRoles": "Employee Roles",
+  "staffs": "Staffs",
+  "services": "Services",
+  "buildings": "Buildings",
+  "storageTypes": "Storage Types",
+  "shelfsTypes": "Shelves Types",
+  "containerTypes": "Container Types",
+  "productTypes": "Product Types",
+  "settings": "Settings"
+}

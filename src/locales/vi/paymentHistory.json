@@ -1,0 +1,47 @@
+{
+  "page": {
+    "title": "Lịch sử thanh toán",
+    "subtitle": "Danh sách các sự kiện thanh toán",
+    "searchPlaceholder": "Tìm mã / đơn / phương thức..."
+  },
+
+  "drawer": {
+    "title": "Thanh toán {{code}}",
+    "subtitle": "Chi tiết lịch sử thanh toán",
+    "platform": "Nền tảng",
+    "amount": "Số tiền",
+    "noData": "Không có dữ liệu",
+    "loading": "Đang tải..."
+  },
+
+  "fields": {
+    "code": "Mã",
+    "order": "Đơn",
+    "method": "Phương thức",
+    "platform": "Nền tảng",
+    "amount": "Số tiền"
+  },
+
+  "actions": {
+    "close": "Đóng",
+    "details": "Chi tiết",
+    "exportCsv": "Xuất CSV",
+    "refresh": "Làm mới",
+    "toggleDensity": "Thay đổi mật độ",
+    "export": "Xuất"
+  },
+
+  "table": {
+    "code": "Mã",
+    "order": "Đơn",
+    "method": "Phương thức",
+    "platform": "Nền tảng",
+    "amount": "Số tiền",
+    "actions": "Hành động"
+  },
+
+  "messages": {
+    "loadFailed": "Tải thất bại",
+    "exportFilenamePrefix": "lichsu_thanh_toan"
+  }
+}

@@ -19,6 +19,8 @@ import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRound
 import { findSuitableContainers, placeContainer } from "@/api/clpApi";
 import { getContainerType } from "@/api/containerTypeApi";
 
+import { useTranslation } from "react-i18next";
+
 type Props = {
   data: any | null;
   onClose: () => void;
@@ -30,9 +32,9 @@ type Dims = { length: number; width: number; height: number };
 const LOCAL_CONTAINER_TYPES_FILE = "/mnt/data/da999d8c-b4eb-43af-ace3-d202c3e7042e.png";
 
 export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
+  const { t } = useTranslation("storagePage");
   const theme = useTheme();
-  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); // >=600
-  const isMdUp = useMediaQuery(theme.breakpoints.up("md")); // >=900
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
 
   const [viewMode, setViewMode] = useState<"order" | "customer">("order");
   const [clpLoading, setClpLoading] = useState(false);
@@ -71,165 +73,156 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
     }
   };
 
-useEffect(() => {
-  setClpSuggestions(null);
-  setClpPayload(null);
-  setClpResponseRaw(null);
-  setClpLoading(false);
-
-  if (!data) return;
-
-  (async () => {
+  useEffect(() => {
     setClpSuggestions(null);
     setClpPayload(null);
     setClpResponseRaw(null);
-    setClpLoading(true);
+    setClpLoading(false);
 
-    try {
-      const explicitLength =
-        data.packageLength ?? data.length ?? data.containerLength ?? data.dimensions?.length ?? null;
-      const explicitWidth =
-        data.packageWidth ?? data.width ?? data.containerWidth ?? data.dimensions?.width ?? null;
-      const explicitHeight =
-        data.packageHeight ?? data.height ?? data.containerHeight ?? data.dimensions?.height ?? null;
+    if (!data) return;
 
-      let dims: Dims | null = null;
+    (async () => {
+      setClpSuggestions(null);
+      setClpPayload(null);
+      setClpResponseRaw(null);
+      setClpLoading(true);
 
-      if (explicitLength != null && explicitWidth != null && explicitHeight != null) {
-        dims = {
-          length: Number(explicitLength),
-          width: Number(explicitWidth),
-          height: Number(explicitHeight),
-        };
-      } else {
-        const containerTypeId = data.containerType ?? data.containerTypeId ?? null;
-        if (containerTypeId != null) {
-          const cacheKey = String(containerTypeId);
-          let ct = containerTypeCache[cacheKey];
-          if (!ct) {
-            try {
-              ct = await getContainerType(Number(containerTypeId));
-              setContainerTypeCache((prev) => ({ ...prev, [cacheKey]: ct }));
-            } catch (err) {
-              console.warn("getContainerType failed for id=", containerTypeId, err);
-              ct = null;
+      try {
+        const explicitLength =
+          data.packageLength ?? data.length ?? data.containerLength ?? data.dimensions?.length ?? null;
+        const explicitWidth =
+          data.packageWidth ?? data.width ?? data.containerWidth ?? data.dimensions?.width ?? null;
+        const explicitHeight =
+          data.packageHeight ?? data.height ?? data.containerHeight ?? data.dimensions?.height ?? null;
+
+        let dims: Dims | null = null;
+
+        if (explicitLength != null && explicitWidth != null && explicitHeight != null) {
+          dims = {
+            length: Number(explicitLength),
+            width: Number(explicitWidth),
+            height: Number(explicitHeight),
+          };
+        } else {
+          const containerTypeId = data.containerType ?? data.containerTypeId ?? null;
+          if (containerTypeId != null) {
+            const cacheKey = String(containerTypeId);
+            let ct = containerTypeCache[cacheKey];
+            if (!ct) {
+              try {
+                ct = await getContainerType(Number(containerTypeId));
+                setContainerTypeCache((prev) => ({ ...prev, [cacheKey]: ct }));
+              } catch (err) {
+                console.warn("getContainerType failed for id=", containerTypeId, err);
+                ct = null;
+              }
             }
-          }
-          if (ct) {
-            const l = ct.length ?? ct.packageLength ?? ct.dimensions?.length ?? ct.size?.length ?? null;
-            const w = ct.width ?? ct.packageWidth ?? ct.dimensions?.width ?? ct.size?.width ?? null;
-            const h = ct.height ?? ct.packageHeight ?? ct.dimensions?.height ?? ct.size?.height ?? null;
-            if (l != null && w != null && h != null) {
-              dims = { length: Number(l), width: Number(w), height: Number(h) };
-            }
-          }
-        }
-
-        if (!dims) {
-          const localList = await loadLocalContainerTypesFile();
-          if (Array.isArray(localList)) {
-            const containerTypeId = data.containerType ?? data.containerTypeId ?? null;
-            const found = localList.find((ct: any) => {
-              if (ct.containerTypeId != null && String(ct.containerTypeId) === String(containerTypeId)) return true;
-              if (ct.id != null && String(ct.id) === String(containerTypeId)) return true;
-              if (ct.type != null && String(ct.type) === String(containerTypeId)) return true;
-              if (ct.containerType != null && String(ct.containerType) === String(containerTypeId)) return true;
-              return false;
-            });
-            if (found) {
-              const l = found.length ?? found.packageLength ?? found.dimensions?.length ?? null;
-              const w = found.width ?? found.packageWidth ?? found.dimensions?.width ?? null;
-              const h = found.height ?? found.packageHeight ?? found.dimensions?.height ?? null;
+            if (ct) {
+              const l = ct.length ?? ct.packageLength ?? ct.dimensions?.length ?? ct.size?.length ?? null;
+              const w = ct.width ?? ct.packageWidth ?? ct.dimensions?.width ?? ct.size?.width ?? null;
+              const h = ct.height ?? ct.packageHeight ?? ct.dimensions?.height ?? ct.size?.height ?? null;
               if (l != null && w != null && h != null) {
                 dims = { length: Number(l), width: Number(w), height: Number(h) };
               }
             }
           }
+
+          if (!dims) {
+            const localList = await loadLocalContainerTypesFile();
+            if (Array.isArray(localList)) {
+              const containerTypeId = data.containerType ?? data.containerTypeId ?? null;
+              const found = localList.find((ct: any) => {
+                if (ct.containerTypeId != null && String(ct.containerTypeId) === String(containerTypeId)) return true;
+                if (ct.id != null && String(ct.id) === String(containerTypeId)) return true;
+                if (ct.type != null && String(ct.type) === String(containerTypeId)) return true;
+                if (ct.containerType != null && String(ct.containerType) === String(containerTypeId)) return true;
+                return false;
+              });
+              if (found) {
+                const l = found.length ?? found.packageLength ?? found.dimensions?.length ?? null;
+                const w = found.width ?? found.packageWidth ?? found.dimensions?.width ?? null;
+                const h = found.height ?? found.packageHeight ?? found.dimensions?.height ?? null;
+                if (l != null && w != null && h != null) {
+                  dims = { length: Number(l), width: Number(w), height: Number(h) };
+                }
+              }
+            }
+          }
         }
-      }
 
-      const rawWeight = data.packageWeight ?? data.weight ?? data.package_weight ?? null;
-      const packageWeight = rawWeight == null ? 10 : Number(rawWeight);
+        const rawWeight = data.packageWeight ?? data.weight ?? data.package_weight ?? null;
+        const packageWeight = rawWeight == null ? 10 : Number(rawWeight);
 
-      const productTypeIds =
-        Array.isArray(data.productTypeIds) && data.productTypeIds.length > 0
-          ? data.productTypeIds
-          : data.productTypeId
-          ? [data.productTypeId]
-          : [];
+        const productTypeIds =
+          Array.isArray(data.productTypeIds) && data.productTypeIds.length > 0
+            ? data.productTypeIds
+            : data.productTypeId
+            ? [data.productTypeId]
+            : [];
 
-      const deposit = data._orderDepositDate ?? data.depositDate ?? null;
-      const ret = data._orderReturnDate ?? data.returnDate ?? null;
-      const storageDays = computeStorageDays(deposit, ret);
+        const deposit = data._orderDepositDate ?? data.depositDate ?? null;
+        const ret = data._orderReturnDate ?? data.returnDate ?? null;
+        const storageDays = computeStorageDays(deposit, ret);
 
-      // Now productTypeIds is OPTIONAL — only require dims + storageDays to proceed
-      const canCallClp = dims !== null && storageDays !== null;
-      if (!canCallClp) {
-        const missing: string[] = [];
-        if (dims === null) missing.push("package dimensions (length/width/height) missing");
-        if (storageDays === null) missing.push("depositDate/returnDate invalid or missing");
-        setClpResponseRaw({ error: "Insufficient real data to call CLP", missing });
+        const canCallClp = dims !== null && storageDays !== null;
+        if (!canCallClp) {
+          const missing: string[] = [];
+          if (dims === null) missing.push(t("missingDims") as string);
+          if (storageDays === null) missing.push(t("missingDates") as string);
+          setClpResponseRaw({ error: t("insufficientData"), missing });
+          setClpSuggestions([]);
+          setClpLoading(false);
+          return;
+        }
+
+        const dimsNonNull: Dims = dims as Dims;
+
+        const basePayload: any = {
+          packageLength: dimsNonNull.length,
+          packageWidth: dimsNonNull.width,
+          packageHeight: dimsNonNull.height,
+          packageWeight,
+          storageDays,
+        };
+
+        const payloadArray: any = { ...basePayload };
+        if (productTypeIds.length > 0) payloadArray.productTypeIds = productTypeIds;
+
+        const payloadSingle: any = { ...basePayload };
+        if (productTypeIds.length > 0) payloadSingle.packageTypeID = productTypeIds[0];
+
+        setClpPayload(payloadArray);
+
+        const res1 = await findSuitableContainers(payloadArray as any);
+        setClpResponseRaw({ tryArray: res1 });
+
+        const list1 = Array.isArray(res1) ? res1 : (res1?.data ?? []);
+        if (Array.isArray(list1) && list1.length > 0) {
+          setClpSuggestions(list1);
+          setClpLoading(false);
+          return;
+        }
+
+        setClpPayload(payloadSingle);
+        const res2 = await findSuitableContainers(payloadSingle as any);
+        setClpResponseRaw((prev: any) => ({ ...prev, trySingle: res2 }));
+        const list2 = Array.isArray(res2) ? res2 : (res2?.data ?? []);
+        if (Array.isArray(list2) && list2.length > 0) {
+          setClpSuggestions(list2);
+          setClpLoading(false);
+          return;
+        }
+
         setClpSuggestions([]);
+      } catch (err) {
+        console.error("[CLP] Error during CLP flow:", err);
+        setClpResponseRaw({ error: (err as any)?.message ?? err });
+        setClpSuggestions([]);
+      } finally {
         setClpLoading(false);
-        return;
       }
-
-      const dimsNonNull: Dims = dims as Dims;
-
-      // Build payloads but only include product type fields when we actually have them
-      const basePayload: any = {
-        packageLength: dimsNonNull.length,
-        packageWidth: dimsNonNull.width,
-        packageHeight: dimsNonNull.height,
-        packageWeight,
-        storageDays,
-      };
-
-      // payload as array (when productTypeIds present include it)
-      const payloadArray: any = { ...basePayload };
-      if (productTypeIds.length > 0) payloadArray.productTypeIds = productTypeIds;
-
-      // payload single (use first product type if available)
-      const payloadSingle: any = { ...basePayload };
-      if (productTypeIds.length > 0) payloadSingle.packageTypeID = productTypeIds[0];
-
-      setClpPayload(payloadArray);
-
-      // First try with array-style payload (may include productTypeIds or not)
-      const res1 = await findSuitableContainers(payloadArray as any);
-      setClpResponseRaw({ tryArray: res1 });
-
-      const list1 = Array.isArray(res1) ? res1 : (res1?.data ?? []);
-      if (Array.isArray(list1) && list1.length > 0) {
-        setClpSuggestions(list1);
-        setClpLoading(false);
-        return;
-      }
-
-      // If no results, try single-style payload (may or may not include packageTypeID)
-      setClpPayload(payloadSingle);
-      const res2 = await findSuitableContainers(payloadSingle as any);
-      setClpResponseRaw((prev: any) => ({ ...prev, trySingle: res2 }));
-      const list2 = Array.isArray(res2) ? res2 : (res2?.data ?? []);
-      if (Array.isArray(list2) && list2.length > 0) {
-        setClpSuggestions(list2);
-        setClpLoading(false);
-        return;
-      }
-
-      // no suggestions
-      setClpSuggestions([]);
-    } catch (err) {
-      console.error("[CLP] Error during CLP flow:", err);
-      setClpResponseRaw({ error: (err as any)?.message ?? err });
-      setClpSuggestions([]);
-    } finally {
-      setClpLoading(false);
-    }
-  })();
-}, [data]); // eslint-disable-line react-hooks/exhaustive-deps
-
-
+    })();
+  }, [data, containerTypeCache]); 
 
   const handlePlaceContainer = async (suggestion: any) => {
     if (!suggestion || !data) return;
@@ -283,38 +276,44 @@ useEffect(() => {
         gap={1}
       >
         <Box display="flex" alignItems="center" gap={1}>
-          <IconButton onClick={onClose} size="small" sx={{ color: "text.secondary" }}>
+          <IconButton onClick={onClose} size="small" sx={{ color: "text.secondary" }} aria-label={t("back")}>
             <ArrowBackIosNewRoundedIcon sx={{ fontSize: 16 }} />
           </IconButton>
           <Box>
             <Typography fontWeight={600} fontSize={isSmUp ? 15 : 14}>
-              Order Detail
+              {t("orderDetailTitle")}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ fontSize: isSmUp ? 13 : 12 }}>
-              {viewMode === "order" ? "Detail Info" : "Customer Info"}
+              {viewMode === "order" ? t("detailInfo") : t("customerInfo")}
             </Typography>
           </Box>
         </Box>
 
         <Box display="flex" alignItems="center" gap={1}>
-          <Tooltip title="View Customer">
-            <IconButton
-              size="small"
-              color={viewMode === "customer" ? "primary" : "default"}
-              onClick={() => setViewMode("customer")}
-            >
-              <PersonOutlineRoundedIcon />
-            </IconButton>
+          <Tooltip title={t("viewCustomer")}>
+            <span>
+              <IconButton
+                size="small"
+                color={viewMode === "customer" ? "primary" : "default"}
+                onClick={() => setViewMode("customer")}
+                aria-label={t("viewCustomer")}
+              >
+                <PersonOutlineRoundedIcon />
+              </IconButton>
+            </span>
           </Tooltip>
 
-          <Tooltip title="View Order">
-            <IconButton
-              size="small"
-              color={viewMode === "order" ? "primary" : "default"}
-              onClick={() => setViewMode("order")}
-            >
-              <ReceiptLongRoundedIcon />
-            </IconButton>
+          <Tooltip title={t("viewOrder")}>
+            <span>
+              <IconButton
+                size="small"
+                color={viewMode === "order" ? "primary" : "default"}
+                onClick={() => setViewMode("order")}
+                aria-label={t("viewOrder")}
+              >
+                <ReceiptLongRoundedIcon />
+              </IconButton>
+            </span>
           </Tooltip>
         </Box>
       </Box>
@@ -340,6 +339,7 @@ useEffect(() => {
               fontWeight: 600,
               fontSize: isSmUp ? 18 : 14,
             }}
+            aria-label={t("orderAvatar")}
           >
             {String(data._orderCode ?? data.orderCode ?? "OD").slice(0, 2).toUpperCase()}
           </Avatar>
@@ -349,8 +349,7 @@ useEffect(() => {
               {data._orderCode ?? data.orderCode ?? "-"}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ fontSize: isSmUp ? 13 : 12 }}>
-              Status: {data._orderStatus ?? data.status ?? "-"} • Payment:{" "}
-              {data._orderPaymentStatus ?? data.paymentStatus ?? "-"}
+              {t("statusPayment", { status: data._orderStatus ?? data.status ?? "-", payment: data._orderPaymentStatus ?? data.paymentStatus ?? "-" })}
             </Typography>
           </Box>
         </Box>
@@ -362,42 +361,46 @@ useEffect(() => {
         color="text.secondary"
         sx={{ fontSize: isSmUp ? 13 : 12, textAlign: "right", mb: 2 }}
       >
-        Deposit: {data._orderDepositDate ?? data.depositDate ?? "-"} • Return:{" "}
-        {data._orderReturnDate ?? data.returnDate ?? "-"}
+        {t("depositReturn", { deposit: data._orderDepositDate ?? data.depositDate ?? "-", ret: data._orderReturnDate ?? data.returnDate ?? "-" })}
       </Typography>
 
       {/* BODY */}
       {viewMode === "order" ? (
         <Box>
           <Typography fontWeight={600} mb={1}>
-            Order Details Code: {data.orderDetailId ?? "-"}
+            {t("orderDetailsCode", { id: data.orderDetailId ?? "-" })}
           </Typography>
 
           <Box sx={{ border: "1px solid #e0e0e0", borderRadius: 2, p: 2, bgcolor: "#fff" }}>
             {/* BASIC FIELDS */}
             <Typography fontSize={14} fontWeight={600}>
-              Pricing & Quantity
+              {t("pricingQuantity")}
             </Typography>
             <Typography variant="body2" mb={1}>
-              Price: {typeof data.price === "number" ? `${data.price.toLocaleString()} đ` : data.price ?? "-"}
+              {t("price", {
+                price:
+                  typeof data.price === "number" ? `${data.price.toLocaleString()} đ` : data.price ?? "-",
+              })}
             </Typography>
 
             <Typography fontSize={14} fontWeight={600} mt={1.5}>
-              Container
+              {t("containerLabel")}
             </Typography>
             <Typography variant="body2" mb={1}>
-              Container Type: {data.containerType ?? "-"}
+              {t("containerType", { type: data.containerType ?? "-" })}
             </Typography>
 
             <Typography fontSize={14} fontWeight={600} mt={1.5}>
-              Product Types
+              {t("productTypes")}
             </Typography>
             <Typography variant="body2" mb={1}>
-              {Array.isArray(data.productTypeIds) ? data.productTypeIds.join(", ") : data.productTypeIds ?? data.productTypeId ?? "-"}
+              {Array.isArray(data.productTypeIds)
+                ? data.productTypeIds.join(", ")
+                : data.productTypeIds ?? data.productTypeId ?? "-"}
             </Typography>
 
             <Typography fontSize={14} fontWeight={600} mt={1.5}>
-              Services
+              {t("services")}
             </Typography>
             <Typography variant="body2" mb={1}>
               {Array.isArray(data.serviceIds) ? data.serviceIds.join(", ") : data.serviceIds ?? "-"}
@@ -406,12 +409,12 @@ useEffect(() => {
             {/* CLP section */}
             <Box mt={2}>
               <Typography fontSize={14} fontWeight={600} mb={1.5}>
-                CLP Suggestions:
+                {t("clpSuggestions")}
               </Typography>
 
               {clpLoading ? (
                 <Typography variant="body2" color="text.secondary">
-                  Loading suggestions...
+                  {t("loadingSuggestions")}
                 </Typography>
               ) : Array.isArray(clpSuggestions) && clpSuggestions.length > 0 ? (
                 <Box
@@ -435,18 +438,18 @@ useEffect(() => {
                     >
                       <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
                         <Typography fontWeight={600} fontSize={15} mb={0.5}>
-                          Container: {s.containerCode}
+                          {t("containerCardTitle", { code: s.containerCode ?? `#${idx}` })}
                         </Typography>
 
                         <Typography variant="body2" color="text.secondary" mb={0.25}>
-                          Floor: {s.floorCode ?? "-"}
+                          {t("floorLabel", { floor: s.floorCode ?? "-" })}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" mb={0.25}>
-                          Serial: {s.serialNumber ?? "-"}
+                          {t("serialLabel", { serial: s.serialNumber ?? "-" })}
                         </Typography>
 
                         <Typography variant="body2" color="text.secondary">
-                          Score: {s.score ?? s.fitScore ?? "-"}
+                          {t("scoreLabel", { score: s.score ?? s.fitScore ?? "-" })}
                         </Typography>
 
                         <Box display="flex" justifyContent="flex-end" mt={1}>
@@ -457,7 +460,7 @@ useEffect(() => {
                             disabled={placing}
                             sx={{ textTransform: "none" }}
                           >
-                            {placing ? "Placing..." : "Place"}
+                            {placing ? t("placing") : t("placeButton")}
                           </Button>
                         </Box>
                       </CardContent>
@@ -468,7 +471,7 @@ useEffect(() => {
                     <Card variant="outlined" sx={{ flex: "1 1 100%", p: 1.5 }}>
                       <CardContent>
                         <Typography fontSize={13} fontWeight={600} mb={1}>
-                          Last place response
+                          {t("lastPlaceResponse")}
                         </Typography>
 
                         <Box
@@ -492,14 +495,14 @@ useEffect(() => {
               ) : (
                 <Box>
                   <Typography variant="body2" color="text.secondary">
-                    No suggestion returned from CLP.
+                    {t("noSuggestion")}
                   </Typography>
 
                   {clpResponseRaw && (
                     <Card variant="outlined" sx={{ mt: 1 }}>
                       <CardContent>
                         <Typography variant="body2" color="text.secondary" mb={1}>
-                          CLP raw response / debug info:
+                          {t("clpRawResponse")}
                         </Typography>
                         <Box
                           component="pre"
@@ -526,33 +529,33 @@ useEffect(() => {
       ) : (
         <Box>
           <Typography fontWeight={600} mb={1}>
-            Customer (Order) Info
+            {t("customerInfoTitle")}
           </Typography>
 
           <Box sx={{ border: "1px solid #e0e0e0", borderRadius: 2, p: 2, bgcolor: "#fff" }}>
             <Typography fontSize={14} fontWeight={600}>
-              Order Code
+              {t("orderCodeLabel")}
             </Typography>
             <Typography variant="body2" mb={1.5}>
               {data._orderCode ?? "-"}
             </Typography>
 
             <Typography fontSize={14} fontWeight={600}>
-              Status / Payment
+              {t("statusPaymentLabel")}
             </Typography>
             <Typography variant="body2" mb={1.5}>
               {data._orderStatus ?? "-"} / {data._orderPaymentStatus ?? "-"}
             </Typography>
 
             <Typography fontSize={14} fontWeight={600}>
-              Deposit / Return
+              {t("depositReturnLabel")}
             </Typography>
             <Typography variant="body2" mb={1.5}>
               {data._orderDepositDate ?? data.depositDate ?? "-"} / {data._orderReturnDate ?? data.returnDate ?? "-"}
             </Typography>
 
             <Typography fontSize={14} fontWeight={600}>
-              Order Total Price
+              {t("orderTotalPriceLabel")}
             </Typography>
             <Typography variant="body2" mb={1.5}>
               {typeof data._orderTotalPrice === "number"

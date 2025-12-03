@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import {
   Box,
   Button,
@@ -16,7 +16,6 @@ import { motion } from "framer-motion";
 
 import authApi, { setAuthStorage } from "../../api/auth";
 
-// Assets (keep same urls or replace with your own)
 const BG_WAVE =
   "https://res.cloudinary.com/dkfykdjlm/image/upload/v1762962577/wave-haikei_skn4to.svg";
 const ILLUSTRATION =

@@ -5,7 +5,7 @@ import type { ShelfType } from "./types";
 export default function ShelfList({
   list,
   onEdit,
-  onDelete,
+  onDelete
 }: {
   list: ShelfType[];
   onEdit: (s: ShelfType) => void;
@@ -20,7 +20,7 @@ export default function ShelfList({
           sx={{
             flex: { xs: "1 1 100%", sm: "1 1 calc(50% - 16px)", md: "1 1 calc(33.333% - 16px)" },
             minWidth: 280,
-            maxWidth: 420,
+            maxWidth: 420
           }}
         >
           <ShelfCard shelf={shelf} onEdit={onEdit} onDelete={onDelete} />

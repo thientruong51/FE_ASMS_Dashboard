@@ -22,9 +22,13 @@ import { getStorageType } from "@/api/storageTypeApi";
 
 import Storage3DView from "./Storage3DView";
 
+import { useTranslation } from "react-i18next";
+
 type Props = { storage: StorageRespItem | null };
 
 export default function TruckLoadCard({ storage }: Props) {
+  const { t } = useTranslation("storagePage");
+
   const [shelves, setShelves] = useState<ShelfItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,12 +38,9 @@ export default function TruckLoadCard({ storage }: Props) {
   const [stLoading, setStLoading] = useState(false);
   const [stError, setStError] = useState<string | null>(null);
 
-  // global snackbar for notifications forwarded from children
-  const [globalSnack, setGlobalSnack] = useState<{ open: boolean; message?: string; severity?: "success" | "error" }>({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+  const [globalSnack, setGlobalSnack] = useState<{ open: boolean; message?: string; severity?: "success" | "error" }>(
+    { open: false, message: "", severity: "success" }
+  );
 
   const showNotify = (message: string, severity: "success" | "error" = "success") => {
     setGlobalSnack({ open: true, message, severity });
@@ -52,7 +53,6 @@ export default function TruckLoadCard({ storage }: Props) {
 
   const isWarehouse = !!storage && (storage.storageTypeName ?? "").toLowerCase().includes("warehouse");
 
-  // --- EXTRACTED: fetchShelves so we can reuse it after add/delete ---
   const fetchShelves = async () => {
     if (!storage || !isWarehouse) {
       setShelves([]);
@@ -65,16 +65,14 @@ export default function TruckLoadCard({ storage }: Props) {
       const arr = (resp as any).data ?? [];
       setShelves(Array.isArray(arr) ? arr : []);
     } catch (err: any) {
-      setError(err.message ?? "Failed to load shelves");
+      setError(err?.message ?? t("truckLoad.failedLoadShelves"));
     } finally {
       setLoading(false);
     }
   };
 
-  // initial fetch + when storage changes
   useEffect(() => {
     fetchShelves();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storage?.storageCode, isWarehouse]);
 
   useEffect(() => {
@@ -97,7 +95,7 @@ export default function TruckLoadCard({ storage }: Props) {
         setStorageType(resp ?? null);
       } catch (err: any) {
         if (!mounted) return;
-        setStError(err?.message ?? "Failed to load storage type");
+        setStError(err?.message ?? t("truckLoad.failedLoadStorageType"));
         setStorageType(null);
       } finally {
         if (mounted) setStLoading(false);
@@ -107,28 +105,21 @@ export default function TruckLoadCard({ storage }: Props) {
     return () => {
       mounted = false;
     };
-  }, [storage?.storageTypeId]);
+  }, [storage?.storageTypeId, t]);
 
   const mediaUrl: string | undefined =
     (storageType &&
-      (storageType.modelUrl ??
-        storageType.fileUrl ??
-        storageType.imageUrl ??
-        storageType.url ??
-        storageType.mediaUrl)) ??
+      (storageType.modelUrl ?? storageType.fileUrl ?? storageType.imageUrl ?? storageType.url ?? storageType.mediaUrl)) ??
     (storage && ((storage as any).modelUrl ?? (storage as any).imageUrl ?? (storage as any).fileUrl)) ??
     undefined;
 
   const isGLB = !!mediaUrl && /\.glb$|\.gltf$/i.test(mediaUrl);
-  // keep original "forceShow3D" logic available (but Large viewer rendering below uses original storageCode check)
   const forceShow3D = !!storage && ["BLD002", "BLD003"].includes(storage.storageCode ?? "");
   const isReady = !!storage && (storage.status ?? "").toLowerCase() === "ready";
 
-  // Effective URLs: if model (glb/gltf) OR forceShow3D, allow model to be used as preview
   const effectiveModelUrl = (isGLB || forceShow3D) ? mediaUrl ?? null : null;
   const effectiveImageUrl = !effectiveModelUrl ? mediaUrl ?? null : null;
 
-  // responsive sizing for the preview box:
   const previewHeight = isLgUp ? 160 : isMdUp ? 140 : isSmUp ? 120 : 100;
   const previewWidth = isSmUp ? 160 : "100%";
 
@@ -154,7 +145,7 @@ export default function TruckLoadCard({ storage }: Props) {
           }}
         >
           {!storage ? (
-            <Typography>Select a storage</Typography>
+            <Typography>{t("truckLoad.selectStorage")}</Typography>
           ) : (
             <>
               <Box
@@ -174,17 +165,17 @@ export default function TruckLoadCard({ storage }: Props) {
                   </Typography>
                   <Box mt={1}>
                     <Typography fontWeight={600} variant="body2">
-                      Details
+                      {t("truckLoad.detailsTitle")}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Dimensions: {storage.width ?? "-"} × {storage.length ?? "-"} × {storage.height ?? "-"}
+                      {t("truckLoad.dimensions")}: {storage.width ?? "-"} × {storage.length ?? "-"} × {storage.height ?? "-"}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Status: {storage.status ?? "-"}
+                      {t("truckLoad.status")}: {storage.status ?? "-"}
                     </Typography>
                     {stError && (
                       <Typography color="error" sx={{ mt: 0.5 }}>
-                        {stError}
+                        {t("truckLoad.storageTypeFailedWithMsg", { msg: stError })}
                       </Typography>
                     )}
                   </Box>
@@ -237,7 +228,7 @@ export default function TruckLoadCard({ storage }: Props) {
                     >
                       <Icon fontSize="large">warehouse</Icon>
                       <Typography variant="caption" color="text.secondary">
-                        No preview available
+                        {t("truckLoad.noPreview")}
                       </Typography>
                     </Paper>
                   )}
@@ -261,11 +252,11 @@ export default function TruckLoadCard({ storage }: Props) {
               {/* Shelves area (if warehouse) */}
               {isWarehouse && (
                 <Box mt={2} sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <Typography fontWeight={700}>Shelves</Typography>
+                  <Typography fontWeight={700}>{t("truckLoad.shelvesTitle")}</Typography>
                   {loading ? (
                     <Box display="flex" gap={1} alignItems="center">
                       <CircularProgress size={18} />
-                      <Typography>Loading shelves...</Typography>
+                      <Typography>{t("truckLoad.loadingShelves")}</Typography>
                     </Box>
                   ) : (
                     <WeightBlock100
@@ -277,7 +268,7 @@ export default function TruckLoadCard({ storage }: Props) {
                       onNotify={showNotify}
                     />
                   )}
-                  {error && <Typography color="error">{error}</Typography>}
+                  {error && <Typography color="error">{t("truckLoad.failedLoadShelvesWithMsg", { msg: error })}</Typography>}
                 </Box>
               )}
             </>

@@ -3,6 +3,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PersonIcon from "@mui/icons-material/Person";
 import type { Employee } from "@/types/staff";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   employees: Employee[];
@@ -11,6 +12,8 @@ type Props = {
 };
 
 export default function StaffCardList({ employees, onEdit, onDelete }: Props) {
+  const { t } = useTranslation("staffPage");
+
   return (
     <Stack spacing={2}>
       {employees.map((emp) => (
@@ -28,7 +31,7 @@ export default function StaffCardList({ employees, onEdit, onDelete }: Props) {
                     fontSize: 12,
                     whiteSpace: "nowrap",
                     overflow: "hidden",
-                    textOverflow: "ellipsis",
+                    textOverflow: "ellipsis"
                   }}
                 >
                   {emp.name || "-"}
@@ -37,10 +40,10 @@ export default function StaffCardList({ employees, onEdit, onDelete }: Props) {
             </Box>
 
             <Box sx={{ display: "flex", gap: 0.5, alignItems: "center" }}>
-              <IconButton size="small" color="primary" onClick={() => onEdit(emp)}>
+              <IconButton size="small" color="primary" onClick={() => onEdit(emp)} aria-label={t("edit")}>
                 <EditIcon fontSize="small" />
               </IconButton>
-              <IconButton size="small" color="error" onClick={() => onDelete(emp.id)}>
+              <IconButton size="small" color="error" onClick={() => onDelete(emp.id)} aria-label={t("delete")}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -50,7 +53,7 @@ export default function StaffCardList({ employees, onEdit, onDelete }: Props) {
 
       {employees.length === 0 && (
         <Typography color="text.secondary" sx={{ textAlign: "center", py: 2 }}>
-          No employees found
+          {t("noEmployees")}
         </Typography>
       )}
     </Stack>
