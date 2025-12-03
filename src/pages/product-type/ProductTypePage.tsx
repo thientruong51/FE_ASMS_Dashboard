@@ -1,11 +1,14 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Container, Box, Typography, Stack, Button, CircularProgress, Snackbar, Alert } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ProductTypeList from "./components/ProductTypeList";
 import ProductTypeDialog from "./components/ProductTypeDialog";
-import { getProductTypes,  type ProductTypeItem } from "@/api/productTypeApi";
+import { getProductTypes, type ProductTypeItem } from "@/api/productTypeApi";
+import { useTranslation } from "react-i18next";
 
 export default function ProductTypePage() {
+  const { t } = useTranslation("productTypePage");
+
   const [rows, setRows] = useState<ProductTypeItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -21,27 +24,36 @@ export default function ProductTypePage() {
       setRows(resp.data ?? []);
     } catch (err) {
       console.error(err);
-      setSnack({ open: true, message: "Load failed", severity: "error" });
+      setSnack({ open: true, message: t("loadFailed"), severity: "error" });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => load(), 400);
-    return () => clearTimeout(t);
+    const tId = setTimeout(() => load(), 400);
+    return () => clearTimeout(tId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
-  const openCreate = () => { setEditId(null); setDialogOpen(true); };
-  const openEdit = (p: ProductTypeItem) => { setEditId(p.productTypeId); setDialogOpen(true); };
+  const openCreate = () => {
+    setEditId(null);
+    setDialogOpen(true);
+  };
+  const openEdit = (p: ProductTypeItem) => {
+    setEditId(p.productTypeId);
+    setDialogOpen(true);
+  };
 
   const onSaved = () => {
     load();
-    setSnack({ open: true, message: "Saved", severity: "success" });
+    setSnack({ open: true, message: t("savedMessage"), severity: "success" });
   };
-
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -60,20 +72,28 @@ export default function ProductTypePage() {
           <Box sx={{ position: "relative", zIndex: 2, p: { xs: 2, md: 3 } }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Box>
-                <Typography variant="h5" fontWeight={800}>Product Types</Typography>
-                <Typography color="text.secondary">Manage your product types </Typography>
+                <Typography variant="h5" fontWeight={700}>
+                  {t("title")}
+                </Typography>
+                <Typography color="text.secondary">{t("subtitle")}</Typography>
               </Box>
 
-              <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>Create</Button>
+              <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+                {t("create")}
+              </Button>
             </Box>
           </Box>
         </Box>
 
         <Box width="100%">
-          
-
           {loading ? (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}><CircularProgress /></Box>
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+              <CircularProgress aria-label={t("loadingAlt")} />
+            </Box>
+          ) : rows.length === 0 ? (
+            <Typography color="text.secondary" align="center">
+              {t("noResults")}
+            </Typography>
           ) : (
             <ProductTypeList list={rows} onEdit={(p) => openEdit(p)} />
           )}
@@ -83,7 +103,9 @@ export default function ProductTypePage() {
       <ProductTypeDialog open={dialogOpen} productTypeId={editId ?? undefined} onClose={() => setDialogOpen(false)} onSaved={() => onSaved()} />
 
       <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack((s) => ({ ...s, open: false }))} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
-        <Alert severity={snack.severity} onClose={() => setSnack((s) => ({ ...s, open: false }))}>{snack.message}</Alert>
+        <Alert severity={snack.severity} onClose={() => setSnack((s) => ({ ...s, open: false }))}>
+          {snack.message}
+        </Alert>
       </Snackbar>
     </Container>
   );

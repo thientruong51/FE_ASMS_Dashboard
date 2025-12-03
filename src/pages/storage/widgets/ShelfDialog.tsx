@@ -7,10 +7,10 @@ import {
   CircularProgress,
   IconButton,
   Divider,
-  useTheme,
-  useMediaQuery,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+
+import { useTranslation } from "react-i18next";
 
 import type { ShelfItem } from "@/api/shelfApi";
 import { getShelf } from "@/api/shelfApi";
@@ -25,9 +25,7 @@ type Props = {
 };
 
 export default function ShelfDialog({ shelfCode, onClose }: Props) {
-  const theme = useTheme();
-  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); // >=600
-  const isMdUp = useMediaQuery(theme.breakpoints.up("md")); // >=900
+  const { t } = useTranslation("storagePage");
 
   const [shelf, setShelf] = useState<ShelfItem | null>(null);
   const [floors, setFloors] = useState<FloorItem[]>([]);
@@ -104,33 +102,38 @@ export default function ShelfDialog({ shelfCode, onClose }: Props) {
         setContainers(uniqContainers);
       } catch (err: any) {
         console.error("Failed to load shelf dialog data", err);
-        if (mounted) setError(err?.message ?? "Request failed");
+        if (mounted) setError(err?.message ?? t("shelfDialog.requestFailed"));
       } finally {
         if (mounted) setLoading(false);
       }
     })();
 
-    return () => { mounted = false; };
-  }, [shelfCode]);
+    return () => {
+      mounted = false;
+    };
+  }, [shelfCode, t]);
 
   const containersByFloor = groupContainersByFloor(containers, floors);
 
   return (
     <Box
-      // outer wrapper — giữ Box vì component này được dùng bên trong <Dialog />
       sx={{
-        // Nếu muốn làm cho dialog parent hiển thị full-screen trên mobile,
-        // hãy set các style con để không bị overflow; parent Dialog vẫn quyết định kích thước "paper".
         width: "100%",
         boxSizing: "border-box",
       }}
     >
       <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Box>
-          <Typography fontWeight={700}>Shelf: {shelfCode}</Typography>
-          <Typography fontSize={12} color="text.secondary">{shelf?.status ?? "Active"}</Typography>
+          <Typography fontWeight={700}>
+            {t("shelfDialog.title", { code: shelfCode })}
+          </Typography>
+          <Typography fontSize={12} color="text.secondary">
+            {shelf?.status ?? t("shelfDialog.statusActive")}
+          </Typography>
         </Box>
-        <IconButton onClick={onClose}><CloseIcon /></IconButton>
+        <IconButton onClick={onClose} aria-label={t("shelfDialog.closeAria")}>
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
 
       <Divider />
@@ -138,45 +141,31 @@ export default function ShelfDialog({ shelfCode, onClose }: Props) {
       <DialogContent
         dividers
         sx={{
-          // padding tùy biến: trên xs giảm để hiển thị được nhiều không gian hơn
           p: { xs: 1, sm: 2.5 },
           width: "100%",
           boxSizing: "border-box",
-
-          // Giữ dialog content trong viewport cao của mobile bằng maxHeight và scroll nội bộ
           maxHeight: { xs: "84vh", sm: "76vh", md: "none" },
-
-          // Trên mobile, nội dung nên chiếm 100% chiều ngang của Dialog (Dialog parent sẽ thường có borderRadius & margins)
-          // Tránh ép nội dung bên trong phải có minWidth quá lớn:
-          // trước đây bạn đặt minWidth xs:1000px khiến mobile phải scroll ngang -> đổi ngược lại
           "& .shelf-inner-wrap": {
-            minWidth: { xs: "auto", md: "1000px" }, // trên md giữ minWidth cho layout 3-pane
+            minWidth: { xs: "auto", md: "1000px" },
             width: { xs: "100%", md: "auto" },
             boxSizing: "border-box",
-            overflowY: "hidden", // inner sẽ quản lý vertical scroll nếu cần
-            // thêm padding nhỏ để scrollbar không chạm vào mép Dialog
+            overflowY: "hidden",
             px: { xs: 0.5, md: 0 },
           },
-
-          // Nếu bạn muốn loại bỏ gap/margins trên mobile để dialog giống full-bleed, uncomment:
-          // "@media (max-width:600px)": { padding: 0, paddingTop: 8, paddingBottom: 8 },
         }}
       >
         {loading ? (
           <Box display="flex" gap={1} alignItems="center">
             <CircularProgress size={18} />
-            <Typography>Loading shelf data...</Typography>
+            <Typography>{t("shelfDialog.loading")}</Typography>
           </Box>
         ) : error ? (
-          <Typography color="error">Request failed: {error}</Typography>
+          <Typography color="error">{t("shelfDialog.requestFailedWithMsg", { msg: error })}</Typography>
         ) : (
           <Box
-            // wrapper cho nội dung chính — gán class để style ở trên tác động
             className="shelf-inner-wrap"
             sx={{
-              // Trên mobile, cho phép nội dung cuộn dọc nếu quá dài.
               overflowY: { xs: "auto", md: "hidden" },
-              // Trên mobile không ép minWidth; trên md đoạn này sẽ cho phép ShelfView rộng hơn
               minWidth: { xs: "auto", md: "1000px" },
               width: { xs: "100%", md: "100%" },
             }}

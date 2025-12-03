@@ -1,0 +1,49 @@
+{
+  "title": "Cài đặt",
+
+  "sections": {
+    "general": "Tổng quan",
+    "changePassword": "Đổi mật khẩu",
+    "account": "Thông tin tài khoản"
+  },
+
+  "fields": {
+    "name": "Tên",
+    "username": "Tên đăng nhập",
+    "phone": "Số điện thoại",
+    "location": "Địa chỉ",
+    "employeeCode": "Mã nhân viên",
+
+    "currentPassword": "Mật khẩu hiện tại",
+    "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu",
+
+    "language": "Ngôn ngữ",
+    "notificationEmail": "Email thông báo"
+  },
+
+  "actions": {
+    "saveChanges": "Lưu thay đổi",
+    "chooseImage": "Chọn ảnh",
+    "changePassword": "Đổi mật khẩu",
+    "save": "Lưu"
+  },
+
+  "messages": {
+    "updateSuccess": "Cập nhật thành công",
+    "updateFailedGeneric": "Cập nhật thất bại. Vui lòng thử lại.",
+    "updateFailedWithErrors": "Cập nhật thất bại với lỗi",
+
+    "passwordChanged": "Đổi mật khẩu thành công",
+    "passwordChangeFailed": "Đổi mật khẩu thất bại. Vui lòng thử lại.",
+
+    "settingsSaved": "Đã lưu cài đặt."
+  },
+
+  "errors": {
+    "employeeIdMissing": "Thiếu ID nhân viên. Không thể cập nhật.",
+    "passwordsRequired": "Vui lòng nhập mật khẩu hiện tại và mật khẩu mới.",
+    "passwordsMismatch": "Mật khẩu mới và xác nhận không khớp.",
+    "saveSettingsFailed": "Không thể lưu cài đặt vào localStorage."
+  }
+}

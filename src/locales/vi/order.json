@@ -1,0 +1,82 @@
+{
+  "page": {
+    "title": "Đơn hàng",
+    "subtitle": "Bấm vào đơn để xem chi tiết",
+    "searchPlaceholder": "Tìm orderCode hoặc khách hàng...",
+    "clickToView": "Bấm vào đơn để xem chi tiết",
+    "noItems": "Không có mục nào",
+    "itemsCount": "{{count}} mục",
+    "itemsCount_plural": "{{count}} mục"
+  },
+
+  "tabs": {
+    "order": "Đơn hàng",
+    "customer": "Khách hàng"
+  },
+
+  "labels": {
+    "order": "Đơn hàng",
+    "orderId": "Mã đơn",
+    "orderDate": "Ngày đặt",
+    "depositDate": "Ngày đặt cọc",
+    "returnDate": "Ngày trả",
+    "payment": "Thanh toán",
+    "unpaid": "Chưa thanh toán",
+    "total": "Tổng",
+    "items": "Mục",
+    "orderInformation": "Thông tin đơn hàng",
+    "customerInformation": "Thông tin khách hàng",
+    "code": "Mã",
+    "name": "Tên",
+    "phone": "Điện thoại",
+    "email": "Email",
+    "address": "Địa chỉ",
+    "noItems": "Không có mục nào",
+    "loading": "Đang tải...",
+    "loadingItems": "Đang tải mục..."
+  },
+
+  "item": {
+    "services": "Dịch vụ",
+    "qty": "Số lượng",
+    "placed": "Đã đặt",
+    "unplaced": "Chưa đặt",
+    "container": "Container",
+    "storage": "Kho",
+    "floor": "Tầng"
+  },
+
+  "actions": {
+    "locate": "Định vị",
+    "close": "Đóng",
+    "markPaid": "Đánh dấu đã thanh toán",
+    "details": "Chi tiết",
+    "export": "Xuất",
+    "toggleDensity": "Thay đổi mật độ",
+    "exportCsv": "Xuất CSV",
+    "refresh": "Làm mới",
+    "viewDetails": "Xem chi tiết",
+    "copyOrderCode": "Sao chép mã đơn"
+  },
+
+  "table": {
+    "orderCode": "Mã đơn",
+    "customer": "Khách hàng",
+    "status": "Trạng thái",
+    "payment": "Thanh toán",
+    "total": "Tổng",
+    "style": "Kiểu",
+    "actions": "Hành động"
+  },
+
+  "messages": {
+    "loadFailed": "Tải thất bại",
+    "fetchOrdersFailed": "Lấy danh sách đơn thất bại",
+    "fetchOrderFailed": "Tải đơn thất bại",
+    "copySuccess": "Đã sao chép vào clipboard"
+  },
+
+  "export": {
+    "filenamePrefix": "Xuất đơn hàng"
+  }
+}

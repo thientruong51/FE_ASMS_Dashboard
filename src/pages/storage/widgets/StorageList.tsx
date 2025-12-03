@@ -24,12 +24,15 @@ import { getBuildings } from "@/api/buildingApi";
 import { getStorages, type StorageRespItem } from "@/api/storageApi";
 import type { Building } from "@/pages/building/components/types";
 
+import { useTranslation } from "react-i18next";
+
 type Props = {
   onSelectStorage?: (s: StorageRespItem) => void;
   selectedStorage?: StorageRespItem | null;
 };
 
 export default function StorageList({ onSelectStorage, selectedStorage }: Props) {
+  const { t } = useTranslation("storagePage");
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [loadingBuildings, setLoadingBuildings] = useState(true);
   const [buildingsError, setBuildingsError] = useState<string | null>(null);
@@ -45,8 +48,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
   const [searchText, setSearchText] = useState("");
 
   const theme = useTheme();
-  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); // >=600
-  const isMdUp = useMediaQuery(theme.breakpoints.up("md")); // >=900
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); 
 
   useEffect(() => {
     let mounted = true;
@@ -58,7 +60,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
         if (!mounted) return;
         setBuildings(resp.data ?? []);
       } catch (err: any) {
-        setBuildingsError(err?.message ?? "Failed to load buildings");
+        setBuildingsError(err?.message ?? t("storageList.failedLoadBuildings"));
       } finally {
         if (mounted) setLoadingBuildings(false);
       }
@@ -66,7 +68,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     let mounted = true;
@@ -87,7 +89,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
         if (!mounted) return;
         setStorages(resp.data ?? []);
       } catch (err: any) {
-        setStoragesError(err?.message ?? "Failed to load storages");
+        setStoragesError(err?.message ?? t("storageList.failedLoadStorages"));
       } finally {
         if (mounted) setLoadingStorages(false);
       }
@@ -95,7 +97,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
     return () => {
       mounted = false;
     };
-  }, [selectedBuilding]);
+  }, [selectedBuilding, t]);
 
   const filteredStorages = useMemo(() => {
     let list = storages.slice();
@@ -122,6 +124,14 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
     Departed: "#757575",
     Ready: "#2e7d32",
   };
+
+  const tabLabels = [
+    t("storageList.tabAll"),
+    t("storageList.tabLoading"),
+    t("storageList.tabUnloading"),
+    t("storageList.tabArriving"),
+    t("storageList.tabPreparing"),
+  ];
 
   return (
     <Card
@@ -154,14 +164,14 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
           gap={isSmUp ? 0 : 1}
         >
           <Typography fontWeight={600} fontSize={15}>
-            Storages
+            {t("storageList.title")}
           </Typography>
 
           <Box sx={{ width: isSmUp ? 320 : "100%" }}>
             {loadingBuildings ? (
               <Box display="flex" alignItems="center" gap={1}>
                 <CircularProgress size={18} />
-                <Typography fontSize={13}>Loading buildings...</Typography>
+                <Typography fontSize={13}>{t("storageList.loadingBuildings")}</Typography>
               </Box>
             ) : buildingsError ? (
               <Typography fontSize={13} color="error">
@@ -171,7 +181,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
               <Autocomplete
                 options={buildings}
                 getOptionLabel={(opt) =>
-                  opt ? `${opt.name ?? opt.buildingCode ?? "Building"} (${opt.buildingCode ?? opt.buildingId ?? ""})` : ""
+                  opt ? `${opt.name ?? opt.buildingCode ?? t("storageList.buildingFallback")} (${opt.buildingCode ?? opt.buildingId ?? ""})` : ""
                 }
                 value={selectedBuilding}
                 onChange={(_, v) => setSelectedBuilding(v)}
@@ -180,7 +190,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    placeholder="Select building..."
+                    placeholder={t("storageList.selectBuildingPlaceholder")}
                     size="small"
                     InputProps={{
                       ...params.InputProps,
@@ -194,6 +204,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                 )}
                 clearOnEscape
                 fullWidth
+                aria-label={t("storageList.buildingAutocompleteAria")}
               />
             )}
           </Box>
@@ -209,13 +220,13 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
           gap={isSmUp ? 0 : 1}
         >
           <Typography fontSize={13} fontWeight={600} color="text.secondary">
-            {selectedBuilding ? `Showing storages for ${selectedBuilding.name ?? selectedBuilding.buildingCode}` : "Choose a building to load storages"}
+            {selectedBuilding ? t("storageList.showingFor", { name: selectedBuilding.name ?? selectedBuilding.buildingCode }) : t("storageList.chooseBuilding")}
           </Typography>
 
           <Box display="flex" alignItems="center" gap={0.5} width={isSmUp ? "auto" : "100%"}>
             <TextField
               size="small"
-              placeholder="Search storages..."
+              placeholder={t("storageList.searchPlaceholder")}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               InputProps={{
@@ -226,8 +237,9 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                 ),
               }}
               sx={{ width: isSmUp ? 260 : "100%" }}
+              inputProps={{ "aria-label": t("storageList.searchAria") }}
             />
-            <IconButton size="small" disabled>
+            <IconButton size="small" disabled aria-label={t("storageList.searchAria")}>
               <SearchRoundedIcon fontSize="small" />
             </IconButton>
           </Box>
@@ -256,8 +268,9 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
               color: "primary.main",
             },
           }}
+          aria-label={t("storageList.tabsAria")}
         >
-          {["All", "Loading", "Unloading", "Arriving", "Preparing"].map((label, i) => (
+          {tabLabels.map((label, i) => (
             <Tab key={i} label={label} />
           ))}
         </Tabs>
@@ -279,17 +292,17 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
             {loadingStorages ? (
               <Box display="flex" alignItems="center" gap={1}>
                 <CircularProgress size={18} />
-                <Typography fontSize={13}>Loading storages...</Typography>
+                <Typography fontSize={13}>{t("storageList.loadingStorages")}</Typography>
               </Box>
             ) : storagesError ? (
               <Typography color="error">{storagesError}</Typography>
             ) : !selectedBuilding ? (
               <Typography fontSize={13} color="text.secondary">
-                Please select a building to view its storages.
+                {t("storageList.selectBuildingToView")}
               </Typography>
             ) : filteredStorages.length === 0 ? (
               <Typography fontSize={13} color="text.secondary">
-                No storages found for this building / filters.
+                {t("storageList.noStoragesFound")}
               </Typography>
             ) : (
               filteredStorages.map((v, i) => (
@@ -305,6 +318,8 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                     transition: "0.18s",
                     "&:hover": { borderColor: "#90caf9", bgcolor: "#f9fbff" },
                   }}
+                  role="button"
+                  aria-label={t("storageList.storageCardAria", { code: v.storageCode })}
                 >
                   <Box display="flex" alignItems="center" mb={1} gap={1}>
                     <WarehouseIcon color="primary" sx={{ fontSize: 20 }} />
@@ -312,7 +327,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                       {v.storageCode}
                     </Typography>
                     <Chip
-                      label={v.status}
+                      label={v.status ?? t("storageList.unknownStatus")}
                       size="small"
                       sx={{
                         color: colorMap[v.status ?? "Ready"] ?? "text.primary",
@@ -333,16 +348,16 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                       <Box display="flex" alignItems="center" mb={0.35}>
                         <FiberManualRecordIcon sx={{ fontSize: 8, color: "#64b5f6", mr: 1 }} />
                         <Typography fontSize={13} color="text.secondary" noWrap>
-                          Type: {v.storageTypeName ?? "N/A"}
+                          {t("storageList.type")}: {v.storageTypeName ?? t("storageList.na")}
                         </Typography>
                         <Typography fontSize={13} color="text.secondary" sx={{ ml: "auto" }} noWrap>
-                          Active: {v.isActive ? "Yes" : "No"}
+                          {t("storageList.active")}: {v.isActive ? t("common.yes") : t("common.no")}
                         </Typography>
                       </Box>
 
                       <Box display="flex" alignItems="center" mb={0.35} gap={1} flexWrap="wrap">
                         <Typography fontSize={13} color="text.secondary" noWrap>
-                          Dimensions:
+                          {t("storageList.dimensions")}:
                         </Typography>
                         <Typography fontSize={13} color="text.secondary" noWrap>
                           {v.width ?? "-"} x {v.length ?? "-"} x {v.height ?? "-"}

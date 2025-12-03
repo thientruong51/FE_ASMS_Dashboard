@@ -1,15 +1,29 @@
 import  { useEffect, useState } from "react";
 import {
+  Box,
+  Paper,
   Stack,
   TextField,
   Button,
-  Box,
-  FormControlLabel,
-  Switch,
+  Avatar,
   Typography,
   Divider,
+  FormControlLabel,
+  Switch,
+  InputAdornment,
+  Chip,
 } from "@mui/material";
-import type { Customer } from "./customer.types";
+
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
+import PhoneIcon from "@mui/icons-material/Phone";
+import HomeIcon from "@mui/icons-material/Home";
+import LockIcon from "@mui/icons-material/Lock";
+import SaveIcon from "@mui/icons-material/Save";
+import CancelIcon from "@mui/icons-material/Cancel";
+
+import type { Customer } from "../components/customer.types";
+import { useTranslation } from "react-i18next";
 
 interface CustomerFormProps {
   customer: Customer | null;
@@ -18,6 +32,8 @@ interface CustomerFormProps {
 }
 
 export default function CustomerForm({ customer, onSave, onCancel }: CustomerFormProps) {
+  const { t } = useTranslation("customer");
+
   const [formData, setFormData] = useState({
     customerCode: "",
     name: "",
@@ -52,15 +68,18 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.customerCode.trim()) newErrors.customerCode = "Customer code is required";
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Invalid email format";
+    if (!formData.customerCode.trim()) newErrors.customerCode = t("form.required");
+    if (!formData.name.trim()) newErrors.name = t("form.required");
 
-    if (!customer && !formData.password.trim()) newErrors.password = "Password is required for new customer";
-    else if (formData.password && formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
+    if (!formData.email.trim()) newErrors.email = t("form.required");
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = t("form.invalidEmail");
 
-    if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) newErrors.phone = "Invalid phone number (10-11 digits)";
+    if (!customer && !formData.password.trim()) newErrors.password = t("form.required");
+    else if (formData.password && formData.password.length < 6)
+      newErrors.password = t("form.passwordMin");
+
+    if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone))
+      newErrors.phone = t("form.invalidPhone");
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -73,134 +92,227 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
 
   const handleSubmit = () => {
     if (validate()) {
-      const dataToSave: Partial<Customer> = { ...formData, password: formData.password || undefined };
+      const dataToSave: Partial<Customer> = {
+        ...formData,
+        password: formData.password || undefined,
+      };
       onSave(dataToSave);
     }
   };
 
-  const twoColStyle = { width: { xs: "100%", sm: "50%" }, pr: { sm: 1 } };
+  const twoCol = {
+    width: { xs: "100%", md: "48%" },
+  };
+
+  const initials = (name: string) =>
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
 
   return (
-    <Box sx={{ pt: 1 }}>
-      <Stack spacing={3}>
-        <Box>
-          <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-            Basic information
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} flexWrap="wrap">
-            <Box sx={twoColStyle}>
-              <TextField
-                label="Customer Code"
-                value={formData.customerCode}
-                onChange={(e) => handleChange("customerCode", e.target.value)}
-                fullWidth
-                required
-                error={!!errors.customerCode}
-                helperText={errors.customerCode || (customer ? "Auto-generated and locked" : "")}
-                disabled={!!customer}
-                size="small"
-              />
-            </Box>
-
-            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
-              <TextField
-                label="Full name"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                fullWidth
-                required
-                error={!!errors.name}
-                helperText={errors.name}
-                size="small"
-              />
-            </Box>
-
-            <Box sx={twoColStyle}>
-              <TextField
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                fullWidth
-                required
-                error={!!errors.email}
-                helperText={errors.email}
-                placeholder="example@gmail.com"
-                size="small"
-              />
-            </Box>
-
-            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
-              <TextField
-                label="Phone"
-                value={formData.phone}
-                onChange={(e) => handleChange("phone", e.target.value)}
-                fullWidth
-                error={!!errors.phone}
-                helperText={errors.phone}
-                placeholder="0901234567"
-                size="small"
-              />
-            </Box>
-
-            <Box sx={{ width: "100%" }}>
-              <TextField
-                label="Address"
-                value={formData.address}
-                onChange={(e) => handleChange("address", e.target.value)}
-                fullWidth
-                multiline
-                rows={2}
-                placeholder="Enter full address"
-                size="small"
-              />
-            </Box>
-          </Stack>
-        </Box>
+    <Paper
+      elevation={3}
+      sx={{
+        p: { xs: 2, sm: 3 },
+        borderRadius: 2,
+        maxWidth: 820,
+        mx: "auto",
+      }}
+    >
+      {/* Header */}
+      <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+        <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56, fontWeight: 700 }}>
+          {formData.name ? initials(formData.name) : <PersonIcon />}
+        </Avatar>
 
         <Box>
-          <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-            Account information
+          <Typography variant="h6" fontWeight={700}>
+            {customer ? t("form.editCustomer") : t("form.newCustomer")}
           </Typography>
-          <Divider sx={{ mb: 2 }} />
-
-          <Stack spacing={2}>
-            <TextField
-              label="Password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => handleChange("password", e.target.value)}
-              fullWidth
-              required={!customer}
-              error={!!errors.password}
-              helperText={errors.password || (customer ? "Leave blank to keep current password" : "")}
-              size="small"
-            />
-
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.isActive}
-                  onChange={(e) => handleChange("isActive", e.target.checked)}
-                  color="success"
-                />
-              }
-              label={<Typography variant="body2">{formData.isActive ? "Active" : "Inactive"}</Typography>}
-            />
-          </Stack>
+          <Typography variant="body2" color="text.secondary">
+            {customer ? t("form.editDescription") : t("form.createDescription")}
+          </Typography>
         </Box>
 
-        <Stack direction="row" spacing={2} justifyContent="flex-end" pt={1}>
-          <Button onClick={onCancel} variant="outlined">
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} variant="contained">
-            {customer ? "Update" : "Create"}
-          </Button>
-        </Stack>
+        <Box flex={1} display="flex" justifyContent="flex-end">
+          <Chip
+            label={formData.isActive ? t("form.active") : t("form.inactive")}
+            color={formData.isActive ? "success" : "default"}
+            size="small"
+          />
+        </Box>
       </Stack>
-    </Box>
+
+      <Divider sx={{ mb: 3 }} />
+
+      {/* 2 columns layout by STACK */}
+      <Stack
+        direction="row"
+        spacing={2}
+        flexWrap="wrap"
+        useFlexGap
+      >
+        {/* CUSTOMER CODE */}
+        <Box sx={twoCol}>
+          <TextField
+            label={t("form.customerCode")}
+            value={formData.customerCode}
+            onChange={(e) => handleChange("customerCode", e.target.value)}
+            fullWidth
+            size="small"
+            required
+            disabled={!!customer}
+            error={!!errors.customerCode}
+            helperText={errors.customerCode || (customer ? t("form.autoGeneratedLocked") : "")}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+
+        {/* FULL NAME */}
+        <Box sx={twoCol}>
+          <TextField
+            label={t("form.fullName")}
+            value={formData.name}
+            onChange={(e) => handleChange("name", e.target.value)}
+            fullWidth
+            size="small"
+            required
+            error={!!errors.name}
+            helperText={errors.name}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+
+        {/* EMAIL */}
+        <Box sx={twoCol}>
+          <TextField
+            label={t("form.email")}
+            type="email"
+            value={formData.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+            fullWidth
+            required
+            size="small"
+            error={!!errors.email}
+            helperText={errors.email || "example@gmail.com"}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+
+        {/* PHONE */}
+        <Box sx={twoCol}>
+          <TextField
+            label={t("form.phone")}
+            value={formData.phone}
+            onChange={(e) => handleChange("phone", e.target.value)}
+            fullWidth
+            size="small"
+            error={!!errors.phone}
+            helperText={errors.phone || "0901234567"}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PhoneIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+
+        {/* ADDRESS FULL WIDTH */}
+        <Box sx={{ width: "100%" }}>
+          <TextField
+            label={t("form.address")}
+            value={formData.address}
+            onChange={(e) => handleChange("address", e.target.value)}
+            fullWidth
+            size="small"
+            multiline
+            rows={3}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <HomeIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+
+        {/* PASSWORD FULL WIDTH */}
+        <Box sx={{ width: "100%" }}>
+          <TextField
+            label={t("form.password")}
+            type="password"
+            value={formData.password}
+            onChange={(e) => handleChange("password", e.target.value)}
+            fullWidth
+            required={!customer}
+            size="small"
+            error={!!errors.password}
+            helperText={
+              errors.password || (customer ? t("form.leaveBlankToKeep") : t("form.passwordPlaceholder"))
+            }
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+      </Stack>
+
+      {/* Switch + hint */}
+      <Stack direction="row" justifyContent="space-between" mt={2} mb={1}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={formData.isActive}
+              onChange={(e) => handleChange("isActive", e.target.checked)}
+              color="success"
+            />
+          }
+          label={formData.isActive ? t("form.isActive") : t("form.inactive")}
+        />
+
+        
+      </Stack>
+
+      <Divider sx={{ mt: 2, mb: 2 }} />
+
+      {/* ACTION BUTTONS */}
+      <Stack direction="row" spacing={2} justifyContent="flex-end">
+        <Button startIcon={<CancelIcon />} variant="outlined" onClick={onCancel}>
+          {t("form.cancel")}
+        </Button>
+
+        <Button startIcon={<SaveIcon />} variant="contained" onClick={handleSubmit}>
+          {customer ? t("form.update") : t("form.create")}
+        </Button>
+      </Stack>
+    </Paper>
   );
 }

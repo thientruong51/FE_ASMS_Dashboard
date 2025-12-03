@@ -16,6 +16,8 @@ import ShelfFloorOrders from "../ShelfFloorOrders";
 import DebugAndAssigned from "../DebugAndAssigned";
 import ContainerDetailDialog from "../ContainerDetailDialog";
 
+import { useTranslation } from "react-i18next";
+
 import type { ShelfItem } from "@/api/shelfApi";
 import type { FloorItem } from "@/api/floorApi";
 import type { ContainerItem } from "@/api/containerApi";
@@ -34,6 +36,7 @@ export default function ShelfView({
   floors = [],
   containersByFloor = {},
 }: ShelfViewProps) {
+  const { t } = useTranslation("storagePage");
   const theme = useTheme();
   const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); // >=600
   const isMdUp = useMediaQuery(theme.breakpoints.up("md")); // >=900
@@ -48,12 +51,10 @@ export default function ShelfView({
 
   const orbitRef = useRef<any>(null);
 
-  // Local copy so we can update UI when child reloads data
   const [localContainersByFloor, setLocalContainersByFloor] = useState<Record<string, ContainerItem[]>>(
     () => ({ ...(containersByFloor ?? {}) })
   );
 
-  // keep local copy in sync when parent prop changes
   useEffect(() => {
     setLocalContainersByFloor({ ...(containersByFloor ?? {}) });
   }, [containersByFloor]);
@@ -75,24 +76,20 @@ export default function ShelfView({
     setContainerOpenKey((prev) => prev + 1);
   };
 
-  // helper to resolve a floor key used in containers map
   const resolveFloorKeyForWrite = (floorNum: number) => {
     const floorObj = floors.find((f) => Number(f.floorNumber) === Number(floorNum));
     if (floorObj && (floorObj as any).floorCode) {
       return (floorObj as any).floorCode as string;
     }
-    // default fallback key
     return `F${floorNum}`;
   };
 
-  // callback to be passed to ShelfFloorOrders — child calls this with updated array for that floor
   const handleContainersUpdated = (updatedList: ContainerItem[]) => {
     if (!selectedFloor) return;
     const key = resolveFloorKeyForWrite(selectedFloor);
     setLocalContainersByFloor((prev) => ({ ...prev, [key]: updatedList }));
   };
 
-  // --- Use serialNumber (number) for sorting (ascending) ---
   const activeContainers: ContainerItem[] = (() => {
     if (!selectedFloor) return [];
 
@@ -123,7 +120,6 @@ export default function ShelfView({
     return [];
   })();
 
-  // responsive sizes for canvas wrapper (keeps "large 3D viewer" feel on wider screens)
   const canvasWidth = isMdUp ? 520 : isSmUp ? 540 : "100%";
   const canvasHeight = isMdUp ? 500 : isSmUp ? 420 : 320;
 
@@ -149,7 +145,7 @@ export default function ShelfView({
         }}
       >
         <Typography fontWeight={600} mb={1}>
-          Shelf: {shelfCode}
+          {t("shelfTitle", { code: shelfCode })}
         </Typography>
 
         <Box
@@ -217,7 +213,7 @@ export default function ShelfView({
 
         <Box mt={1} display="flex" alignItems="center" justifyContent="center" gap={1}>
           <Typography fontSize={13} fontWeight={600}>
-            {selectedFloor ? `Selected: Floor ${selectedFloor}` : "Click a floor on the model"}
+            {selectedFloor ? t("selectedFloor", { floor: selectedFloor }) : t("clickFloorOnModel")}
           </Typography>
         </Box>
 
@@ -256,7 +252,7 @@ export default function ShelfView({
                   whiteSpace: "nowrap",
                 }}
               >
-                Floor {fn}
+                {t("floorButton", { floor: fn })}
               </Box>
             ))}
           </Box>
@@ -299,7 +295,7 @@ export default function ShelfView({
               p: 2,
             }}
           >
-            Click a floor to view containers & orders
+            {t("clickFloorToView")}
           </Box>
         )}
       </Box>

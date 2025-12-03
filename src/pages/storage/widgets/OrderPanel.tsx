@@ -10,6 +10,7 @@ import {
   useMediaQuery,
   Snackbar,
   Alert,
+  Tooltip,
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -25,10 +26,12 @@ import { getProductTypes } from "@/api/productTypeApi";
 import { getServices } from "@/api/serviceApi";
 import OrderDetailDrawer from "./OrderDetailDrawer";
 
+import { useTranslation } from "react-i18next";
+
 export default function OrderPanel() {
+  const { t } = useTranslation("storagePage");
   const theme = useTheme();
-  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); // >=600
-  const isMdUp = useMediaQuery(theme.breakpoints.up("md")); // >=900
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); 
 
   const [search, setSearch] = useState("");
   const [details, setDetails] = useState<any[]>([]);
@@ -44,12 +47,10 @@ export default function OrderPanel() {
   const loadAllDetailsForFullOrders = useCallback(async () => {
     setLoading(true);
     try {
-      // --- build lookups name -> id for product types and services ---
       const productTypeNameToId: Record<string, number> = {};
       const serviceNameToId: Record<string, number> = {};
 
       try {
-        // getProductTypes returns ProductTypeListResponse
         const ptResp = await getProductTypes({ pageSize: 1000 });
         const pts = ptResp?.data ?? [];
         pts.forEach((p: any) => {
@@ -62,7 +63,6 @@ export default function OrderPanel() {
       }
 
       try {
-        // getServices returns Service[]
         const ss = await getServices();
         ss.forEach((s: any) => {
           const name = String(s.name ?? "").trim();
@@ -73,7 +73,6 @@ export default function OrderPanel() {
         console.warn("getServices failed", err);
       }
 
-      // 1) Lấy danh sách orders với style = "full"
       const ordersResp = await getOrders({
         pageNumber: 1,
         pageSize: 50,
@@ -81,7 +80,6 @@ export default function OrderPanel() {
       });
       const orders = ordersResp.data ?? [];
 
-      // 2) Với mỗi order, lấy details rồi filter isPlaced === null
       const detailsList = await Promise.all(
         orders.map(async (o) => {
           try {
@@ -89,7 +87,6 @@ export default function OrderPanel() {
             const items = resp.data ?? [];
 
             const mapped = items.map((item: any) => {
-              // If backend already returned ids, prefer them
               let productTypeIds: number[] =
                 Array.isArray(item.productTypeIds) && item.productTypeIds.length
                   ? item.productTypeIds
@@ -98,7 +95,6 @@ export default function OrderPanel() {
               let serviceIds: number[] =
                 Array.isArray(item.serviceIds) && item.serviceIds.length ? item.serviceIds : [];
 
-              // If ids not provided, derive from names using lookups
               const namesPT: string[] = Array.isArray(item.productTypeNames)
                 ? item.productTypeNames.map((n: any) => String(n).trim())
                 : [];
@@ -121,11 +117,10 @@ export default function OrderPanel() {
 
               return {
                 ...item,
-                // keep names as backup
                 productTypeNames: namesPT,
                 serviceNames: namesS,
-                productTypeIds, // may be []
-                serviceIds, // may be []
+                productTypeIds, 
+                serviceIds, 
                 _orderCode: o.orderCode,
                 _orderStatus: o.status,
                 _orderPaymentStatus: o.paymentStatus,
@@ -135,7 +130,6 @@ export default function OrderPanel() {
               };
             });
 
-            // chỉ giữ item có isPlaced === null
             return mapped.filter((it: any) => it.isPlaced === false);
           } catch (err) {
             console.error("Error fetching details for", o.orderCode, err);
@@ -144,7 +138,6 @@ export default function OrderPanel() {
         })
       );
 
-      // 3) Flatten và set state
       const flat = detailsList.flat();
       setDetails(flat);
     } catch (err) {
@@ -179,19 +172,17 @@ export default function OrderPanel() {
 
   const handleOnPlaced = (result: { success: boolean; data: any }) => {
     if (result?.success) {
-      setSnackMsg("Placed successfully.");
+      setSnackMsg(t("orderPanel.placedSuccess"));
       setSnackSeverity("success");
     } else {
-      const msg = (result?.data && (result.data.error || JSON.stringify(result.data))) || "Place failed.";
-      setSnackMsg(`Place failed: ${msg}`);
+      const msg = (result?.data && (result.data.error || JSON.stringify(result.data))) || t("orderPanel.placeFailedGeneric");
+      setSnackMsg(`${t("orderPanel.placeFailedPrefix")} ${msg}`);
       setSnackSeverity("error");
     }
     setSnackOpen(true);
 
-    // close drawer
     setOpen(false);
 
-    // reload data
     loadAllDetailsForFullOrders();
   };
 
@@ -227,13 +218,13 @@ export default function OrderPanel() {
             gap={1}
           >
             <Typography fontWeight={600} fontSize={15}>
-              Order
+              {t("orderPanel.title")}
             </Typography>
           </Box>
 
           {/* SEARCH */}
           <TextField
-            placeholder="Search by Container, Order Code, Storage, Product/Service id..."
+            placeholder={t("orderPanel.searchPlaceholder")}
             size="small"
             fullWidth
             value={search}
@@ -249,6 +240,7 @@ export default function OrderPanel() {
               mb: 1.5,
               "& .MuiOutlinedInput-root": { borderRadius: 2 },
             }}
+            inputProps={{ "aria-label": t("orderPanel.searchAria") }}
           />
 
           {/* SUBHEADER */}
@@ -261,19 +253,26 @@ export default function OrderPanel() {
             gap={1}
           >
             <Typography fontSize={13} fontWeight={600} color="text.secondary">
-              Showing {filtered.length} Orders detail {loading ? " (loading...)" : ""}
+              {t("orderPanel.showing", { count: filtered.length })}
+              {loading ? ` • ${t("orderPanel.loading")}` : ""}
             </Typography>
 
             <Box display="flex" alignItems="center" gap={0.5}>
-              <IconButton size="small">
-                <ViewListOutlinedIcon fontSize="small" />
-              </IconButton>
-              <IconButton size="small">
-                <MapOutlinedIcon fontSize="small" />
-              </IconButton>
-              <IconButton size="small">
-                <ViewModuleOutlinedIcon fontSize="small" />
-              </IconButton>
+              <Tooltip title={t("orderPanel.listView")}>
+                <IconButton size="small" aria-label={t("orderPanel.listView")}>
+                  <ViewListOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={t("orderPanel.mapView")}>
+                <IconButton size="small" aria-label={t("orderPanel.mapView")}>
+                  <MapOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={t("orderPanel.gridView")}>
+                <IconButton size="small" aria-label={t("orderPanel.gridView")}>
+                  <ViewModuleOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
           </Box>
 
@@ -295,8 +294,8 @@ export default function OrderPanel() {
                   key={`${d.orderDetailId ?? i}-${i}`}
                   sx={{
                     width: {
-                      xs: "100%", // responsive: mobile 1 column
-                      sm: "calc(50% - 4px)", // desktop/tablet 2 columns
+                      xs: "100%", 
+                      sm: "calc(50% - 4px)",
                     },
                   }}
                   onClick={() => handleOpenDetail(d)}
@@ -315,6 +314,8 @@ export default function OrderPanel() {
                       },
                       height: "auto",
                     }}
+                    role="button"
+                    aria-label={t("orderPanel.openDetail")}
                   >
                     <Box display="flex" justifyContent="flex-end" mb={0.3}>
                       <DragIndicatorOutlinedIcon
@@ -333,16 +334,16 @@ export default function OrderPanel() {
                       sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                     >
                       <LockOutlinedIcon sx={{ fontSize: 15, color: "text.secondary" }} />
-                      {d.containerCode ? `Container: ${d.containerCode}` : `Detail #${d.orderDetailId ?? i}`}
+                      {d.containerCode ? `${t("orderPanel.containerLabel", { code: d.containerCode })}` : t("orderPanel.detailLabel", { id: d.orderDetailId ?? i })}
                     </Typography>
 
                     <Box display="flex" gap={1} alignItems="center" mb={0.5}>
                       <Box>
                         <Typography fontSize={12} color="text.secondary">
-                          Order: <strong>{d._orderCode}</strong>
+                          {t("orderPanel.orderPrefix")}: <strong>{d._orderCode}</strong>
                         </Typography>
                         <Typography fontSize={12} color="text.secondary">
-                          Status: {d._orderStatus ?? "-"}
+                          {t("orderPanel.statusLabel")}: {d._orderStatus ?? "-"}
                         </Typography>
                       </Box>
                     </Box>

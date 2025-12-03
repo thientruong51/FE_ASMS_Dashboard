@@ -2,18 +2,20 @@ import React, { useEffect, useState } from "react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, TextField, Alert } from "@mui/material";
 import shelfTypeApi from "@/api/shelfTypeApi";
 import type { ShelfType } from "./types";
+import { useTranslation } from "react-i18next";
 
 export default function ShelfFormDialog({
   open,
   onClose,
   initial,
-  onSaved,
+  onSaved
 }: {
   open: boolean;
   onClose: () => void;
   initial?: Partial<ShelfType>;
   onSaved: (s: ShelfType) => void;
 }) {
+  const { t } = useTranslation("shelfPage");
   const [form, setForm] = useState<Partial<ShelfType>>(initial || {});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,12 +29,12 @@ export default function ShelfFormDialog({
 
   const validate = (f: Partial<ShelfType>) => {
     const errs: Record<string, string> = {};
-    if (!f.name) errs.name = "Name is required";
-    if (!f.length || f.length <= 0) errs.length = "Length must be > 0";
-    if (!f.width || f.width <= 0) errs.width = "Width must be > 0";
-    if (!f.height || f.height <= 0) errs.height = "Height must be > 0";
-    if (f.price !== null && f.price !== undefined && f.price < 0) errs.price = "Price cannot be negative";
-    if (f.imageUrl && !/^https?:\/\//i.test(f.imageUrl)) errs.imageUrl = "Must be a valid URL";
+    if (!f.name) errs.name = `${t("name")} ${t("required")}`;
+    if (!f.length || f.length <= 0) errs.length = t("lengthGT0");
+    if (!f.width || f.width <= 0) errs.width = t("widthGT0");
+    if (!f.height || f.height <= 0) errs.height = t("heightGT0");
+    if (f.price !== null && f.price !== undefined && f.price < 0) errs.price = t("priceNonNegative");
+    if (f.imageUrl && !/^https?:\/\//i.test(f.imageUrl)) errs.imageUrl = t("validUrl");
 
     return errs;
   };
@@ -55,7 +57,7 @@ export default function ShelfFormDialog({
     const errs = validate(form);
     setFieldErrors(errs);
     if (Object.keys(errs).length) {
-      setError("Please fix validation errors");
+      setError(t("saveFailed"));
       return;
     }
 
@@ -69,7 +71,7 @@ export default function ShelfFormDialog({
         width: Number(form.width),
         height: Number(form.height),
         price: form.price === null ? null : Number(form.price),
-        imageUrl: form.imageUrl || "",
+        imageUrl: form.imageUrl || ""
       };
 
       if (form.shelfTypeId) {
@@ -82,7 +84,7 @@ export default function ShelfFormDialog({
 
       onClose();
     } catch (err: any) {
-      setError(err?.message || "Save failed");
+      setError(err?.message || t("saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -90,11 +92,11 @@ export default function ShelfFormDialog({
 
   return (
     <Dialog fullWidth maxWidth="sm" open={open} onClose={onClose}>
-      <DialogTitle>{form.shelfTypeId ? "Update Shelf Type" : "Create Shelf Type"}</DialogTitle>
+      <DialogTitle>{form.shelfTypeId ? t("editDialogTitle") : t("createDialogTitle")}</DialogTitle>
       <DialogContent dividers>
         <Box sx={{ display: "grid", gap: 2 }}>
           <TextField
-            label="Name"
+            label={t("name")}
             value={form.name || ""}
             onChange={handleChange("name")}
             error={!!fieldErrors.name}
@@ -103,21 +105,21 @@ export default function ShelfFormDialog({
 
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1 }}>
             <TextField
-              label="Length"
+              label={t("length")}
               value={form.length || ""}
               onChange={handleChange("length")}
               error={!!fieldErrors.length}
               helperText={fieldErrors.length}
             />
             <TextField
-              label="Width"
+              label={t("width")}
               value={form.width || ""}
               onChange={handleChange("width")}
               error={!!fieldErrors.width}
               helperText={fieldErrors.width}
             />
             <TextField
-              label="Height"
+              label={t("height")}
               value={form.height || ""}
               onChange={handleChange("height")}
               error={!!fieldErrors.height}
@@ -126,7 +128,7 @@ export default function ShelfFormDialog({
           </Box>
 
           <TextField
-            label="Price"
+            label={t("price")}
             value={form.price ?? ""}
             onChange={handleChange("price")}
             error={!!fieldErrors.price}
@@ -134,7 +136,7 @@ export default function ShelfFormDialog({
           />
 
           <TextField
-            label="GLB URL"
+            label={t("glbUrl")}
             value={form.imageUrl || ""}
             onChange={handleChange("imageUrl")}
             error={!!fieldErrors.imageUrl}
@@ -147,10 +149,10 @@ export default function ShelfFormDialog({
 
       <DialogActions>
         <Button onClick={onClose} disabled={saving}>
-          Cancel
+          {t("cancel")}
         </Button>
         <Button onClick={handleSave} variant="contained" disabled={saving}>
-          {saving ? "Saving..." : "Save"}
+          {saving ? t("saving") : t("save")}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,9 +9,11 @@ import {
   FormControlLabel,
   Checkbox,
   Box,
+  CircularProgress,
 } from "@mui/material";
 import type { EmployeeRoleItem } from "@/api/employeeRoleApi";
 import { createEmployeeRole, getEmployeeRole, updateEmployeeRole } from "@/api/employeeRoleApi";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   open: boolean;
@@ -21,6 +23,8 @@ type Props = {
 };
 
 export default function EmployeeRoleDialog({ open, onClose, employeeRoleId, onSaved }: Props) {
+  const { t } = useTranslation("employeeRole");
+
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<Partial<EmployeeRoleItem>>({
     name: "",
@@ -42,12 +46,15 @@ export default function EmployeeRoleDialog({ open, onClose, employeeRoleId, onSa
         setForm(resp);
       } catch (err) {
         console.error(err);
+        alert(t("messages.loadFailed"));
       } finally {
         if (mounted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
-  }, [open, employeeRoleId]);
+    return () => {
+      mounted = false;
+    };
+  }, [open, employeeRoleId, t]);
 
   const handleChange = (k: keyof EmployeeRoleItem) => (e: any) => {
     const value = e?.target?.type === "checkbox" ? e.target.checked : e.target.value;
@@ -56,7 +63,7 @@ export default function EmployeeRoleDialog({ open, onClose, employeeRoleId, onSa
 
   const handleSubmit = async () => {
     if (!form.name || form.name.trim() === "") {
-      alert("Tên vai trò là bắt buộc");
+      alert(t("form.required"));
       return;
     }
     try {
@@ -71,7 +78,7 @@ export default function EmployeeRoleDialog({ open, onClose, employeeRoleId, onSa
       onClose();
     } catch (err: any) {
       console.error(err);
-      alert(err?.message ?? "Lưu thất bại");
+      alert(err?.message ?? t("messages.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -79,19 +86,30 @@ export default function EmployeeRoleDialog({ open, onClose, employeeRoleId, onSa
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{employeeRoleId ? "Edit Employee Role" : "Create Employee Role"}</DialogTitle>
+      <DialogTitle>{employeeRoleId ? t("form.editTitle") : t("form.createTitle")}</DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} pt={1}>
-          <TextField label="Name" value={form.name ?? ""} onChange={handleChange("name")} fullWidth required />
+          <TextField
+            label={t("form.name")}
+            value={form.name ?? ""}
+            onChange={handleChange("name")}
+            fullWidth
+            required
+            disabled={loading}
+          />
           <FormControlLabel
             control={<Checkbox checked={!!form.isActive} onChange={handleChange("isActive")} />}
-            label="Active"
+            label={t("form.active")}
           />
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={loading}>{loading ? "Saving..." : "Save"}</Button>
+        <Button onClick={onClose} disabled={loading}>
+          {t("form.cancel")}
+        </Button>
+        <Button onClick={handleSubmit} variant="contained" disabled={loading}>
+          {loading ? <CircularProgress size={18} /> : t("form.save")}
+        </Button>
       </DialogActions>
     </Dialog>
   );

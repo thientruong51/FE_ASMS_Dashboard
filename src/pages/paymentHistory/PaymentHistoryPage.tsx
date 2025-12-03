@@ -1,4 +1,4 @@
-import  { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Card,
@@ -22,21 +22,23 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import * as paymentApi from "@/api/paymentHistoryApi";
 import PaymentHistoryDetailDrawer from "./components/PaymentHistoryDetailDrawer";
+import { useTranslation } from "react-i18next";
 
-function ToolbarExtras({ onExport, onRefresh }: { onExport: () => void; onRefresh: () => void }) {
+function ToolbarExtras({ onExport, onRefresh, exportLabel, refreshLabel }: { onExport: () => void; onRefresh: () => void; exportLabel: string; refreshLabel: string }) {
   return (
     <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1 }}>
       <Button startIcon={<DownloadIcon />} size="small" onClick={onExport}>
-        Export CSV
+        {exportLabel}
       </Button>
       <Button startIcon={<RefreshIcon />} size="small" onClick={onRefresh}>
-        Refresh
+        {refreshLabel}
       </Button>
     </Box>
   );
 }
 
 export default function PaymentHistoryPage() {
+  const { t } = useTranslation("paymentHistory");
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -70,8 +72,6 @@ export default function PaymentHistoryPage() {
     fetchAll();
   }, []);
 
-
-
   const openDrawerFor = async (row: paymentApi.PaymentHistoryItem) => {
     if (!row) return;
     setSelectedCode(row.paymentHistoryCode);
@@ -89,16 +89,16 @@ export default function PaymentHistoryPage() {
 
   const columns = useMemo<GridColDef<any, any, any>[]>(
     () => [
-      { field: "paymentHistoryCode", headerName: "Code", minWidth: 240, flex: 1 },
+      { field: "paymentHistoryCode", headerName: t("table.code"), minWidth: 240, flex: 1 },
       {
         field: "orderCode",
-        headerName: "Order",
+        headerName: t("table.order"),
         minWidth: 160,
         flex: 0.9,
         renderCell: (p: any) => (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography noWrap>{p.value ?? "-"}</Typography>
-            <Tooltip title="Copy orderCode">
+            <Tooltip title={t("actions.copy") ?? t("actions.details")}>
               <IconButton
                 size="small"
                 onClick={(e) => {
@@ -112,11 +112,11 @@ export default function PaymentHistoryPage() {
           </Box>
         ),
       },
-      { field: "paymentMethod", headerName: "Method", minWidth: 140, flex: 0.8 },
-      { field: "paymentPlatform", headerName: "Platform", minWidth: 140, flex: 0.8 },
+      { field: "paymentMethod", headerName: t("table.method"), minWidth: 140, flex: 0.8 },
+      { field: "paymentPlatform", headerName: t("table.platform"), minWidth: 140, flex: 0.8 },
       {
         field: "amount",
-        headerName: "Amount",
+        headerName: t("table.amount"),
         minWidth: 120,
         flex: 0.8,
         type: "number",
@@ -124,7 +124,7 @@ export default function PaymentHistoryPage() {
       },
       {
         field: "actions",
-        headerName: "Actions",
+        headerName: t("table.actions"),
         width: 120,
         sortable: false,
         renderCell: (params: any) => {
@@ -132,7 +132,7 @@ export default function PaymentHistoryPage() {
           const isLoadingForThis = itemLoading && selectedCode === code;
           return (
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-              <Tooltip title="View details">
+              <Tooltip title={t("actions.details")}>
                 <span>
                   <IconButton size="small" onClick={() => openDrawerFor(params.row)} disabled={isLoadingForThis}>
                     <VisibilityIcon fontSize="small" />
@@ -145,7 +145,7 @@ export default function PaymentHistoryPage() {
         },
       },
     ],
-    [itemLoading, selectedCode]
+    [itemLoading, selectedCode, t]
   );
 
   function filteredWithMemo(all: any[], s: string, orderFilter: string) {
@@ -191,7 +191,7 @@ export default function PaymentHistoryPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `payment_history_export_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `${t("messages.exportFilenamePrefix")}_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -200,9 +200,9 @@ export default function PaymentHistoryPage() {
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
       <Box mb={2}>
         <Typography variant="h4" fontWeight={700}>
-          Payment History
+          {t("page.title")}
         </Typography>
-        <Typography color="text.secondary">List of payment events</Typography>
+        <Typography color="text.secondary">{t("page.subtitle")}</Typography>
       </Box>
 
       <Card sx={{ mb: 2 }}>
@@ -210,7 +210,7 @@ export default function PaymentHistoryPage() {
           <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" }, alignItems: "center" }}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <TextField
-                placeholder="Search code / order / method..."
+                placeholder={t("page.searchPlaceholder")}
                 size="small"
                 fullWidth
                 value={search}
@@ -225,15 +225,12 @@ export default function PaymentHistoryPage() {
               />
             </Box>
 
-           
-
             <Box sx={{ display: "flex", gap: 1 }}>
-              
               <Button variant="text" onClick={() => setDensity(density === "standard" ? "compact" : "standard")}>
-                Toggle density
+                {t("actions.toggleDensity")}
               </Button>
               <Button startIcon={<DownloadIcon />} onClick={handleExportCsv}>
-                Export
+                {t("actions.export")}
               </Button>
             </Box>
           </Box>
@@ -242,7 +239,7 @@ export default function PaymentHistoryPage() {
 
       <Card>
         <CardContent>
-          <ToolbarExtras onExport={handleExportCsv} onRefresh={fetchAll} />
+          <ToolbarExtras onExport={handleExportCsv} onRefresh={fetchAll} exportLabel={t("actions.exportCsv")} refreshLabel={t("actions.refresh")} />
 
           {isSm ? (
             <Stack spacing={2}>
@@ -255,7 +252,7 @@ export default function PaymentHistoryPage() {
                     </Box>
                     <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                       <Button size="small" onClick={() => openDrawerFor(o)} startIcon={<VisibilityIcon />}>
-                        Details
+                        {t("actions.details")}
                       </Button>
                       {itemLoading && selectedCode === o.paymentHistoryCode && <CircularProgress size={18} />}
                     </Box>

@@ -1,0 +1,49 @@
+{
+  "title": "Settings",
+
+  "sections": {
+    "general": "General",
+    "changePassword": "Change Password",
+    "account": "Account Settings"
+  },
+
+  "fields": {
+    "name": "Name",
+    "username": "Username",
+    "phone": "Phone Number",
+    "location": "Location",
+    "employeeCode": "Employee Code",
+
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+
+    "language": "Language",
+    "notificationEmail": "Notification Email"
+  },
+
+  "actions": {
+    "saveChanges": "Save Changes",
+    "chooseImage": "Choose Image",
+    "changePassword": "Change Password",
+    "save": "Save"
+  },
+
+  "messages": {
+    "updateSuccess": "Updated successfully",
+    "updateFailedGeneric": "Update failed. Please try again.",
+    "updateFailedWithErrors": "Update failed with errors",
+
+    "passwordChanged": "Password changed successfully",
+    "passwordChangeFailed": "Password change failed. Please try again.",
+
+    "settingsSaved": "Settings saved."
+  },
+
+  "errors": {
+    "employeeIdMissing": "Employee ID missing. Cannot update.",
+    "passwordsRequired": "Please enter current and new password.",
+    "passwordsMismatch": "New password and confirmation do not match.",
+    "saveSettingsFailed": "Unable to save settings to localStorage."
+  }
+}

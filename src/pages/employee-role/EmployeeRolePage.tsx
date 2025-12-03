@@ -1,4 +1,4 @@
-import  { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import  { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Container,
@@ -31,10 +31,10 @@ import {
   type EmployeeRoleItem,
 } from "@/api/employeeRoleApi";
 import EmployeeRoleDialog from "./components/EmployeeRoleDialog";
-
-
+import { useTranslation } from "react-i18next";
 
 export default function EmployeeRolePage() {
+  const { t } = useTranslation("employeeRole");
   const theme = useTheme();
   const isSmDown = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -47,7 +47,7 @@ export default function EmployeeRolePage() {
   const [snack, setSnack] = useState<{ open: boolean; message?: string; severity?: "success" | "error" }>({ open: false });
 
   const [q, setQ] = useState("");
-  const [filterActive, setFilterActive] = useState<string>(""); 
+  const [filterActive, setFilterActive] = useState<string>("");
 
   const debounceRef = useRef<number | null>(null);
 
@@ -60,11 +60,11 @@ export default function EmployeeRolePage() {
       setRows(data);
     } catch (err) {
       console.error(err);
-      setSnack({ open: true, message: "Load failed", severity: "error" });
+      setSnack({ open: true, message: t("messages.fetchFailed"), severity: "error" });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchAll();
@@ -107,29 +107,29 @@ export default function EmployeeRolePage() {
     setDialogOpen(false);
     setEditId(null);
     fetchAll();
-    setSnack({ open: true, message: "Saved", severity: "success" });
+    setSnack({ open: true, message: t("messages.saved"), severity: "success" });
   };
 
   const handleDelete = async (id?: number | null) => {
     if (!id) return;
-    if (!window.confirm("Are you sure you want to delete this role?")) return;
+    if (!window.confirm(t("dialog.deleteConfirm"))) return;
     try {
       await deleteEmployeeRole(id);
       setAllRows((prev) => prev.filter((r) => r.employeeRoleId !== id));
       setRows((prev) => prev.filter((r) => r.employeeRoleId !== id));
-      setSnack({ open: true, message: "Deleted", severity: "success" });
+      setSnack({ open: true, message: t("messages.deleted"), severity: "success" });
     } catch (err) {
       console.error(err);
-      setSnack({ open: true, message: "Delete failed", severity: "error" });
+      setSnack({ open: true, message: t("messages.deleteFailed"), severity: "error" });
     }
   };
 
   const columns: GridColDef[] = useMemo(
     () => [
-      { field: "employeeRoleId", headerName: "ID", width: 100 },
+      { field: "employeeRoleId", headerName: t("table.id"), width: 100 },
       {
         field: "name",
-        headerName: "Name",
+        headerName: t("table.name"),
         flex: 1,
         minWidth: 240,
         renderCell: (params) => (
@@ -143,13 +143,13 @@ export default function EmployeeRolePage() {
       },
       {
         field: "isActive",
-        headerName: "Active",
+        headerName: t("table.active"),
         width: 120,
-        renderCell: (params) => <Chip label={params.value ? "Active" : "Inactive"} size="small" color={params.value ? "success" : "default"} />,
+        renderCell: (params) => <Chip label={params.value ? t("table.active") : t("dialog.delete")} size="small" color={params.value ? "success" : "default"} />,
       },
       {
         field: "actions",
-        headerName: "Actions",
+        headerName: t("table.actions"),
         width: 140,
         sortable: false,
         renderCell: (params) => (
@@ -164,7 +164,7 @@ export default function EmployeeRolePage() {
         ),
       },
     ],
-    []
+    [t]
   );
 
   return (
@@ -198,15 +198,15 @@ export default function EmployeeRolePage() {
           <Box sx={{ position: "relative", zIndex: 2, p: { xs: 2, md: 3 } }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" gap={2} flexDirection={{ xs: "column", sm: "row" }}>
               <Box>
-                <Typography variant="h5" fontWeight={800}>
-                  Employee Roles
+                <Typography variant="h5" fontWeight={700}>
+                  {t("page.title")}
                 </Typography>
-                <Typography color="text.secondary">Manage employee roles</Typography>
+                <Typography color="text.secondary">{t("page.subtitle")}</Typography>
               </Box>
 
               <Box sx={{ display: "flex", gap: 1, width: { xs: "100%", sm: "auto" }, justifyContent: { xs: "stretch", sm: "flex-end" } }}>
                 <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} sx={{ width: { xs: "100%", sm: "auto" } }}>
-                  Create
+                  {t("page.create")}
                 </Button>
               </Box>
             </Box>
@@ -219,7 +219,7 @@ export default function EmployeeRolePage() {
             <Box display="flex" gap={2} flexDirection={{ xs: "column", sm: "row" }} alignItems="center" width="30%">
               <Box sx={{ flex: { xs: "1 1 100%", sm: "1 1 auto" }, minWidth: 0 }}>
                 <TextField
-                  placeholder="Search by name or id..."
+                  placeholder={t("page.searchPlaceholder")}
                   size="small"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
@@ -230,15 +230,15 @@ export default function EmployeeRolePage() {
               <Box sx={{ width: { xs: "100%", sm: 150 } }}>
                 <TextField
                   select
-                  label="Filter active"
+                  label={t("page.filterAll")}
                   size="small"
                   value={filterActive}
                   onChange={(e) => setFilterActive(e.target.value)}
                   fullWidth
                 >
-                  <MenuItem value="">All</MenuItem>
-                  <MenuItem value="active">Active</MenuItem>
-                  <MenuItem value="inactive">Inactive</MenuItem>
+                  <MenuItem value="">{t("page.filterAll")}</MenuItem>
+                  <MenuItem value="active">{t("page.filterActive")}</MenuItem>
+                  <MenuItem value="inactive">{t("page.filterInactive")}</MenuItem>
                 </TextField>
               </Box>
             </Box>
@@ -259,7 +259,7 @@ export default function EmployeeRolePage() {
                     <List>
                       {rows.length === 0 ? (
                         <ListItem>
-                          <ListItemText primary="No roles found" />
+                          <ListItemText primary={t("page.noRolesFound")} />
                         </ListItem>
                       ) : (
                         rows.map((r) => (
@@ -283,7 +283,7 @@ export default function EmployeeRolePage() {
                                   <Typography fontWeight={700}>{r.name}</Typography>
                                 </Box>
                               }
-                              secondary={<>{r.isActive ? <Chip label="Active" size="small" color="success" /> : <Chip label="Inactive" size="small" />} </>}
+                              secondary={<>{r.isActive ? <Chip label={t("table.active")} size="small" color="success" /> : <Chip label={t("dialog.delete")} size="small" />} </>}
                             />
                           </ListItem>
                         ))
@@ -322,5 +322,3 @@ export default function EmployeeRolePage() {
     </Container>
   );
 }
-
-

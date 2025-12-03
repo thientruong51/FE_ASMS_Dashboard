@@ -20,6 +20,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Html, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import type { ContainerType } from "./types";
+import { useTranslation } from "react-i18next";
 
 function GLBModelFit({ url }: { url: string }) {
   const gltf = useGLTF(url);
@@ -80,6 +81,7 @@ export default function ContainerTypeCard({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState<boolean>(!!forceVisible);
+  const { t } = useTranslation("containerType");
 
   useEffect(() => {
     if (forceVisible) setVisible(true);
@@ -123,8 +125,7 @@ export default function ContainerTypeCard({
         "&:hover": {
           transform: "translateY(-8px) scale(1.015)",
           boxShadow: "0 18px 48px rgba(16,24,40,0.16)",
-           borderColor: "primary.main",
-          
+          borderColor: "primary.main",
         },
         "&:hover .media": {
           transform: "scale(1.03)",
@@ -145,7 +146,7 @@ export default function ContainerTypeCard({
 
         {visible && hasModel ? (
           <Box className="media" sx={{ width: "100%", height: 220, zIndex: 1 }}>
-            <Canvas style={{ width: "100%", height: "100%",background: "linear-gradient(180deg,#f6f9fb,#f3f7fb)"  }} gl={{ antialias: true }} dpr={[1, 1.5]}>
+            <Canvas style={{ width: "100%", height: "100%", background: "linear-gradient(180deg,#f6f9fb,#f3f7fb)" }} gl={{ antialias: true }} dpr={[1, 1.5]}>
               <ambientLight intensity={0.45} />
               <directionalLight position={[5, 5, 5]} intensity={0.35} />
               <Suspense
@@ -177,7 +178,6 @@ export default function ContainerTypeCard({
           </Box>
         )}
 
-        {/* small top-left id chip */}
         <Chip
           label={`#${item.containerTypeId}`}
           size="small"
@@ -194,20 +194,20 @@ export default function ContainerTypeCard({
           </Box>
 
           <Stack direction="column" spacing={1} alignItems="flex-end">
-            <Chip size="small" label={`${(item.length ?? 0).toFixed(2)}×${(item.width ?? 0).toFixed(2)}×${(item.height ?? 0).toFixed(2)} m`} />
-            {typeof item.price !== "undefined" && <Chip size="small" label={`${Number(item.price).toLocaleString()} VND`} />}
+            <Chip size="small" label={t("card.dimensions", { l: (item.length ?? 0).toFixed(2), w: (item.width ?? 0).toFixed(2), h: (item.height ?? 0).toFixed(2) })} />
+            {typeof item.price !== "undefined" && <Chip size="small" label={t("card.price", { price: Number(item.price).toLocaleString() })} />}
           </Stack>
         </Box>
       </CardContent>
 
       <CardActions sx={{ px: 1, pb: 1 }}>
-        <Tooltip title="Edit">
+        <Tooltip title={t("tooltips.edit")}>
           <IconButton size="small" aria-label="edit" onClick={() => onEdit(item)} sx={{ borderRadius: 2 }}>
             <EditIcon />
           </IconButton>
         </Tooltip>
 
-        <Tooltip title="Delete">
+        <Tooltip title={t("tooltips.delete")}>
           <IconButton size="small" aria-label="delete" onClick={() => onDelete(item.containerTypeId)} sx={{ borderRadius: 2 }}>
             <DeleteIcon />
           </IconButton>
@@ -216,7 +216,7 @@ export default function ContainerTypeCard({
         <Box sx={{ flex: "1 0 auto" }} />
 
         <Button size="small" variant="text">
-          View
+          {t("card.view")}
         </Button>
       </CardActions>
     </Card>

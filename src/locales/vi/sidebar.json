@@ -1,0 +1,17 @@
+{
+  "dashboard": "Bảng điều khiển",
+  "orders": "Đơn hàng",
+  "trackingHistorys": "Lịch sử Tracking",
+  "storages": "Kho",
+  "customers": "Khách hàng",
+  "paymentHistorys": "Lịch sử thanh toán",
+  "employeeRoles": "Vai trò nhân viên",
+  "staffs": "Nhân sự",
+  "services": "Dịch vụ",
+  "buildings": "Tòa nhà",
+  "storageTypes": "Loại kho",
+  "shelfsTypes": "Loại kệ",
+  "containerTypes": "Loại container",
+  "productTypes": "Loại sản phẩm",
+  "settings": "Cài đặt"
+}

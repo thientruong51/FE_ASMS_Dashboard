@@ -1,0 +1,45 @@
+{
+  "page": {
+    "title": "Employee Roles",
+    "subtitle": "Manage employee roles",
+    "create": "Create",
+    "searchPlaceholder": "Search by name or id...",
+    "filterAll": "All",
+    "filterActive": "Active",
+    "filterInactive": "Inactive",
+    "noRolesFound": "No roles found"
+  },
+
+  "table": {
+    "id": "ID",
+    "name": "Name",
+    "active": "Active",
+    "actions": "Actions"
+  },
+
+  "form": {
+    "createTitle": "Create Employee Role",
+    "editTitle": "Edit Employee Role",
+    "name": "Name",
+    "active": "Active",
+    "required": "Name is required",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
+
+  "dialog": {
+    "deleteConfirm": "Are you sure you want to delete this role?",
+    "deleteConfirmWithName": "Are you sure you want to delete \"{{name}}\"?",
+    "delete": "Delete",
+    "deleting": "Deleting..."
+  },
+
+  "messages": {
+    "loadFailed": "Load failed",
+    "saved": "Saved",
+    "deleted": "Deleted",
+    "deleteFailed": "Delete failed",
+    "fetchFailed": "Failed to load roles"
+  }
+}

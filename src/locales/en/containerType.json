@@ -1,0 +1,63 @@
+{
+  "page": {
+    "title": "Container Types",
+    "subtitle": "Manage container templates — 3D preview if available",
+    "create": "Create",
+    "count": "Count: {{count}}",
+    "category": "Category: {{cat}}",
+    "tabs": {
+      "self": "Self Storage",
+      "warehouse": "Warehouse"
+    }
+  },
+
+  "card": {
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "dimensions": "{{l}}×{{w}}×{{h}} m",
+    "price": "{{price}} VND"
+  },
+
+  "form": {
+    "createTitle": "Create Container Type",
+    "editTitle": "Edit Container Type",
+    "type": "Type",
+    "length": "Length (m)",
+    "width": "Width (m)",
+    "height": "Height (m)",
+    "imageUrl": "Image / Model URL (.jpg | .png | .glb | .gltf)",
+    "price": "Price",
+    "preview": "Preview",
+    "noPreview": "No preview",
+    "modelDetected": "3D model detected ({{ext}})",
+    "urlNotPreviewable": "URL provided (not previewable)",
+    "save": "Save",
+    "cancel": "Cancel",
+    "required": "Required",
+    "saving": "Saving..."
+  },
+
+  "delete": {
+    "title": "Delete Container Type",
+    "confirm": "Are you sure you want to delete this container type? This action cannot be undone.",
+    "confirmWithName": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleting": "Deleting..."
+  },
+
+  "messages": {
+    "fetchFailed": "Failed to fetch container types",
+    "createSuccess": "Created successfully",
+    "updateSuccess": "Update successful",
+    "deleteSuccess": "Delete successful",
+    "saveFailed": "Error while saving",
+    "deleteFailed": "Delete failure"
+  },
+
+  "tooltips": {
+    "edit": "Edit",
+    "delete": "Delete"
+  }
+}

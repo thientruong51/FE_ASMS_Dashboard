@@ -19,7 +19,8 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
-import type { Building } from "../components/types";
+import type { Building } from "./types";
+import { useTranslation } from "react-i18next";
 
 function GLBModelFit({ url }: { url: string }) {
   const gltf = useGLTF(url);
@@ -125,6 +126,7 @@ export default function BuildingCard({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState<boolean>(!!forceVisible);
+  const { t } = useTranslation("building");
 
   useEffect(() => {
     if (forceVisible) setVisible(true);
@@ -155,24 +157,23 @@ export default function BuildingCard({
 
   return (
     <Card
-  variant="elevation"
-  elevation={selected ? 8 : 2}
-  sx={{
-    height: "100%",
-    display: "flex",
-    flexDirection: "column",
-    transition: "transform 200ms, box-shadow 200ms, border-color 200ms",
-    border: selected ? "2px solid" : "2px solid transparent",
-    borderColor: selected ? "primary.main" : "transparent",
-    cursor: selectable ? "pointer" : "default",
-
-    "&:hover": {
-      transform: "translateY(-6px)",
-      borderColor: "primary.main",   
-    },
-  }}
-  onClick={() => selectable && onSelect && onSelect(building.buildingId)}
->
+      variant="elevation"
+      elevation={selected ? 8 : 2}
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        transition: "transform 200ms, box-shadow 200ms, border-color 200ms",
+        border: selected ? "2px solid" : "2px solid transparent",
+        borderColor: selected ? "primary.main" : "transparent",
+        cursor: selectable ? "pointer" : "default",
+        "&:hover": {
+          transform: "translateY(-6px)",
+          borderColor: "primary.main"
+        }
+      }}
+      onClick={() => selectable && onSelect && onSelect(building.buildingId)}
+    >
       <Box ref={ref} sx={{ position: "relative", overflow: "hidden", height: 220 }}>
         {hasModel ? (
           <ModelView url={building.imageUrl ?? null} visible={visible} />
@@ -184,12 +185,10 @@ export default function BuildingCard({
           </Box>
         )}
 
-        {/* overlay header */}
         <Box sx={{ position: "absolute", left: 12, top: 12, zIndex: 3, display: "flex", gap: 1, alignItems: "center" }}>
           <Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36 }}>
             <ApartmentIcon />
           </Avatar>
-         
         </Box>
       </Box>
 
@@ -206,7 +205,7 @@ export default function BuildingCard({
 
           <Stack direction="column" spacing={1} alignItems="flex-end">
             {typeof building.isActive === "boolean" && (
-              <Chip size="small" label={building.isActive ? "Active" : "Inactive"} color={building.isActive ? "success" : "default"} />
+              <Chip size="small" label={building.isActive ? t("card.active") : t("card.inactive")} color={building.isActive ? "success" : "default"} />
             )}
             {building.status && <Chip size="small" label={building.status} />}
           </Stack>
@@ -220,7 +219,7 @@ export default function BuildingCard({
 
         {building.area && (
           <Typography variant="body2" sx={{ mt: 1 }}>
-            Area: {building.area}
+            {t("card.area", { area: building.area })}
           </Typography>
         )}
       </CardContent>
@@ -235,8 +234,8 @@ export default function BuildingCard({
         </IconButton>
 
         <Box sx={{ flex: "1 0 auto", display: "flex", justifyContent: "flex-end", pr: 1 }}>
-          <Button size="small" startIcon={<VisibilityIcon />} onClick={(e) => { e.stopPropagation(); /* optional: open viewer */ }}>
-            View
+          <Button size="small" startIcon={<VisibilityIcon />} onClick={(e) => { e.stopPropagation(); }}>
+            {t("card.view")}
           </Button>
         </Box>
       </CardActions>

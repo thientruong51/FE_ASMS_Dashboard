@@ -4,8 +4,9 @@ import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import type { Customer } from "./customer.types";
+import type { Customer } from "../components/customer.types";
 import type { GridPaginationModel } from "@mui/x-data-grid";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   rows: Customer[];
@@ -18,13 +19,15 @@ type Props = {
 const getRowId = (row: any) => row.id ?? row.customerId ?? JSON.stringify(row);
 
 export default function CustomerCardList({ rows, paginationModel, onPageChange, onEdit, onDelete }: Props) {
+  const { t } = useTranslation("customer");
+
   const mobileTotalPages = Math.max(1, Math.ceil((rows.length === 0 ? 0 : rows.length) / (paginationModel.pageSize || 10)));
 
   return (
     <Box sx={{ display: { xs: "block", sm: "none" } }}>
       {rows.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-          No customers
+          {t("card.noCustomers")}
         </Typography>
       ) : (
         <Box>
@@ -34,17 +37,25 @@ export default function CustomerCardList({ rows, paginationModel, onPageChange, 
                 <CardContent sx={{ p: 1 }}>
                   <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <Avatar sx={{ width: 36, height: 36 }}><PersonIcon /></Avatar>
+                      <Avatar sx={{ width: 36, height: 36 }}>
+                        <PersonIcon />
+                      </Avatar>
                       <Box>
-                        <Typography fontWeight={700} sx={{ fontSize: 14 }}>{c.customerCode || "-"}</Typography>
+                        <Typography fontWeight={700} sx={{ fontSize: 14 }}>
+                          {c.customerCode || "-"}
+                        </Typography>
                         <Typography sx={{ fontSize: 13, color: "text.secondary" }}>{c.name || "-"}</Typography>
                       </Box>
                     </Stack>
 
                     <Stack direction="row" spacing={0.5} alignItems="center">
-                      <Chip label={c.isActive ? "Active" : "Inactive"} size="small" />
-                      <IconButton size="small" color="primary" onClick={() => onEdit(c)}><EditIcon fontSize="small" /></IconButton>
-                      <IconButton size="small" color="error" onClick={() => onDelete(getRowId(c))}><DeleteIcon fontSize="small" /></IconButton>
+                      <Chip label={c.isActive ? t("card.active") : t("card.inactive")} size="small" />
+                      <IconButton size="small" color="primary" onClick={() => onEdit(c)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" color="error" onClick={() => onDelete(getRowId(c))}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
                     </Stack>
                   </Stack>
 
@@ -63,7 +74,9 @@ export default function CustomerCardList({ rows, paginationModel, onPageChange, 
                         <Typography sx={{ fontSize: 13 }}>{c.phone}</Typography>
                       </Stack>
                     ) : null}
-                    {c.address ? <Typography sx={{ fontSize: 13, color: "text.secondary" }}>{c.address}</Typography> : null}
+                    {c.address ? (
+                      <Typography sx={{ fontSize: 13, color: "text.secondary" }}>{c.address}</Typography>
+                    ) : null}
                   </Stack>
                 </CardContent>
               </Card>

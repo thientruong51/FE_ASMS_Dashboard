@@ -1,4 +1,4 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import StorageTypeCard from "./StorageTypeCard";
 import type { StorageType } from "./types";
@@ -11,7 +11,7 @@ export default function StorageTypeList({
   selectable = false,
   selectedId,
   onSelect,
-  loading,
+  loading
 }: {
   list: StorageType[];
   onEdit?: (s: StorageType) => void;
@@ -56,7 +56,7 @@ export default function StorageTypeList({
         display: "grid",
         gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "repeat(3, 1fr)" },
         gap: 3,
-        alignItems: "stretch",
+        alignItems: "stretch"
       }}
     >
       {list.map((t) => (

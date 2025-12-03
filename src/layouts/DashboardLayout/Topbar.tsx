@@ -1,4 +1,4 @@
-import  { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   TextField,
@@ -7,16 +7,24 @@ import {
   Avatar,
   Typography,
   useMediaQuery,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  Divider,
+  Tooltip,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import LogoutIcon from "@mui/icons-material/Logout";
+import PersonIcon from "@mui/icons-material/Person";
 import { useDispatch } from "react-redux";
 import { toggleSidebar } from "@/features/ui/uiSlice";
 import { getEmployeeRoles } from "@/api/employeeRoleApi";
+import authApi, { clearAuthStorage, getRefreshToken } from "@/api/auth";
+import { useTranslation } from "react-i18next";
 
 function parseJwt(token?: string | null) {
   if (!token) return null;
@@ -41,6 +49,7 @@ function getInitials(name?: string | null) {
 }
 
 export default function Topbar() {
+  const { t } = useTranslation("topbar");
   const theme = useTheme();
   const dispatch = useDispatch();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -48,11 +57,14 @@ export default function Topbar() {
   const [rolesMap, setRolesMap] = useState<Record<number, string>>({});
   const [user, setUser] = useState<{ name?: string; username?: string; role?: string } | null>(null);
 
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
+
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const resp = await getEmployeeRoles({ pageSize: 1000 }); 
+        const resp = await getEmployeeRoles({ pageSize: 1000 });
         const arr = resp?.data ?? [];
         if (!mounted) return;
         const m: Record<number, string> = {};
@@ -64,9 +76,7 @@ export default function Topbar() {
         console.warn("Failed to load employee roles", err);
       }
     })();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
   const refreshUserFromToken = async () => {
@@ -81,7 +91,6 @@ export default function Topbar() {
 
       const name = payload.Name ?? payload.name ?? payload.fullName ?? payload.UserName ?? null;
       const username = payload.UserName ?? payload.username ?? null;
-
 
       let roleName: string | undefined;
       const roleId = payload.EmployeeRoleId ?? payload.employeeRoleId ?? payload.RoleId ?? null;
@@ -106,7 +115,6 @@ export default function Topbar() {
 
   useEffect(() => {
     refreshUserFromToken();
-
     const handler = (ev: StorageEvent) => {
       if (ev.key === "accessToken" || ev.key === null) {
         refreshUserFromToken();
@@ -114,12 +122,12 @@ export default function Topbar() {
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
-  }, [rolesMap]); 
+  }, [rolesMap]);
 
   const displayName = useMemo(() => {
-    if (!user) return "User";
-    return user.name ?? user.username ?? "User";
-  }, [user]);
+    if (!user) return t("userDefault");
+    return user.name ?? user.username ?? t("userDefault");
+  }, [user, t]);
 
   const displayRole = useMemo(() => {
     if (!user || !user.role) return "";
@@ -127,6 +135,23 @@ export default function Topbar() {
   }, [user]);
 
   const initials = getInitials(user?.name ?? user?.username ?? "");
+
+  const handleAvatarClick = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
+  const handleLogout = async () => {
+    try {
+      const refreshToken = getRefreshToken() ?? localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        await authApi.logout({ refreshToken }).catch(() => {});
+      }
+    } catch (err) {
+    } finally {
+      clearAuthStorage();
+      handleMenuClose();
+      window.location.href = "/login";
+    }
+  };
 
   return (
     <Box
@@ -151,59 +176,80 @@ export default function Topbar() {
           </IconButton>
         )}
 
-        {!isMobile && (
-          <TextField
-            placeholder="Search by User id, User Name, Date etc"
-            size="small"
-            sx={{
-              maxWidth: 320,
-              width: "100%",
-              backgroundColor: "#f8f9fb",
-              borderRadius: 1,
-              flexShrink: 1,
-              minWidth: 0,
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
-        )}
+        <Box
+          component="img"
+          src="https://res.cloudinary.com/dkfykdjlm/image/upload/v1762190185/LOGO-remove_1_o1wgk2.png"
+          alt={t("logoAlt")}
+          sx={{ height: { xs: 32, sm: 40 }, cursor: "pointer", userSelect: "none", display: "block" }}
+          onClick={() => { window.location.href = "/"; }}
+        />
       </Box>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
-        <IconButton color="primary">
-          <AddIcon />
-        </IconButton>
+        <Tooltip title={t("add")}>
+          <IconButton color="primary">
+            <AddIcon />
+          </IconButton>
+        </Tooltip>
 
-        <IconButton>
-          <NotificationsNoneIcon />
-        </IconButton>
+        <Tooltip title={t("notifications")}>
+          <IconButton>
+            <NotificationsNoneIcon />
+          </IconButton>
+        </Tooltip>
 
         {isMobile ? (
-          <Avatar sx={{ bgcolor: "#f1f1f1" }}>
+          <Avatar
+            sx={{ bgcolor: "#f1f1f1", cursor: "pointer" }}
+            onClick={handleAvatarClick}
+            aria-controls={menuOpen ? "topbar-avatar-menu" : undefined}
+            aria-haspopup="true"
+            aria-expanded={menuOpen ? "true" : undefined}
+          >
             {initials ? <Typography variant="body2">{initials}</Typography> : <AccountCircleIcon color="action" />}
           </Avatar>
         ) : (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
-            <Avatar sx={{ bgcolor: "#e6f7f2", color: "#075" }}>
+            <Avatar
+              sx={{ bgcolor: "#e6f7f2", color: "#075", cursor: "pointer" }}
+              onClick={handleAvatarClick}
+              aria-controls={menuOpen ? "topbar-avatar-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={menuOpen ? "true" : undefined}
+            >
               {initials ? <Typography variant="body2">{initials}</Typography> : <AccountCircleIcon color="action" />}
             </Avatar>
 
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="body2" fontWeight={600} noWrap>
-                {displayName}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {displayRole}
-              </Typography>
+              <Typography variant="body2" fontWeight={600} noWrap>{displayName}</Typography>
+              <Typography variant="caption" color="text.secondary" noWrap>{displayRole}</Typography>
             </Box>
           </Box>
         )}
       </Box>
+
+      <Menu
+        id="topbar-avatar-menu"
+        anchorEl={anchorEl}
+        open={menuOpen}
+        onClose={handleMenuClose}
+        onClick={handleMenuClose}
+        PaperProps={{ elevation: 3, sx: { mt: "6px", minWidth: 140 } }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      >
+        <MenuItem onClick={handleMenuClose}>
+          <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
+          {t("profile")}
+        </MenuItem>
+
+        <Divider />
+
+        <MenuItem onClick={handleLogout}>
+          <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
+          {t("logout")}
+        </MenuItem>
+      </Menu>
     </Box>
   );
 }

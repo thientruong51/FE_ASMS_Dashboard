@@ -18,6 +18,7 @@ import EmployeeRolePage from "@/pages/employee-role/EmployeeRolePage";
 import OrderPage from "@/pages/order/OrderPage";
 import TrackingHistoryPage from "@/pages/trackingHistory/TrackingHistoryPage";
 import PaymentHistoryPage from "@/pages/paymentHistory/PaymentHistoryPage";
+import SettingsPage from "@/pages/setting/SettingsPage";
 
 export const router = createBrowserRouter([
   {
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
           { path: "storage-types", element: <StorageTypePage /> },
           { path: "services", element: <ServicePage /> },
           { path: "product-types", element: <ProductTypePage /> },
+          { path: "settings", element: <SettingsPage /> },
         ],
       },
     ],

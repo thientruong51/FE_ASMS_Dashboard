@@ -26,6 +26,8 @@ import type { ContainerItem } from "@/api/containerApi";
 import ContainerDetailDialog from "./ContainerDetailDialog";
 import { updateContainerPosition, getContainers } from "@/api/containerApi";
 
+import { useTranslation } from "react-i18next";
+
 type Props = {
   shelfCode: string;
   floor: number;
@@ -49,9 +51,10 @@ export default function ShelfFloorOrders({
   containers = [],
   onContainersUpdated,
 }: Props) {
+  const { t } = useTranslation("storagePage");
   const theme = useTheme();
-  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); // >=600
-  const isMdUp = useMediaQuery(theme.breakpoints.up("md")); // >=900
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); 
+  const isMdUp = useMediaQuery(theme.breakpoints.up("md")); 
 
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -111,15 +114,16 @@ export default function ShelfFloorOrders({
   };
 
   const deleteOrder = (id: string) => {
+    const confirmMsg = t("shelfFloor.confirmDelete");
     if (typeof window !== "undefined" && window.confirm) {
-      if (!window.confirm("Delete this order?")) return;
+      if (!window.confirm(confirmMsg)) return;
     }
     setOrders((p) => p.filter((o) => o.id !== id));
   };
 
   const formatValue = (v: any) => {
     if (v === null || v === undefined || v === "") return "-";
-    if (typeof v === "boolean") return v ? "Yes" : "No";
+    if (typeof v === "boolean") return v ? t("common.yes") : t("common.no");
     if (typeof v === "number") return v.toString();
     return String(v);
   };
@@ -152,13 +156,13 @@ export default function ShelfFloorOrders({
     });
 
     setSelectedContainer(null);
-    notify(`Saved ${updated.containerCode} locally`, "info");
+    notify(t("shelfFloor.savedLocally", { code: updated.containerCode }), "info");
   };
 
   const applyUpdatesToServer = async () => {
     const entries = Object.entries(editedContainers);
     if (entries.length === 0) {
-      notify("No edited containers to update.", "warning");
+      notify(t("shelfFloor.noEditedContainers"), "warning");
       return;
     }
 
@@ -179,10 +183,10 @@ export default function ShelfFloorOrders({
           delete copy[code];
           return copy;
         });
-        notify(`Updated ${code}`, "success");
+        notify(t("shelfFloor.updatedServer", { code }), "success");
       } catch (err) {
         console.error("Failed to update", code, err);
-        notify(`Failed to update ${code}. Aborting.`, "error");
+        notify(t("shelfFloor.failedToUpdate", { code }), "error");
         setIsApplying(false);
         return;
       }
@@ -255,25 +259,25 @@ export default function ShelfFloorOrders({
                 console.error("onContainersUpdated callback error", err);
               }
             }
-            notify("Data reloaded from server.", "info");
+            notify(t("shelfFloor.reloadedFromServer"), "info");
           } else {
-            notify("Server returned no matching items for this floor; keeping local view.", "warning");
+            notify(t("shelfFloor.serverReturnedNoMatching"), "warning");
           }
         } else {
-          notify("Updates applied — but server reload returned unexpected shape.", "warning");
+          notify(t("shelfFloor.serverReloadUnexpected"), "warning");
         }
       } catch (err) {
         console.warn("Failed to reload containers from server", err);
-        notify("Updated but failed to reload from server. Keeping local view.", "warning");
+        notify(t("shelfFloor.reloadFailedKeepLocal"), "warning");
       }
     } catch (err) {
       console.error("Failed to merge/update local list", err);
-      notify("Apply finished but merge failed. See console.", "warning");
+      notify(t("shelfFloor.applyMergeFailed"), "warning");
     } finally {
       setIsApplying(false);
     }
 
-    notify("Apply updates finished.", "info");
+    notify(t("shelfFloor.applyFinished"), "info");
   };
 
   const renderContainerCard = (c: ContainerItem, idx: number, isEdited = false) => {
@@ -297,15 +301,16 @@ export default function ShelfFloorOrders({
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography fontSize={12} fontWeight={700}>
-                Container: {c.containerCode ?? "-"}
+                {t("shelfFloor.containerLabel", { code: c.containerCode ?? "-" })}
               </Typography>
             </Stack>
             <IconButton
               size="small"
               onClick={(e) => {
                 e.stopPropagation();
-                notify(`Actions for ${c.containerCode ?? "-"}`, "info");
+                notify(t("shelfFloor.actionsFor", { code: c.containerCode ?? "-" }), "info");
               }}
+              aria-label={t("shelfFloor.moreActions")}
             >
               <MoreVertIcon fontSize="small" />
             </IconButton>
@@ -313,11 +318,13 @@ export default function ShelfFloorOrders({
 
           <Box mt={1} mb={0.25}>
             <Typography fontSize={13} fontWeight={600}>
-              Weight: {typeof c.currentWeight === "number" ? `${c.currentWeight} kg` : formatValue(c.currentWeight)}
+              {t("shelfFloor.weightLabel", {
+                weight: typeof c.currentWeight === "number" ? `${c.currentWeight} kg` : formatValue(c.currentWeight),
+              })}
             </Typography>
             <Typography fontSize={12} color="text.secondary">
-              Floor: {c.floorCode ?? "-"}{" "}
-              {isEdited && <span style={{ color: "#1976d2", fontWeight: 700 }}>• edited</span>}
+              {t("shelfFloor.floorLabel", { floor: c.floorCode ?? "-" })}{" "}
+              {isEdited && <span style={{ color: "#1976d2", fontWeight: 700 }}>• {t("shelfFloor.editedTag")}</span>}
             </Typography>
           </Box>
         </CardContent>
@@ -331,7 +338,7 @@ export default function ShelfFloorOrders({
       return (
         <Box>
           <Typography fontSize={13} fontWeight={700} mb={0.5}>
-            Edited containers ({editedList.length})
+            {t("shelfFloor.editedContainersTitle", { count: editedList.length })}
           </Typography>
 
           {/* two-column responsive grid with scroll */}
@@ -361,7 +368,7 @@ export default function ShelfFloorOrders({
     return (
       <>
         {orders.length === 0 ? (
-          <Typography color="text.secondary">Nothing is edited.</Typography>
+          <Typography color="text.secondary">{t("shelfFloor.nothingEdited")}</Typography>
         ) : (
           <Stack spacing={1}>
             {orders.map((o) => (
@@ -380,10 +387,10 @@ export default function ShelfFloorOrders({
                       </Typography>
                     </Box>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <IconButton size="small" onClick={() => openEdit(o)}>
+                      <IconButton size="small" onClick={() => openEdit(o)} aria-label={t("shelfFloor.editOrder")}>
                         <EditIcon fontSize="small" />
                       </IconButton>
-                      <IconButton size="small" color="error" onClick={() => deleteOrder(o.id)}>
+                      <IconButton size="small" color="error" onClick={() => deleteOrder(o.id)} aria-label={t("shelfFloor.deleteOrder")}>
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Stack>
@@ -401,21 +408,23 @@ export default function ShelfFloorOrders({
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={1}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography fontWeight={600}>Orders on Floor {floor}</Typography>
+          <Typography fontWeight={600}>
+            {t("shelfFloor.ordersOnFloor", { floor })}
+          </Typography>
           <Typography fontSize={12} color="text.secondary">
-            Shelf: {shelfCode} • Containers: {containersOnThisFloor.length}
+            {t("shelfFloor.shelfAndCount", { shelf: shelfCode, count: containersOnThisFloor.length })}
           </Typography>
           {/* Show edited containers summary */}
           {Object.keys(editedContainers).length > 0 && (
             <Typography fontSize={12} color="warning.main" sx={{ wordBreak: "break-word", maxWidth: 560 }}>
-              Edited: {Object.keys(editedContainers).join(", ")}
+              {t("shelfFloor.editedList", { list: Object.keys(editedContainers).join(", ") })}
             </Typography>
           )}
         </Box>
 
         <Stack direction="row" spacing={1} alignItems="center">
           <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openAdd}>
-            Add
+            {t("shelfFloor.addButton")}
           </Button>
           <Button
             variant="outlined"
@@ -424,7 +433,7 @@ export default function ShelfFloorOrders({
             onClick={() => setConfirmOpen(true)}
             disabled={Object.keys(editedContainers).length === 0 || isApplying}
           >
-            {isApplying ? "Applying..." : `Apply updates (${Object.keys(editedContainers).length})`}
+            {isApplying ? t("shelfFloor.applying") : t("shelfFloor.applyButton", { count: Object.keys(editedContainers).length })}
           </Button>
         </Stack>
       </Stack>
@@ -451,11 +460,11 @@ export default function ShelfFloorOrders({
           }}
         >
           <Typography fontWeight={600} fontSize={14} mb={1}>
-            Containers (Floor {floor})
+            {t("shelfFloor.containersTitle", { floor })}
           </Typography>
 
           <Box display="flex" flexWrap="wrap" gap={1.25}>
-            {containersOnThisFloor.length === 0 && <Typography color="text.secondary">No containers.</Typography>}
+            {containersOnThisFloor.length === 0 && <Typography color="text.secondary">{t("shelfFloor.noContainers")}</Typography>}
             {containersOnThisFloor.map((c: any, idx) => {
               const isEdited = !!editedContainers[c.containerCode ?? ""];
               return (
@@ -473,26 +482,26 @@ export default function ShelfFloorOrders({
 
       {/* Order add/edit dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>{editingOrder ? "Edit Order" : "Add New Order"}</DialogTitle>
+        <DialogTitle>{editingOrder ? t("shelfFloor.editOrderTitle") : t("shelfFloor.addOrderTitle")}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} mt={1}>
             <TextField
-              label="Order ID"
+              label={t("shelfFloor.orderIdLabel")}
               value={formData.id}
               onChange={(e) => setFormData({ ...formData, id: e.target.value })}
               fullWidth
               disabled={!!editingOrder}
             />
-            <TextField label="Customer" value={formData.customer} onChange={(e) => setFormData({ ...formData, customer: e.target.value })} fullWidth />
-            <TextField label="Weight" value={formData.weight} onChange={(e) => setFormData({ ...formData, weight: e.target.value })} fullWidth />
+            <TextField label={t("shelfFloor.customerLabel")} value={formData.customer} onChange={(e) => setFormData({ ...formData, customer: e.target.value })} fullWidth />
+            <TextField label={t("shelfFloor.weightLabelShort")} value={formData.weight} onChange={(e) => setFormData({ ...formData, weight: e.target.value })} fullWidth />
             <TextField
-              label="Container (optional)"
+              label={t("shelfFloor.containerOptional")}
               select
               SelectProps={{ native: true }}
               value={formData.containerCode ?? ""}
               onChange={(e) => setFormData({ ...formData, containerCode: e.target.value || null })}
             >
-              <option value="">— none —</option>
+              <option value="">{t("shelfFloor.noneOption")}</option>
               {containersOnThisFloor.map((c: any) => (
                 <option key={c.containerCode ?? c.id} value={c.containerCode ?? c.id}>
                   {c.containerCode ?? c.id}
@@ -500,40 +509,40 @@ export default function ShelfFloorOrders({
               ))}
             </TextField>
             <TextField
-              label="Status"
+              label={t("shelfFloor.statusLabel")}
               select
               SelectProps={{ native: true }}
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value as OrderItem["status"] })}
               fullWidth
             >
-              <option value="Active">Active</option>
-              <option value="Pending">Pending</option>
-              <option value="Delivered">Delivered</option>
+              <option value="Active">{t("shelfFloor.statusActive")}</option>
+              <option value="Pending">{t("shelfFloor.statusPending")}</option>
+              <option value="Delivered">{t("shelfFloor.statusDelivered")}</option>
             </TextField>
-            <TextField label="Note" value={formData.note ?? ""} onChange={(e) => setFormData({ ...formData, note: e.target.value })} fullWidth multiline minRows={2} />
+            <TextField label={t("shelfFloor.noteLabel")} value={formData.note ?? ""} onChange={(e) => setFormData({ ...formData, note: e.target.value })} fullWidth multiline minRows={2} />
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)} startIcon={<CloseIcon />}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button variant="contained" onClick={saveOrder}>
-            Save
+            {t("common.save")}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Confirm dialog for apply (Material UI) */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Apply updates</DialogTitle>
+        <DialogTitle>{t("shelfFloor.applyConfirmTitle")}</DialogTitle>
         <DialogContent>
-          <Typography>Are you sure you want to apply updates to {Object.keys(editedContainers).length} container(s)?</Typography>
+          <Typography>{t("shelfFloor.applyConfirmBody", { count: Object.keys(editedContainers).length })}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+          <Button onClick={() => setConfirmOpen(false)}>{t("common.cancel")}</Button>
           <Button variant="contained" onClick={applyUpdatesToServer} disabled={isApplying}>
-            Yes, apply
+            {t("shelfFloor.confirmApply")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -544,7 +553,7 @@ export default function ShelfFloorOrders({
         container={selectedContainer}
         onClose={() => setSelectedContainer(null)}
         onSaveLocal={handleSaveContainerLocally}
-        onNotify={notify}
+        onNotify={(msg, sev) => notify(msg, sev ?? "info")}
       />
 
       {/* Snackbar */}
