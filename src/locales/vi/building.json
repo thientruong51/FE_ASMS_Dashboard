@@ -52,5 +52,14 @@
     "saveFailed": "Lỗi khi lưu dữ liệu",
     "deleteFailed": "Xóa thất bại"
   },
-  "buttons": { "create": "Tạo", "edit": "Sửa", "delete": "Xóa", "view": "Xem" }
+  "buttons": { "create": "Tạo", "edit": "Sửa", "delete": "Xóa", "view": "Xem" },
+  "buildingNames": {
+    "self_storage": "Nhà kho tự quản",
+    "self_storage_ac": "Nhà kho tự quản (Có điều hòa)",
+    "warehouse": "Nhà kho dịch vụ",
+    "warehouse_ac": "Nhà kho dịch vụ (Có điều hòa)",
+    "warehouse_expired": "Kho hết hạn",
+    "warehouse_oversize": "Kho quá cỡ",
+    "noData": "-"
+  }
 }

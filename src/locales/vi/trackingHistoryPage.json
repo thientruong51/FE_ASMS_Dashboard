@@ -1,5 +1,5 @@
 {
-  "title": "Lịch Sử Tracking",
+  "title": "Lịch Sử Xử Lí",
   "subtitle": "Xem và quản lý các sự kiện theo dõi",
   "id": "ID",
   "order": "Đơn hàng",
@@ -9,7 +9,7 @@
   "image": "Hình ảnh",
   "noImage": "Không có hình",
   "created": "Tạo lúc",
-  "trackingFor": "Tracking #{{id}}",
+  "trackingFor": "Xử Lí #{{id}}",
   "confirm": "Xác nhận",
   "confirmActionSuccess": "Hành động thực hiện thành công.",
   "close": "Đóng",
@@ -44,5 +44,41 @@
   "updateStatusConfirmMsg": "Bạn có chắc muốn cập nhật trạng thái đơn {{code}}?",
   "retrievedNotice": "Đơn đã được trả. Không có hành động nào khả dụng.",
   "newReturnDateLabel": "Ngày trả mới",
-  "imageAlt": "tracking"
+  "imageAlt": "Xử Lí",
+  "currentAssign": "Nhân viên hiện tại",
+  "nextAssign": "Nhân viên kế tiếp",
+  "actionType": "Hành động",
+  "statusNames": {
+  "processing": "Đang xử lý",
+  "retrieved": "Đã nhận lại",
+  "pending": "Đang chờ",
+  "wait_pick_up": "Chờ lấy hàng",
+  "verify": "Xác minh",
+  "checkout": "Hoàn tất",
+  "pick_up": "Lấy hàng",
+  "renting": "Đang cho thuê",
+  "stored": "Đã lưu kho",
+  "overdue": "Quá hạn",
+  "store_in_expired_storage": "Lưu kho hết hạn",
+  "order_created": "Đơn vừa tạo",
+  "processing_order": "Đang xử lý đơn hàng",
+  "order_retrieved": "Đơn đã nhận lại",
+  "noData": "-"
+},
+"actionTypeNames": {
+  "order_retrieved": "Đơn đã nhận lại",
+  "order_created": "Đơn vừa tạo",
+  "processing_order": "Đang xử lý đơn hàng",
+  "stored_in_warehouse": "Đã lưu kho",
+  "picked_up": "Đã lấy hàng",
+  "checkout_completed": "Hoàn tất đơn hàng",
+  "verification": "Xác minh",
+  "ready_for_pickup": "Sẵn sàng để lấy",
+  "customer_retrieved_from_expired-storage":"Đã lấy lại từ kho lưu trữ đã hết hạn",
+  "renting_active":"Đang cho thuê",
+  "noData": "-"
+}
+
+
+  
 }

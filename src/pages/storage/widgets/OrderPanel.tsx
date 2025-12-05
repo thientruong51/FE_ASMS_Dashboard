@@ -27,11 +27,12 @@ import { getServices } from "@/api/serviceApi";
 import OrderDetailDrawer from "./OrderDetailDrawer";
 
 import { useTranslation } from "react-i18next";
+import { translateStatus, canonicalStatusKey } from "@/utils/statusHelper"; 
 
 export default function OrderPanel() {
-  const { t } = useTranslation("storagePage");
+  const { t } = useTranslation(["storagePage", "statusNames"]);
   const theme = useTheme();
-  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); 
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
 
   const [search, setSearch] = useState("");
   const [details, setDetails] = useState<any[]>([]);
@@ -44,109 +45,119 @@ export default function OrderPanel() {
   const [snackMsg, setSnackMsg] = useState("");
   const [snackSeverity, setSnackSeverity] = useState<"success" | "error" | "info">("success");
 
-  const loadAllDetailsForFullOrders = useCallback(async () => {
-    setLoading(true);
-    try {
-      const productTypeNameToId: Record<string, number> = {};
-      const serviceNameToId: Record<string, number> = {};
-
+  const loadAllDetailsForFullOrders = useCallback(
+    async () => {
+      setLoading(true);
       try {
-        const ptResp = await getProductTypes({ pageSize: 1000 });
-        const pts = ptResp?.data ?? [];
-        pts.forEach((p: any) => {
-          const name = String(p.name ?? "").trim();
-          const id = p.productTypeId ?? (p.id as number | undefined);
-          if (name && id != null) productTypeNameToId[name] = id;
+        const productTypeNameToId: Record<string, number> = {};
+        const serviceNameToId: Record<string, number> = {};
+
+        try {
+          const ptResp = await getProductTypes({ pageSize: 1000 });
+          const pts = ptResp?.data ?? [];
+          pts.forEach((p: any) => {
+            const name = String(p.name ?? "").trim();
+            const id = p.productTypeId ?? (p.id as number | undefined);
+            if (name && id != null) productTypeNameToId[name] = id;
+          });
+        } catch (err) {
+          console.warn("getProductTypes failed", err);
+        }
+
+        try {
+          const ss = await getServices();
+          ss.forEach((s: any) => {
+            const name = String(s.name ?? "").trim();
+            const id = s.serviceId ?? (s.id as number | undefined);
+            if (name && id != null) serviceNameToId[name] = id;
+          });
+        } catch (err) {
+          console.warn("getServices failed", err);
+        }
+
+        const ordersResp = await getOrders({
+          pageNumber: 1,
+          pageSize: 50,
+          style: "full",
+          status: "processing",
         });
-      } catch (err) {
-        console.warn("getProductTypes failed", err);
-      }
 
-      try {
-        const ss = await getServices();
-        ss.forEach((s: any) => {
-          const name = String(s.name ?? "").trim();
-          const id = s.serviceId ?? (s.id as number | undefined);
-          if (name && id != null) serviceNameToId[name] = id;
-        });
-      } catch (err) {
-        console.warn("getServices failed", err);
-      }
+        const ordersRaw = ordersResp.data ?? [];
+        const orders = Array.isArray(ordersRaw)
+          ? ordersRaw.filter((o: any) => String(o.status ?? "").toLowerCase() === "processing")
+          : [];
 
-      const ordersResp = await getOrders({
-        pageNumber: 1,
-        pageSize: 50,
-        style: "full",
-      });
-      const orders = ordersResp.data ?? [];
+        const detailsList = await Promise.all(
+          orders.map(async (o) => {
+            try {
+              const resp = await getOrderDetails(o.orderCode);
+              const items = resp.data ?? [];
 
-      const detailsList = await Promise.all(
-        orders.map(async (o) => {
-          try {
-            const resp = await getOrderDetails(o.orderCode);
-            const items = resp.data ?? [];
+              const mapped = items.map((item: any) => {
+                let productTypeIds: number[] =
+                  Array.isArray(item.productTypeIds) && item.productTypeIds.length ? item.productTypeIds : [];
 
-            const mapped = items.map((item: any) => {
-              let productTypeIds: number[] =
-                Array.isArray(item.productTypeIds) && item.productTypeIds.length
-                  ? item.productTypeIds
+                let serviceIds: number[] =
+                  Array.isArray(item.serviceIds) && item.serviceIds.length ? item.serviceIds : [];
+
+                const namesPT: string[] = Array.isArray(item.productTypeNames)
+                  ? item.productTypeNames.map((n: any) => String(n).trim())
                   : [];
 
-              let serviceIds: number[] =
-                Array.isArray(item.serviceIds) && item.serviceIds.length ? item.serviceIds : [];
+                if (!productTypeIds.length && namesPT.length) {
+                  productTypeIds = namesPT
+                    .map((nm) => productTypeNameToId[nm])
+                    .filter((v) => v != null) as number[];
+                }
 
-              const namesPT: string[] = Array.isArray(item.productTypeNames)
-                ? item.productTypeNames.map((n: any) => String(n).trim())
-                : [];
+                const namesS: string[] = Array.isArray(item.serviceNames)
+                  ? item.serviceNames.map((n: any) => String(n).trim())
+                  : [];
 
-              if (!productTypeIds.length && namesPT.length) {
-                productTypeIds = namesPT
-                  .map((nm) => productTypeNameToId[nm])
-                  .filter((v) => v != null) as number[];
-              }
+                if (!serviceIds.length && namesS.length) {
+                  serviceIds = namesS.map((nm) => serviceNameToId[nm]).filter((v) => v != null) as number[];
+                }
 
-              const namesS: string[] = Array.isArray(item.serviceNames)
-                ? item.serviceNames.map((n: any) => String(n).trim())
-                : [];
+                const orderStatusRaw = o.status ?? null;
+                const orderStatusKey = canonicalStatusKey(orderStatusRaw);
+                const orderStatusLabel = translateStatus(t, orderStatusRaw);
 
-              if (!serviceIds.length && namesS.length) {
-                serviceIds = namesS
-                  .map((nm) => serviceNameToId[nm])
-                  .filter((v) => v != null) as number[];
-              }
+                return {
+                  ...item,
+                  productTypeNames: namesPT,
+                  serviceNames: namesS,
+                  productTypeIds,
+                  serviceIds,
+                  _orderCode: o.orderCode,
+                  _orderStatus: o.status,
+                  _orderStatusKey: orderStatusKey,
+                  _orderStatusLabel: orderStatusLabel,
+                  _orderPaymentStatus: o.paymentStatus,
+                  _orderDepositDate: o.depositDate,
+                  _orderReturnDate: o.returnDate,
+                  _orderTotalPrice: o.totalPrice,
+                };
+              });
 
-              return {
-                ...item,
-                productTypeNames: namesPT,
-                serviceNames: namesS,
-                productTypeIds, 
-                serviceIds, 
-                _orderCode: o.orderCode,
-                _orderStatus: o.status,
-                _orderPaymentStatus: o.paymentStatus,
-                _orderDepositDate: o.depositDate,
-                _orderReturnDate: o.returnDate,
-                _orderTotalPrice: o.totalPrice,
-              };
-            });
+              return mapped.filter((it: any) => it.isPlaced === false);
+            } catch (err) {
+              console.error("Error fetching details for", o.orderCode, err);
+              return [];
+            }
+          })
+        );
 
-            return mapped.filter((it: any) => it.isPlaced === false);
-          } catch (err) {
-            console.error("Error fetching details for", o.orderCode, err);
-            return [];
-          }
-        })
-      );
-
-      const flat = detailsList.flat();
-      setDetails(flat);
-    } catch (err) {
-      console.error("Load orders error", err);
-      setDetails([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        const flat = detailsList.flat();
+        setDetails(flat);
+      } catch (err) {
+        console.error("Load orders error", err);
+        setDetails([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [t]
+  );
 
   useEffect(() => {
     loadAllDetailsForFullOrders();
@@ -164,8 +175,7 @@ export default function OrderPanel() {
       String(d.containerCode ?? "").toLowerCase().includes(q) ||
       String(d._orderCode ?? "").toLowerCase().includes(q) ||
       String(d.storageCode ?? "").toLowerCase().includes(q) ||
-      (Array.isArray(d.productTypeIds) &&
-        d.productTypeIds.join(",").toLowerCase().includes(q)) ||
+      (Array.isArray(d.productTypeIds) && d.productTypeIds.join(",").toLowerCase().includes(q)) ||
       (Array.isArray(d.serviceIds) && d.serviceIds.join(",").toLowerCase().includes(q));
     return matches;
   });
@@ -294,7 +304,7 @@ export default function OrderPanel() {
                   key={`${d.orderDetailId ?? i}-${i}`}
                   sx={{
                     width: {
-                      xs: "100%", 
+                      xs: "100%",
                       sm: "calc(50% - 4px)",
                     },
                   }}
@@ -343,7 +353,7 @@ export default function OrderPanel() {
                           {t("orderPanel.orderPrefix")}: <strong>{d._orderCode}</strong>
                         </Typography>
                         <Typography fontSize={12} color="text.secondary">
-                          {t("orderPanel.statusLabel")}: {d._orderStatus ?? "-"}
+                          {t("orderPanel.statusLabel")}: {d._orderStatusLabel ?? d._orderStatus ?? "-"}
                         </Typography>
                       </Box>
                     </Box>

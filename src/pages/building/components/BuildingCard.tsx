@@ -21,6 +21,7 @@ import { OrbitControls, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { Building } from "./types";
 import { useTranslation } from "react-i18next";
+import { translateBuildingName } from "@/utils/buildingNames"; 
 
 function GLBModelFit({ url }: { url: string }) {
   const gltf = useGLTF(url);
@@ -126,7 +127,7 @@ export default function BuildingCard({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState<boolean>(!!forceVisible);
-  const { t } = useTranslation("building");
+  const { t } = useTranslation(["building", "buildingNames"]);
 
   useEffect(() => {
     if (forceVisible) setVisible(true);
@@ -155,6 +156,8 @@ export default function BuildingCard({
   const hasModel = !!building.imageUrl && /\.(glb|gltf|obj)$/i.test(building.imageUrl ?? "");
   const hasImage = !!building.imageUrl && /\.(jpe?g|png|webp|gif)$/i.test(building.imageUrl ?? "");
 
+  const displayName = translateBuildingName(t, building.name, (building as any).nameEn);
+
   return (
     <Card
       variant="elevation"
@@ -178,7 +181,7 @@ export default function BuildingCard({
         {hasModel ? (
           <ModelView url={building.imageUrl ?? null} visible={visible} />
         ) : hasImage ? (
-          <Box component="img" src={building.imageUrl ?? undefined} alt={building.name} sx={{ width: "100%", height: 220, objectFit: "cover" }} />
+          <Box component="img" src={building.imageUrl ?? undefined} alt={displayName} sx={{ width: "100%", height: 220, objectFit: "cover" }} />
         ) : (
           <Box display="flex" alignItems="center" justifyContent="center" height={220} bgcolor="grey.100">
             <ApartmentIcon sx={{ fontSize: 56, color: "text.secondary" }} />
@@ -199,13 +202,13 @@ export default function BuildingCard({
               {building.buildingCode ?? ""}
             </Typography>
             <Typography variant="h6" noWrap>
-              {building.name}
+              {displayName}
             </Typography>
           </Box>
 
           <Stack direction="column" spacing={1} alignItems="flex-end">
             {typeof building.isActive === "boolean" && (
-              <Chip size="small" label={building.isActive ? t("card.active") : t("card.inactive")} color={building.isActive ? "success" : "default"} />
+              <Chip size="small" label={building.isActive ? t("card.active", { ns: "building" }) : t("card.inactive", { ns: "building" })} color={building.isActive ? "success" : "default"} />
             )}
             {building.status && <Chip size="small" label={building.status} />}
           </Stack>
@@ -219,23 +222,23 @@ export default function BuildingCard({
 
         {building.area && (
           <Typography variant="body2" sx={{ mt: 1 }}>
-            {t("card.area", { area: building.area })}
+            {t("card.area", { area: building.area, ns: "building" })}
           </Typography>
         )}
       </CardContent>
 
       <CardActions sx={{ px: 1 }}>
-        <IconButton size="small" aria-label="edit" onClick={(e) => { e.stopPropagation(); onEdit(building); }}>
+        <IconButton size="small" aria-label={t("card.edit", { ns: "building" })} onClick={(e) => { e.stopPropagation(); onEdit(building); }}>
           <EditIcon />
         </IconButton>
 
-        <IconButton size="small" aria-label="delete" onClick={(e) => { e.stopPropagation(); onDelete(building.buildingId); }}>
+        <IconButton size="small" aria-label={t("card.delete", { ns: "building" })} onClick={(e) => { e.stopPropagation(); onDelete(building.buildingId); }}>
           <DeleteIcon />
         </IconButton>
 
         <Box sx={{ flex: "1 0 auto", display: "flex", justifyContent: "flex-end", pr: 1 }}>
           <Button size="small" startIcon={<VisibilityIcon />} onClick={(e) => { e.stopPropagation(); }}>
-            {t("card.view")}
+            {t("card.view", { ns: "building" })}
           </Button>
         </Box>
       </CardActions>

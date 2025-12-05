@@ -7,35 +7,103 @@ import {
   Avatar,
   useTheme,
   Drawer,
+  CircularProgress,
+  useMediaQuery,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import OrderRequestDetail from "./OrderRequestDetail";
+import * as orderApi from "@/api/orderApi";
+
+type UiOrderRow = {
+  id: string;
+  customer: string;
+  location?: string;
+  destination?: string;
+  date?: string;
+  raw: orderApi.OrderRespItem;
+};
 
 export default function OrderRequests() {
+  const { t } = useTranslation("dashboard");
   const theme = useTheme();
+  const isXs = useMediaQuery(theme.breakpoints.down("sm")); // mobile
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<any>(null);
 
-  const orders = [
-    {
-      id: "ORDERID01",
-      customer: "Raj Industries",
-      location: "41 Sector 15, Scf, Delhi",
-      destination: "C6, Shah Colony, Mumbai",
-      date: "17 July 2024, 18:00",
-    },
-    {
-      id: "ORDERID02",
-      customer: "Raj Industries",
-      location: "41 Sector 15, Scf, Delhi",
-      destination: "C6, Shah Colony, Mumbai",
-      date: "17 July 2024, 18:00",
-    },
-  ];
+  const [rows, setRows] = useState<UiOrderRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
 
-  const handleView = (item: any) => {
-    setSelected(item);
+  const fetchTop5 = async () => {
+    setLoading(true);
+    try {
+      const resp = await orderApi.getOrders({ page: 1, pageSize: 5 });
+      const list = resp.data ?? [];
+      const mapped: UiOrderRow[] = list.map((o) => ({
+        id: o.orderCode,
+        customer: o.customerCode ?? "-",
+        location: o.depositDate ? `${t("orderRequests.deposit")}: ${o.depositDate}` : "-",
+        destination: o.returnDate ? `${t("orderRequests.return")}: ${o.returnDate}` : "-",
+        date: o.orderDate ?? o.depositDate ?? "-",
+        raw: o,
+      }));
+      setRows(mapped);
+    } catch (err) {
+      console.error("getOrders failed", err);
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTop5();
+  }, []);
+
+  const handleView = async (item: UiOrderRow) => {
+    setSelected(null);
     setOpen(true);
+    setDetailLoading(true);
+
+    try {
+      const [orderFull, detailsResp] = await Promise.all([
+        orderApi.getOrder(item.id).catch((e) => {
+          console.error("getOrder failed", e);
+          return null;
+        }),
+        orderApi.getOrderDetails(item.id).catch((e) => {
+          console.error("getOrderDetails failed", e);
+          return { success: false, message: (e as any)?.message ?? "failed", data: [] as any[] };
+        }),
+      ]);
+
+      const composed = {
+        id: item.id,
+        customer: orderFull?.customerCode ?? item.customer,
+        location: orderFull?.pickupAddress ?? item.location ?? "-",
+        destination: orderFull?.deliveryAddress ?? item.destination ?? "-",
+        date: orderFull?.orderDate ?? item.date,
+        rawOrder: orderFull ?? item.raw,
+        orderDetails: detailsResp?.data ?? [],
+        orderMeta: { success: detailsResp?.success ?? false, message: detailsResp?.message ?? "" },
+      };
+
+      setSelected(composed);
+    } catch (err) {
+      console.error("handleView error", err);
+      setSelected({
+        id: item.id,
+        customer: item.customer,
+        location: item.location,
+        destination: item.destination,
+        date: item.date,
+        rawOrder: item.raw,
+        orderDetails: [],
+      });
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   return (
@@ -48,16 +116,11 @@ export default function OrderRequests() {
           overflow: "hidden",
         }}
       >
-        <CardContent sx={{ p: 2.5 }}>
+        <CardContent sx={{ p: { xs: 1.5, sm: 2.5 } }}>
           {/* HEADER */}
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={1.5}
-          >
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
             <Typography fontWeight={600} fontSize={15}>
-              Order Requests
+              {t("orderRequests.title")}
             </Typography>
             <Typography
               variant="body2"
@@ -68,118 +131,139 @@ export default function OrderRequests() {
                 fontSize: 13,
                 "&:hover": { textDecoration: "underline" },
               }}
+              onClick={fetchTop5}
             >
-              View All
+              {t("orderRequests.viewAll")}
             </Typography>
           </Box>
 
           {/* LIST */}
-          <Box display="flex" flexDirection="column" gap={1.5}>
-            {orders.map((item, i) => (
-              <Box
-                key={i}
-                sx={{
-                  border: "1px solid #eee",
-                  borderRadius: 2,
-                  p: 1.5,
-                  backgroundColor: "#fff9f9",
-                }}
-              >
+          <Box display="flex" flexDirection="column" gap={1.25}>
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                <CircularProgress size={20} />
+              </Box>
+            ) : (
+              rows.map((item, i) => (
                 <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mb={1}
+                  key={i}
+                  sx={{
+                    border: "1px solid #eee",
+                    borderRadius: 2,
+                    p: { xs: 1, sm: 1.5 },
+                    backgroundColor: "#fff9f9",
+                    cursor: "pointer",
+                    "&:active": { transform: "scale(0.998)" },
+                  }}
+                  onClick={() => handleView(item)}
                 >
-                  <Typography fontWeight={600}>{item.id}</Typography>
-                  <Typography fontSize={13} color="text.secondary">
-                    {item.date}
-                  </Typography>
-                </Box>
-
-                <Typography fontSize={13.5} color="text.secondary">
-                  <b>Pickup:</b> {item.location}
-                </Typography>
-                <Typography fontSize={13.5} color="text.secondary">
-                  <b>Destination:</b> {item.destination}
-                </Typography>
-
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mt={1.5}
-                >
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Avatar
-                      sx={{
-                        width: 28,
-                        height: 28,
-                        bgcolor: "#e3f2fd",
-                        color: "#1976d2",
-                        fontSize: 13,
-                      }}
-                    >
-                      RI
-                    </Avatar>
-                    <Typography fontWeight={600} fontSize={13.5}>
-                      {item.customer}
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                    <Typography fontWeight={600} fontSize={14}>
+                      {item.id}
+                    </Typography>
+                    <Typography fontSize={12} color="text.secondary">
+                      {item.date}
                     </Typography>
                   </Box>
 
-                  <Button
-                    size="small"
-                    onClick={() => handleView(item)}
-                    sx={{
-                      textTransform: "none",
-                      fontWeight: 500,
-                      fontSize: 13,
-                    }}
-                  >
-                    View Details
-                  </Button>
+                  <Typography fontSize={13} color="text.secondary">
+                    <b>{t("orderRequests.pickupLabel")}</b> {item.location}
+                  </Typography>
+                  <Typography fontSize={13} color="text.secondary">
+                    <b>{t("orderRequests.destinationLabel")}</b> {item.destination}
+                  </Typography>
+
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mt={1.25}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Avatar
+                        sx={{
+                          width: { xs: 32, sm: 28 },
+                          height: { xs: 32, sm: 28 },
+                          bgcolor: "#e3f2fd",
+                          color: "#1976d2",
+                          fontSize: 13,
+                        }}
+                      >
+                        {String((item.customer ?? "C").slice(0, 2)).toUpperCase()}
+                      </Avatar>
+                      <Typography fontWeight={600} fontSize={13.5}>
+                        {item.customer}
+                      </Typography>
+                    </Box>
+
+                    {/* On mobile we rely on tapping the card; on desktop show explicit button */}
+                    {!isXs && (
+                      <Button
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleView(item);
+                        }}
+                        sx={{
+                          textTransform: "none",
+                          fontWeight: 500,
+                          fontSize: 13,
+                        }}
+                      >
+                        {t("orderRequests.viewDetails")}
+                      </Button>
+                    )}
+                  </Box>
                 </Box>
-              </Box>
-            ))}
+              ))
+            )}
           </Box>
         </CardContent>
       </Card>
 
       {/* Drawer chứa chi tiết */}
       <Drawer
-  anchor="right"
-  open={open}
-  onClose={() => setOpen(false)}
-  transitionDuration={300}
-  PaperProps={{
-    sx: (theme) => ({
-      width: {
-        xs: "100%", 
-        sm: "70%",  
-        md: "520px" 
-      },
-      height: "100vh",
-      borderRadius: {
-        xs: 0,
-        sm: "12px 0 0 12px"
-      },
-      boxShadow: "-6px 0 20px rgba(0,0,0,0.08)",
-      overflowY: "auto",
-      backgroundColor: theme.palette.background.paper,
-      scrollbarWidth: "thin",
-      "&::-webkit-scrollbar": {
-        width: "6px",
-      },
-      "&::-webkit-scrollbar-thumb": {
-        backgroundColor: "rgba(0,0,0,0.2)",
-        borderRadius: 3,
-      },
-    }),
-  }}
->
-  <OrderRequestDetail data={selected} onClose={() => setOpen(false)} />
-</Drawer>
-
+        anchor="right"
+        open={open}
+        onClose={() => {
+          setOpen(false);
+          setSelected(null);
+        }}
+        transitionDuration={300}
+        ModalProps={{
+          keepMounted: true,
+        }}
+        PaperProps={{
+          sx: (theme) => ({
+            width: isXs ? "100%" : { sm: "70%", md: "520px" },
+            maxWidth: "100%",
+            height: "100vh",
+            borderRadius: isXs ? 0 : "12px 0 0 12px",
+            boxShadow: "-6px 0 20px rgba(0,0,0,0.08)",
+            overflowY: "auto",
+            backgroundColor: theme.palette.background.paper,
+            scrollbarWidth: "thin",
+            "&::-webkit-scrollbar": {
+              width: "6px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "rgba(0,0,0,0.2)",
+              borderRadius: 3,
+            },
+          }),
+        }}
+      >
+        {detailLoading ? (
+          <Box sx={{ p: 3, display: "flex", justifyContent: "center" }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Box sx={{ p: { xs: 2, sm: 3 }, minHeight: "100vh", boxSizing: "border-box" }}>
+            <OrderRequestDetail
+              data={selected}
+              onClose={() => {
+                setOpen(false);
+                setSelected(null);
+              }}
+            />
+          </Box>
+        )}
+      </Drawer>
     </>
   );
 }

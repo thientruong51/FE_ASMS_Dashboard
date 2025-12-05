@@ -33,5 +33,18 @@
   "fetchFailed": "Lấy danh sách thất bại",
   "deleteSuccess": "Xóa thành công",
   "deleteFailed": "Xóa thất bại",
-  "loadingAlt": "Đang tải..."
+  "loadingAlt": "Đang tải...",
+  "storageTypeNames": {
+    "small": "Nhỏ",
+    "medium": "Vừa",
+    "large": "Lớn",
+    "small_ac": "Nhỏ (Có điều hòa)",
+    "medium_ac": "Vừa (Có điều hòa)",
+    "large_ac": "Lớn (Có điều hòa)" ,
+    "warehouse": "Kho",
+    "warehouse_ac": "Kho (Có điều hòa)",
+    "warehouse_expired": "Kho hết hạn",
+    "warehouse_oversize": "Kho quá cỡ",
+    "noData": "-"
+  }
 }

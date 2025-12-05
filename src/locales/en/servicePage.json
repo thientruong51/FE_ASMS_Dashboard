@@ -23,5 +23,17 @@
   "price": "Price",
   "description": "Description (use + to separate features)",
   "editDialogTitle": "Edit Service",
-  "createDialogTitle": "Create Service"
+  "createDialogTitle": "Create Service",
+    "serviceNames": {
+    "from_shipping_to_warehouse": "From Shipping to Warehouse",
+    "protecting": "Protecting",
+    "product_packaging": "Product Packaging",
+    "delivery": "Delivery",
+    "basic": "Basic",
+    "basic_ac": "Basic AC",
+    "business": "Business",
+    "business_ac": "Business AC",
+    "premium": "Premium",
+    "premium_ac": "Premium AC"
+  }
 }

@@ -78,5 +78,44 @@
 
   "export": {
     "filenamePrefix": "Xuất đơn hàng"
-  }
+  },
+  "paymentStatus": {
+  "paid": "Đã thanh toán",
+  "unpaid": "Chưa thanh toán",
+  "pending": "Đang chờ",
+  "refunded": "Hoàn tiền"
+},
+ "statusNames": {
+  "processing": "Đang xử lý",
+  "retrieved": "Đã nhận lại",
+  "pending": "Đang chờ",
+  "wait_pick_up": "Chờ lấy hàng",
+  "verify": "Xác minh",
+  "checkout": "Hoàn tất",
+  "pick_up": "Lấy hàng",
+  "renting": "Đang cho thuê",
+  "stored": "Đã lưu kho",
+  "overdue": "Quá hạn",
+  "store_in_expired_storage": "Lưu kho hết hạn",
+  "order_created": "Đơn vừa tạo",
+  "processing_order": "Đang xử lý đơn hàng",
+  "order_retrieved": "Đơn đã nhận lại",
+  "noData": "-"
+},
+"serviceNames": {
+    "protecting": "Bảo vệ",
+    "product_packaging": "Đóng gói sản phẩm",
+    "delivery": "Giao hàng"
+  },
+   "productTypeNames": {
+    "fragile": "Hàng dễ vỡ",
+    "electronics": "Hàng điện tử",
+    "cold_storage": "Cần kho lạnh",
+    "heavy": "Hàng nặng"
+  },
+  "styleNames": {
+"full": "Dịch vụ",
+"self": "Tự quản",
+"noData": "-"
+}
 }

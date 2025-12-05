@@ -59,5 +59,12 @@
   "tooltips": {
     "edit": "Edit",
     "delete": "Delete"
+  },
+  "containerTypeNames": {
+    "a_storage": "A Storage",
+    "b_storage": "B Storage",
+    "c_storage": "C Storage",
+    "d_storage": "D Storage",
+    "noData": "-"
   }
 }

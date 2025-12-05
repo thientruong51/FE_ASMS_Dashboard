@@ -31,5 +31,13 @@
   "priceNonNegative": "Giá không được âm",
   "validUrl": "Phải là URL hợp lệ",
   "loadingAlt": "Đang tải...",
-  "contact": "Liên hệ"
+  "contact": "Liên hệ",
+   "shelfTypeNames": {
+    "shelf_storage": "Kệ kho tự quản",
+    "shelf_logistics": "Kệ kho dịch vụ",
+    "pallet_rack": "Kệ pallet",
+    "cantilever": "Kệ cantilever",
+    "mezzanine": "Tầng mezzanine",
+    "noData": "-"
+  }
 }

@@ -1,4 +1,4 @@
-import  { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Drawer,
   Box,
@@ -24,6 +24,14 @@ import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import orderApi, { type OrderDetailItem } from "@/api/orderApi";
 import { useTranslation } from "react-i18next";
 
+import {
+  translateStatus,
+  translatePaymentStatus,
+  translateServiceName,
+  translateProductType,
+  translateStyle,
+} from "@/utils/translationHelpers";
+
 type Props = {
   orderCode: string | null;
   open: boolean;
@@ -41,7 +49,7 @@ function a11yProps(index: number) {
 export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull }: Props) {
   const { t } = useTranslation("order");
 
-  const [tabIndex, setTabIndex] = useState(0); 
+  const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [details, setDetails] = useState<OrderDetailItem[]>([]);
   const [meta, setMeta] = useState<{ success?: boolean; message?: string }>({});
@@ -107,6 +115,35 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
   useEffect(() => {
     if (open) setTabIndex(0);
   }, [open]);
+
+  const withTooltip = (original?: string | null, translated?: string | null) => {
+    const orig = original ?? "";
+    const trans = translated ?? orig ?? "-";
+    if (!orig) return <span>{trans}</span>;
+    return (
+      <Tooltip title={orig}>
+        <span style={{ display: "inline-block", maxWidth: 320, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {trans}
+        </span>
+      </Tooltip>
+    );
+  };
+
+  const headerPaymentTranslated = translatePaymentStatus(t, String(headerPaymentStatus ?? ""));
+  const headerStatusTranslated = translateStatus(t, String(order?.status ?? ""));
+  const headerStyleTranslated = translateStyle(t, String(order?.style ?? ""));
+
+  const labelFor = (k: string) => {
+    const i18nKey = `labels.${k}`;
+    const looked = t(i18nKey);
+    if (looked && looked !== i18nKey) return looked;
+    return k
+      .replace(/([A-Z])/g, " $1")
+      .replace(/[_\-]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/^./, (s) => s.toUpperCase());
+  };
 
   return (
     <Drawer
@@ -179,15 +216,15 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5, flexWrap: "wrap" }}>
                   {has(headerPaymentStatus) && (
                     <Chip
-                      label={String(headerPaymentStatus)}
+                      label={withTooltip(String(headerPaymentStatus), headerPaymentTranslated)}
                       size="small"
                       color={String(headerPaymentStatus).toLowerCase() === "paid" ? "success" : "warning"}
                       sx={{ fontWeight: 700 }}
                       icon={<PaymentOutlinedIcon sx={{ fontSize: 16 }} />}
                     />
                   )}
-                  {has(order?.status) && <Chip label={String(order.status)} size="small" variant="outlined" />}
-                  {has(order?.style) && <Chip label={String(order.style)} size="small" variant="outlined" />}
+                  {has(order?.status) && <Chip label={withTooltip(String(order.status), headerStatusTranslated)} size="small" variant="outlined" />}
+                  {has(order?.style) && <Chip label={withTooltip(String(order.style), headerStyleTranslated)} size="small" variant="outlined" />}
                 </Stack>
               </Box>
             </Box>
@@ -261,7 +298,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                     {has(order.paymentStatus) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
                         <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.payment")}</Box>
-                        <Box sx={{ flex: 1 }}>{order.paymentStatus}</Box>
+                        <Box sx={{ flex: 1 }}>{withTooltip(String(order.paymentStatus), translatePaymentStatus(t, String(order.paymentStatus)))}</Box>
                       </Box>
                     )}
 
@@ -271,8 +308,16 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                         <Box sx={{ flex: 1, color: "error.main", fontWeight: 700 }}>{fmtMoney(order.unpaidAmount)}</Box>
                       </Box>
                     )}
+                    {has(order.style) && (
+                      <Box sx={{ display: "flex", gap: 2 }}>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("table.style")}</Box>
+                        <Box sx={{ flex: 1 }}>
+                          {withTooltip(String(order.style), translateStyle(t, String(order.style)))}
+                        </Box>
+                      </Box>
+                    )}
 
-                    {/* Generic additional fields */}
+                    {/* Generic additional fields — use i18n labels.* fallback humanized */}
                     {order &&
                       Object.keys(order)
                         .filter(
@@ -288,15 +333,18 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                               "unpaidAmount",
                               "customerCode",
                               "customerName",
+                              "style"
                             ].includes(k)
                         )
                         .map((k) => {
                           const v = order[k];
                           if (!has(v)) return null;
+                          // pretty-print arrays
+                          const display = Array.isArray(v) ? v.join(", ") : String(v);
                           return (
                             <Box key={k} sx={{ display: "flex", gap: 2 }}>
-                              <Box sx={{ width: 140, color: "text.secondary" }}>{k}</Box>
-                              <Box sx={{ flex: 1 }}>{String(v)}</Box>
+                              <Box sx={{ width: 140, color: "text.secondary" }}>{labelFor(k)}</Box>
+                              <Box sx={{ flex: 1 }}>{display}</Box>
                             </Box>
                           );
                         })}
@@ -324,12 +372,24 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                     {details.map((d) => {
                       const productNames = joinIfArray((d as any).productTypeNames);
                       const serviceNames = joinIfArray((d as any).serviceNames);
+
+                      // translated forms
+                      const productTranslated = productNames
+                        ? productNames
+                          .split(",")
+                          .map((x) => translateProductType(t, x.trim()))
+                          .join(", ")
+                        : null;
+                      const serviceTranslated = serviceNames
+                        ? serviceNames
+                          .split(",")
+                          .map((x) => translateServiceName(t, x.trim()))
+                          .join(", ")
+                        : null;
+
                       return (
                         <Card key={d.orderDetailId} variant="outlined" sx={{ borderRadius: 2 }}>
                           <CardContent sx={{ display: "flex", gap: 2, alignItems: "center", p: 1.25 }}>
-                            {/* thumbnail */}
-                            
-
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
                                 <Box sx={{ minWidth: 0 }}>
@@ -338,7 +398,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                                   </Typography>
                                   {serviceNames && (
                                     <Typography variant="caption" color="text.secondary" noWrap>
-                                      {t("item.services")}: {serviceNames}
+                                      {t("item.services")}: {withTooltip(serviceNames, serviceTranslated)}
                                     </Typography>
                                   )}
                                 </Box>
@@ -356,6 +416,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                                 {has(d.containerCode) && <Chip size="small" label={`${t("item.container")}: ${d.containerCode}`} />}
                                 {has(d.storageCode) && <Chip size="small" label={`${t("item.storage")}: ${d.storageCode}`} />}
                                 {has(d.floorCode) && <Chip size="small" label={`${t("item.floor")}: ${d.floorCode}`} />}
+                                {productNames && <Chip size="small" label={withTooltip(productNames, productTranslated)} />}
                               </Box>
                             </Box>
                           </CardContent>
@@ -421,17 +482,18 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                       </Box>
                     )}
 
-                    {/* generic other customer fields */}
+                    {/* generic other customer fields — use i18n labels.* fallback humanized */}
                     {order &&
                       Object.keys(order)
                         .filter((k) => !["customerCode", "customerName", "phoneContact", "customerEmail", "customerAddress"].includes(k))
                         .map((k) => {
                           const v = order[k];
                           if (!has(v)) return null;
+                          const display = Array.isArray(v) ? v.join(", ") : String(v);
                           return (
                             <Box key={k} sx={{ display: "flex", gap: 2 }}>
-                              <Box sx={{ width: 140, color: "text.secondary" }}>{k}</Box>
-                              <Box sx={{ flex: 1 }}>{String(v)}</Box>
+                              <Box sx={{ width: 140, color: "text.secondary" }}>{labelFor(k)}</Box>
+                              <Box sx={{ flex: 1 }}>{display}</Box>
                             </Box>
                           );
                         })}

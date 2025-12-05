@@ -13,8 +13,11 @@ import type { Employee } from "../../types/staff";
 import { useTranslation } from "react-i18next";
 import { Box as MBox } from "@mui/system";
 
+import { translateRoleName, canonicalRoleKey } from "@/utils/roleNames";
+import { translateBuildingName } from "@/utils/buildingNames";
+
 export default function StaffPage() {
-  const { t } = useTranslation("staffPage");
+  const { t } = useTranslation(["staffPage", "roleNames", "buildingNames"]);
   const theme = useTheme();
   const isSmDown = useMediaQuery(theme.breakpoints.down("sm"));
   const isMdDown = useMediaQuery(theme.breakpoints.down("md"));
@@ -65,10 +68,23 @@ export default function StaffPage() {
     const m: Record<string, string> = {};
     for (const b of buildings) {
       const key = String((b as any).buildingId ?? (b as any).id ?? "");
-      if (key) m[key] = b.name ?? "";
+      if (key) {
+        const raw = (b as any).name ?? "";
+        m[key] = translateBuildingName(t, raw);
+      }
     }
     return m;
-  }, [buildings]);
+  }, [buildings, t]);
+
+  const roleOptions = useMemo(() => {
+    return (roles ?? []).map((r: any) => {
+      const raw = r.name ?? r.roleName ?? "";
+      const value = canonicalRoleKey(raw);
+      const label = translateRoleName(t, raw);
+      return { value, label };
+    });
+  }, [roles, t]);
+
 
   const filteredEmployees = employees.filter((emp) => {
     const q = searchTerm.trim().toLowerCase();
@@ -78,13 +94,19 @@ export default function StaffPage() {
       (emp.employeeCode && emp.employeeCode.toLowerCase().includes(q)) ||
       (emp.phone && emp.phone.includes(q));
 
-    const empRoleName = emp.roleName ?? emp.employeeRole?.name ?? "";
+    const empRoleName =
+      (emp as any).roleName ??
+      (emp.employeeRole as any)?.name ??
+      "";
 
-    const matchesRole = filterRole === "" || empRoleName === filterRole;
+    const empRoleKey = canonicalRoleKey(empRoleName);
+
+    const matchesRole = filterRole === "" || empRoleKey === filterRole;
     const matchesStatus = filterStatus === "" || emp.status === filterStatus;
 
     return matchesSearch && matchesRole && matchesStatus;
   });
+
 
   const baseColumns: GridColDef[] = useMemo(
     () => [
@@ -115,7 +137,8 @@ export default function StaffPage() {
         minWidth: 140,
         flex: 1,
         renderCell: (params: GridRenderCellParams) => {
-          const roleLabel = params.row.roleName ?? params.value?.name ?? "N/A";
+          const rawRole = (params.row as any).roleName ?? (params.row as any).employeeRole?.name ?? "";
+          const roleLabel = translateRoleName(t, rawRole);
           return <Chip label={roleLabel} size={isSmDown ? "small" : "small"} color="primary" variant="outlined" />;
         }
       },
@@ -125,9 +148,10 @@ export default function StaffPage() {
         minWidth: 120,
         flex: 0.9,
         renderCell: (params: GridRenderCellParams) => {
-          const emp = params.row;
-          const bName = emp.buildingName ?? emp.building?.name ?? buildingMap[String(emp.buildingId ?? "")] ?? "-";
-          return <Typography sx={{ fontSize: { xs: 12, sm: 14 } }}>{bName}</Typography>;
+          const emp = params.row as any;
+          const rawB = emp.buildingName ?? emp.building?.name ?? "";
+          const bLabel = translateBuildingName(t, rawB);
+          return <Typography sx={{ fontSize: { xs: 12, sm: 14 } }}>{bLabel || "-"}</Typography>;
         }
       },
       {
@@ -190,14 +214,16 @@ export default function StaffPage() {
 
       <Card sx={{ mb: 3, borderRadius: 2 }}>
         <CardContent>
+          {/* StaffToolbar: pass role/building options (value = canonical key, label = translated) */}
+          {/* cast to any to avoid type mismatch if StaffToolbar expects EmployeeRole[] */}
           <StaffToolbar
             searchTerm={searchTerm}
             onSearch={setSearchTerm}
             filterRole={filterRole}
-            onFilterRole={setFilterRole}
+            onFilterRole={(val) => setFilterRole(val ?? "")}
             filterStatus={filterStatus}
             onFilterStatus={setFilterStatus}
-            roles={roles}
+            roles={roleOptions as any}
             onAdd={handleOpenAdd}
           />
         </CardContent>

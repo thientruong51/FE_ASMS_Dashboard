@@ -23,5 +23,17 @@
   "price": "Giá",
   "description": "Mô tả (dùng + để tách tính năng)",
   "editDialogTitle": "Chỉnh sửa dịch vụ",
-  "createDialogTitle": "Tạo dịch vụ"
+  "createDialogTitle": "Tạo dịch vụ",
+  "serviceNames": {
+    "from_shipping_to_warehouse": "Gửi hàng đến kho",
+    "protecting": "Bảo hiểm hàng hóa",
+    "product_packaging": "Đóng gói sản phẩm",
+    "delivery": "Giao hàng",
+    "basic": "Gói Cơ bản",
+    "basic_ac": "Gói Cơ bản có máy lạnh",
+    "business": "Gói Doanh nghiệp",
+    "business_ac": "Gói Doanh nghiệp có máy lạnh",
+    "premium": "Gói Cao cấp",
+    "premium_ac": "Gói Cao cấp có máy lạnh"
+  }
 }

@@ -30,6 +30,10 @@ import type { ContainerItem } from "@/api/containerApi";
 import type { ContainerLocationLogItem } from "@/api/containerLocationLogApi";
 import containerLocationLogApi from "@/api/containerLocationLogApi";
 
+import { translateStatus } from "@/utils/statusHelper";
+import { translatePaymentStatus } from "@/utils/paymentStatusHelper";
+import { translateFieldLabel, formatBoolean } from "@/utils/fieldLabels";
+
 type Props = {
   open: boolean;
   container: ContainerItem | null;
@@ -41,17 +45,19 @@ type Props = {
 const FALLBACK_IMAGE =
   "https://res.cloudinary.com/dkfykdjlm/image/upload/v1762190192/LOGO-remove_1_1_wj05gw.png";
 
-const formatValue = (v: any) => {
-  if (v === null || v === undefined || v === "") return "-";
-  if (typeof v === "boolean") return v ? "Yes" : "No";
-  if (typeof v === "number") return v.toString();
-  return String(v);
-};
+const normalizeKey = (k: string) =>
+  k
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
 
 export default function ContainerDetailDialog({ open, container, onClose, onSaveLocal, onNotify }: Props) {
-  const { t } = useTranslation("storagePage");
+  const { t } = useTranslation(["storagePage", "statusNames", "paymentStatus", "common"]);
   const theme = useTheme();
   const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
+
+  const c = container as any;
 
   const [serialNumber, setSerialNumber] = React.useState<number | "">("");
   const [layer, setLayer] = React.useState<number | "">("");
@@ -64,17 +70,17 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
   const [logError, setLogError] = React.useState<string | null>(null);
 
   const initialSerial = React.useMemo(() => {
-    return container && typeof (container as any).serialNumber === "number" ? (container as any).serialNumber : "";
-  }, [container]);
+    return c && typeof c.serialNumber === "number" ? c.serialNumber : "";
+  }, [c]);
 
   const initialLayer = React.useMemo(() => {
-    return container && typeof (container as any).layer === "number" ? (container as any).layer : "";
-  }, [container]);
+    return c && typeof c.layer === "number" ? c.layer : "";
+  }, [c]);
 
   React.useEffect(() => {
-    if (container) {
-      setSerialNumber(typeof (container as any).serialNumber === "number" ? (container as any).serialNumber : "");
-      setLayer(typeof (container as any).layer === "number" ? (container as any).layer : "");
+    if (c) {
+      setSerialNumber(typeof c.serialNumber === "number" ? c.serialNumber : "");
+      setLayer(typeof c.layer === "number" ? c.layer : "");
     } else {
       setSerialNumber("");
       setLayer("");
@@ -83,46 +89,91 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
     setLogs([]);
     setLogTotalRecords(0);
     setLogError(null);
-  }, [container]);
+  }, [c]);
 
   const hasChanges = React.useMemo(() => {
-    if (!container) return false;
+    if (!c) return false;
     return serialNumber !== initialSerial || layer !== initialLayer;
-  }, [serialNumber, layer, initialSerial, initialLayer, container]);
+  }, [serialNumber, layer, initialSerial, initialLayer, c]);
 
-  const imageSrc =
-    container && (container as any).imageUrl && typeof (container as any).imageUrl === "string"
-      ? (container as any).imageUrl
-      : FALLBACK_IMAGE;
+  const imageSrc = c && c.imageUrl && typeof c.imageUrl === "string" ? c.imageUrl : FALLBACK_IMAGE;
 
-  const mainFields = {
-    containerCode: container?.containerCode ?? "-",
-    status: container?.status ?? "-",
-    type: container?.type ?? "-",
-    serialNumber: (container as any)?.serialNumber ?? "-",
-    floorCode: container?.floorCode ?? "-",
-    weight:
-      typeof container?.currentWeight === "number"
-        ? `${container.currentWeight} / ${container.maxWeight ?? "-"} kg`
-        : `${formatValue(container?.currentWeight)} / ${formatValue(container?.maxWeight)}`,
+  const statusLabel = translateStatus(t, c?._orderStatus ?? c?.status ?? c?.state ?? null);
+
+  const formatValue = (v: any) => {
+    if (v === null || v === undefined || v === "") return "-";
+    if (typeof v === "boolean") return formatBoolean(t, v);
+    if (typeof v === "number") return v.toString();
+    return String(v);
   };
 
-  const auxEntries = container
-    ? Object.entries(container).filter(
-        ([k]) =>
-          ![
-            "imageUrl",
-            "containerCode",
-            "status",
-            "type",
-            "serialNumber",
-            "layer",
-            "floorCode",
-            "currentWeight",
-            "maxWeight",
-          ].includes(k)
-      )
-    : [];
+  const mainFields = {
+    containerCode: c?.containerCode ?? "-",
+    status: statusLabel ?? (c?.status ?? "-"),
+    type: c?.type ?? "-",
+    serialNumber: c?.serialNumber ?? "-",
+    floorCode: c?.floorCode ?? "-",
+    weight:
+      typeof c?.currentWeight === "number"
+        ? `${c.currentWeight} / ${c.maxWeight ?? "-"} kg`
+        : `${formatValue(c?.currentWeight)} / ${formatValue(c?.maxWeight)}`,
+  };
+
+  const AUX_BLACKLIST_KEYS = React.useMemo(() => {
+    return [
+      "price",
+      "position_x",
+      "position_y",
+      "position_z",
+      "positionx",
+      "positiony",
+      "positionz",
+      "lastoptimizeddate",
+      "last_optimized_date",
+      "last_optimized",
+      "optimization_score",
+      "optimizationscore",
+      "notes",
+      "container_above_code",
+      "containerabovecode",
+      "container_above",
+      "lastoptimized",
+      "last_optimized_date_time",
+      "opt_score",
+      "optimization-score",
+    ].reduce<Record<string, boolean>>((acc, k) => {
+      acc[k] = true;
+      return acc;
+    }, {});
+  }, []);
+
+  const auxEntries = React.useMemo(() => {
+    if (!c) return [];
+    const primary = [
+      "imageUrl",
+      "imageurl",
+      "containerCode",
+      "containercode",
+      "status",
+      "type",
+      "serialNumber",
+      "serialnumber",
+      "layer",
+      "floorCode",
+      "floorcode",
+      "currentWeight",
+      "currentweight",
+      "maxWeight",
+      "maxweight",
+    ].map(normalizeKey);
+
+    return Object.entries(c).filter(([k]) => {
+      const nk = normalizeKey(k);
+      if (primary.includes(nk)) return false;
+      if (AUX_BLACKLIST_KEYS[nk]) return false;
+      return true;
+    });
+  }, [c, AUX_BLACKLIST_KEYS]);
 
   const handleCopy = async (text?: string | null) => {
     const toCopy = text ?? "";
@@ -139,7 +190,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
   };
 
   const handleSaveLocal = () => {
-    if (!container) return;
+    if (!c) return;
 
     if (!hasChanges) {
       onNotify?.(t("noChangesToSave"), "info");
@@ -147,7 +198,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
     }
 
     const updated: ContainerItem = {
-      ...container,
+      ...c,
       serialNumber: serialNumber === "" ? undefined : Number(serialNumber),
       layer: layer === "" ? undefined : Number(layer),
     } as any;
@@ -161,7 +212,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
 
   const fetchLogs = React.useCallback(
     async (page: number) => {
-      const code = container?.containerCode ?? "";
+      const code = c?.containerCode ?? "";
       if (!code) {
         setLogs([]);
         setLogTotalRecords(0);
@@ -171,10 +222,10 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
       setLogError(null);
       try {
         const resp = await containerLocationLogApi.getByContainerCode(code, page, logPageSize);
-        const data: any = (resp && (resp as any).data) ? (resp as any).data : resp;
+        const data: any = resp && (resp as any).data ? (resp as any).data : resp;
         setLogs(Array.isArray(data.items) ? data.items : []);
         setLogPage(data.currentPage ?? page);
-        setLogTotalRecords(typeof data.totalRecords === "number" ? data.totalRecords : (data.items ? data.items.length : 0));
+        setLogTotalRecords(typeof data.totalRecords === "number" ? data.totalRecords : data.items ? data.items.length : 0);
       } catch (err: any) {
         setLogError(err?.message ?? t("copyFailed"));
         setLogs([]);
@@ -183,13 +234,13 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
         setLogLoading(false);
       }
     },
-    [container?.containerCode, logPageSize, t]
+    [c?.containerCode, logPageSize, t]
   );
 
   React.useEffect(() => {
     if (!open) return;
     fetchLogs(1);
-  }, [open, container?.containerCode]);
+  }, [open, c?.containerCode]);
 
   const handlePrevPage = async () => {
     if (logPage <= 1) return;
@@ -213,6 +264,43 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
     } catch {
       return d;
     }
+  };
+
+  const displayAuxValue = (k: string, v: any) => {
+    const nk = normalizeKey(k);
+
+    if (nk === "is_active" || nk === "isactive") {
+      return formatBoolean(t, v);
+    }
+
+    if (nk === "product_type_id" || nk === "producttypeid" || nk === "product_type_ids" || nk === "producttypeids") {
+      if (Array.isArray(v)) return v.join(", ");
+      return v ?? "-";
+    }
+
+    if (nk === "order_detail_id" || nk === "orderdetailid" || nk === "orderdetail") {
+      return v ?? "-";
+    }
+
+    if (nk === "status" || nk === "_order_status" || nk === "order_status" || nk === "_orderstatus" || nk === "orderstatus") {
+      return translateStatus(t, String(v)) ?? (v ?? "-");
+    }
+
+    if (nk.includes("payment") || nk === "_order_payment_status" || nk === "paymentstatus") {
+      return translatePaymentStatus(t, String(v)) ?? (v ?? "-");
+    }
+
+    if (Array.isArray(v)) return v.join(", ");
+
+    if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) {
+      try {
+        const d = new Date(v);
+        if (!isNaN(d.getTime())) return d.toLocaleString();
+      } catch {
+      }
+    }
+
+    return formatValue(v);
   };
 
   return (
@@ -249,11 +337,11 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
       <Divider />
 
       <DialogContent dividers sx={{ p: { xs: 1.5, sm: 3 } }}>
-        {!container ? (
+        {!c ? (
           <Box sx={{ py: 5, textAlign: "center", color: "text.secondary" }}>{t("noContainerSelected")}</Box>
         ) : (
           <Stack spacing={2}>
-            {/* Image + main info (side-by-side on sm+, stacked on xs) */}
+            {/* Image + main info */}
             <Stack direction={isSmUp ? "row" : "column"} spacing={2} alignItems="flex-start">
               <Box
                 sx={{
@@ -271,7 +359,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
               >
                 <img
                   src={imageSrc}
-                  alt={String(container?.containerCode ?? "")}
+                  alt={String(c?.containerCode ?? "")}
                   style={{
                     width: "100%",
                     height: "100%",
@@ -321,7 +409,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                     size="small"
                     variant="outlined"
                     startIcon={<ContentCopyIcon />}
-                    onClick={() => handleCopy(container?.containerCode)}
+                    onClick={() => handleCopy(c?.containerCode)}
                     sx={{
                       whiteSpace: "nowrap",
                       width: isSmUp ? "auto" : "100%",
@@ -331,7 +419,6 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                     {t("copyCode")}
                   </Button>
 
-                  {/* Editable inputs for serialNumber & layer */}
                   <TextField
                     size="small"
                     label={t("serialNumber")}
@@ -350,14 +437,8 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
 
             <Divider />
 
-            {/* Aux fields (2-column) */}
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 1,
-              }}
-            >
+            {/* Aux fields */}
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               {auxEntries.length === 0 ? (
                 <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>
                   {t("noAdditionalData")}
@@ -376,11 +457,11 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                       boxSizing: "border-box",
                     }}
                   >
-                    <Typography fontSize={11} color="text.secondary" sx={{ textTransform: "capitalize" }}>
-                      {k.replace(/([A-Z])/g, " $1").replace(/[_-]/g, " ")}
+                    <Typography fontSize={11} color="text.secondary">
+                      {translateFieldLabel(t, k)}
                     </Typography>
                     <Typography fontSize={13} fontWeight={600}>
-                      {formatValue(v)}
+                      {displayAuxValue(k, v)}
                     </Typography>
                   </Box>
                 ))
@@ -389,7 +470,7 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
 
             <Divider />
 
-            {/* Location logs section */}
+            {/* Location logs and pagination */}
             <Box>
               <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
                 <Typography variant="subtitle1">{t("locationHistory")}</Typography>
@@ -443,8 +524,9 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                               <Typography fontWeight={700} fontSize={13}>
                                 {l.currentFloor ?? "-"}
                               </Typography>
-                              <Typography fontSize={12} color="text.secondary">
-                                {l.assign ? `(${l.assign})` : null}
+
+                              <Typography fontSize={12} color="text.secondary" sx={{ ml: 0.5 }}>
+                                {l.performedBy ? t("performedBy", { name: l.performedBy }) : null}
                               </Typography>
                             </Stack>
                           }
@@ -466,7 +548,6 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
                     ))}
                   </List>
 
-                  {/* simple pagination controls */}
                   <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center" sx={{ mt: 1 }}>
                     <Button
                       size="small"
@@ -492,7 +573,6 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
               )}
             </Box>
 
-            {/* Save locally */}
             <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 1 }}>
               <Button
                 variant="contained"

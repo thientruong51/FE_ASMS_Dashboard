@@ -21,6 +21,7 @@ import { OrbitControls, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { ShelfType } from "../components/types";
 import { useTranslation } from "react-i18next";
+import { translateShelfTypeName } from "@/utils/shelfTypeNames"; 
 
 function GLBModelFit({ url }: { url: string }) {
   const gltf = useGLTF(url, true);
@@ -122,7 +123,7 @@ export default function ShelfCard({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
-  const { t } = useTranslation("shelfPage");
+  const { t } = useTranslation(["shelfPage", "shelfTypeNames"]);
 
   useEffect(() => {
     const el = ref.current;
@@ -145,6 +146,8 @@ export default function ShelfCard({
 
   const hasModel = !!shelf.imageUrl && /\.(glb|gltf|obj)$/i.test(shelf.imageUrl ?? "");
   const hasImage = !!shelf.imageUrl && /\.(jpe?g|png|webp|gif)$/i.test(shelf.imageUrl ?? "");
+
+  const displayName = translateShelfTypeName(t, shelf.name, (shelf as any).nameEn);
 
   return (
     <Card
@@ -173,7 +176,7 @@ export default function ShelfCard({
         {hasModel ? (
           <ShelfModelView url={shelf.imageUrl!} visible={visible} />
         ) : hasImage ? (
-          <Box component="img" src={shelf.imageUrl!} alt={shelf.name} sx={{ width: "100%", height: 220, objectFit: "cover" }} />
+          <Box component="img" src={shelf.imageUrl!} alt={displayName} sx={{ width: "100%", height: 220, objectFit: "cover" }} />
         ) : (
           <Box display="flex" alignItems="center" justifyContent="center" height={220} bgcolor="grey.100">
             <ShelvesIcon sx={{ fontSize: 56, color: "text.secondary" }} />
@@ -191,7 +194,7 @@ export default function ShelfCard({
         <Box display="flex" justifyContent="space-between" alignItems="flex-start">
           <Box>
             <Typography variant="h6" noWrap>
-              {shelf.name}
+              {displayName}
             </Typography>
           </Box>
 
@@ -203,17 +206,17 @@ export default function ShelfCard({
       </CardContent>
 
       <CardActions sx={{ px: 1 }}>
-        <IconButton size="small" aria-label="edit" onClick={(e) => { e.stopPropagation(); onEdit(shelf); }}>
+        <IconButton size="small" aria-label={t("edit", { ns: "shelfPage" })} onClick={(e) => { e.stopPropagation(); onEdit(shelf); }}>
           <EditIcon />
         </IconButton>
 
-        <IconButton size="small" aria-label="delete" onClick={(e) => { e.stopPropagation(); onDelete(shelf.shelfTypeId); }}>
+        <IconButton size="small" aria-label={t("delete", { ns: "shelfPage" })} onClick={(e) => { e.stopPropagation(); onDelete(shelf.shelfTypeId); }}>
           <DeleteIcon />
         </IconButton>
 
         <Box sx={{ flex: "1 0 auto", display: "flex", justifyContent: "flex-end", pr: 1 }}>
           <Button size="small" startIcon={<VisibilityIcon />} onClick={(e) => { e.stopPropagation(); /* optional full preview */ }}>
-            {t("preview")}
+            {t("preview", { ns: "shelfPage" })}
           </Button>
         </Box>
       </CardActions>

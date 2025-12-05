@@ -1,4 +1,4 @@
-import  { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Container,
@@ -32,6 +32,7 @@ import {
 } from "@/api/employeeRoleApi";
 import EmployeeRoleDialog from "./components/EmployeeRoleDialog";
 import { useTranslation } from "react-i18next";
+import { translateRoleName } from "@/utils/roleNames"; 
 
 export default function EmployeeRolePage() {
   const { t } = useTranslation("employeeRole");
@@ -132,14 +133,17 @@ export default function EmployeeRolePage() {
         headerName: t("table.name"),
         flex: 1,
         minWidth: 240,
-        renderCell: (params) => (
-          <Box display="flex" alignItems="center" gap={1}>
-            <PersonIcon sx={{ fontSize: 18, color: "primary.main" }} />
-            <Typography fontWeight={600} sx={{ fontSize: { xs: 12, sm: 14 } }}>
-              {params.value}
-            </Typography>
-          </Box>
-        ),
+        renderCell: (params) => {
+          const display = translateRoleName(t, params.row.name, params.row.nameEn);
+          return (
+            <Box display="flex" alignItems="center" gap={1}>
+              <PersonIcon sx={{ fontSize: 18, color: "primary.main" }} />
+              <Typography fontWeight={600} sx={{ fontSize: { xs: 12, sm: 14 } }}>
+                {display}
+              </Typography>
+            </Box>
+          );
+        },
       },
       {
         field: "isActive",
@@ -280,7 +284,7 @@ export default function EmployeeRolePage() {
                               primary={
                                 <Box display="flex" alignItems="center" gap={1}>
                                   <PersonIcon sx={{ fontSize: 18, color: "primary.main" }} />
-                                  <Typography fontWeight={700}>{r.name}</Typography>
+                                  <Typography fontWeight={700}>{translateRoleName(t, r.name)}</Typography>
                                 </Box>
                               }
                               secondary={<>{r.isActive ? <Chip label={t("table.active")} size="small" color="success" /> : <Chip label={t("dialog.delete")} size="small" />} </>}

@@ -41,5 +41,6 @@
     "deleted": "Deleted",
     "deleteFailed": "Delete failed",
     "fetchFailed": "Failed to load roles"
-  }
+  },
+  "roleNames": { "manager": "Manager", "warehouse staff": "Warehouse staff", "delivery staff": "Delivery staff", "admin": "Administrator", "noData": "-" }
 }
