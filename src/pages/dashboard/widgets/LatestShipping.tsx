@@ -19,7 +19,12 @@ import {
   type TrackingHistoryItem,
 } from "@/api/trackingHistoryApi";
 import TrackingHistoryDetailDrawer from "@/pages/trackingHistory/components/TrackingHistoryDetailDrawer";
-
+import {
+  canonicalStatusKey,
+  translateStatus,
+  translateActionType,
+  canonicalActionTypeKey,
+} from "@/utils/translationHelpers";
 export default function LatestShipping() {
   const { t } = useTranslation("dashboard");
   const theme = useTheme();
@@ -183,8 +188,8 @@ export default function LatestShipping() {
                       }}
                     />
                     <Typography variant="caption" color="text.secondary">
-                      {row.actionType ?? "-"}
-                    </Typography>
+  {translateActionType(t, row.actionType)}
+</Typography>
                   </Box>
 
                   <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
@@ -215,7 +220,18 @@ export default function LatestShipping() {
 
     return [
       { field: "orderCode", headerName: t("order"), width: 150 },
-      { field: "actionType", headerName: t("details"), flex: 1, minWidth: 160 },
+      {
+  field: "actionType",
+  headerName: t("details"),
+  flex: 1,
+  minWidth: 160,
+  renderCell: (params: any) => {
+    const row = params?.row as TrackingHistoryItem | undefined;
+    if (!row) return null;
+    const translated = translateActionType(t, row.actionType);
+    return <Typography variant="body2" noWrap>{translated}</Typography>;
+  },
+},
       {
         field: "newStatus",
         headerName: t("status"),
