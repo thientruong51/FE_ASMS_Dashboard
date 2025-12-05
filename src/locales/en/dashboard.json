@@ -1,0 +1,134 @@
+{
+  "latestTrackingHistories": "Latest Tracking Histories",
+  "order": "Order",
+  "details": "Details",
+  "status": "Status",
+  "from": "From",
+  "to": "To",
+  "created": "Created",
+  "view": "View",
+  "noData": "-",
+  "chip_from": "From:",
+  "arrow": "→",
+ "statusNames": {
+  "processing": "Processing",
+  "retrieved": "Retrieved",
+  "pending": "Pending",
+  "wait_pick_up": "Waiting for Pickup",
+  "verify": "Verifying",
+  "checkout": "Checkout Completed",
+  "pick_up": "Picked Up",
+  "renting": "Renting",
+  "stored": "Stored",
+  "overdue": "Overdue",
+  "store_in_expired_storage": "Stored in Expired Storage",
+  "order_created": "Order Created",
+  "processing_order": "Processing Order",
+  "order_retrieved": "Order Retrieved",
+  "noData": "-"
+},
+  "orderStatus": {
+    "title": "Order Status Distribution",
+    "viewAll": "View All",
+    "totalOrders": "Total Orders"
+  },
+  "orderRequest": {
+    "title": "Order Request Details",
+    "orderDetails": "Order Details",
+    "customerDetails": "Customer Details",
+    "viewCustomer": "View Customer",
+    "viewOrder": "View Order",
+    "customerInfo": "Customer info",
+    "accept": "Accept",
+    "reject": "Reject",
+    "orderId": "Order ID",
+    "orderPlacedOn": "Order Placed On",
+    "status": "Status",
+    "paymentStatus": "Payment Status",
+    "pickupAddress": "Pickup Address",
+    "deliveryAddress": "Delivery Address",
+    "total": "Total",
+    "items": "Items",
+    "noItems": "No item details",
+    "item": "Item",
+    "quantity": "Qty",
+    "price": "Price",
+    "subTotal": "Sub",
+    "services": "Services",
+    "customerName": "Customer Name",
+    "company": "Company",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address"
+  },
+  "paymentStatus": {
+  "paid": "Paid",
+  "unpaid": "Unpaid",
+  "pending": "Pending",
+  "refunded": "Refunded"
+},
+"serviceNames": {
+    "protecting": "Protecting",
+    "product_packaging": "Product Packaging",
+    "delivery": "Delivery"
+  },
+   "productTypeNames": {
+    "fragile": "Fragile",
+    "electronics": "Electronics",
+    "cold_storage": "Cold Storage",
+    "heavy": "Heavy"
+  },
+   "orderRequests": {
+    "title": "Order Requests",
+    "viewAll": "View All",
+    "deposit": "Deposit",
+    "return": "Return",
+    "pickupLabel": "Pickup:",
+    "destinationLabel": "Destination:",
+    "viewDetails": "View Details"
+  },
+  "recentOrders": {
+    "title": "Recent Orders",
+    "period": {
+      "month": "Month",
+      "week": "Week",
+      "day":"day"
+    },
+    "groups": {
+      "active": "Active Orders",
+      "pending": "Pending Req",
+      "completed": "Completed"
+    },
+    "comparisonText": "in comparison to last period"
+  },
+   "revenue": {
+    "title": "Revenue",
+    "period": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "thisPeriod": "This period",
+    "changeVsPrev": "Change vs previous",
+    "noChartData": "No chart data available",
+    "noData": "No data",
+    "noPreviousData": "No previous data",
+    "comparisonText": "compared to last period"
+  },
+ "actionTypeNames": {
+  "order_retrieved": "Order Retrieved",
+  "order_created": "Order Created",
+  "processing_order": "Processing Order",
+  "stored_in_warehouse": "Stored in Warehouse",
+  "picked_up": "Picked Up",
+  "checkout_completed": "Checkout Completed",
+  "verification": "Verification",
+  "ready_for_pickup": "Ready for Pickup",
+  "customer_retrieved_from_expired-storage":"Customer Retrieved from Expired Storage",
+  "renting_active":"Renting Active",
+  "noData": "-"
+}
+
+  
+}

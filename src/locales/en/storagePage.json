@@ -211,6 +211,50 @@
       "truckLoadAria": "Preview and shelves panel",
       "orderPanelAria": "Orders and placement panel"
     }
+  },
+   "performedBy": "by {{name}}",
+   "statusNames": {
+"processing": "Processing",
+"retrieved": "Received",
+"pending": "Pending",
+"wait_pick_up": "Waiting for pickup",
+"verify": "Verify",
+"checkout": "Completed",
+"pick_up": "Pick up",
+"renting": "Renting",
+"stored": "Stored",
+"overdue": "Overdue",
+"store_in_expired_storage": "Storage expired",
+"order_created": "Order just created",
+"processing_order": "Order processing",
+"order_retrieved": "Order received back",
+"noData": "-",
+"occupied": "Occupied",
+"active": "Active",
+"ready": "Ready",
+"reserved": "Reserved",
+"rented": "Rented"
+},
+"paymentStatus": {
+"paid": "Paid",
+"unpaid": "Unpaid",
+"pending": "Pending",
+"refunded": "Refund"
+},
+"containerFields": {
+    "isActive": "Is Active",
+    "productTypeId": "Product Type Id",
+    "productTypeIds": "Product Type Ids",
+    "orderDetailId": "Order Detail Id",
+    "price": "Price",
+    "positionX": "Position X",
+    "positionY": "Position Y",
+    "positionZ": "Position Z",
+    "lastOptimizedDate": "Last Optimized Date",
+    "optimizationScore": "Optimization Score",
+    "notes": "Notes",
+    "containerAboveCode": "Container Above Code",
+    "status": "Status"
   }
  
 }

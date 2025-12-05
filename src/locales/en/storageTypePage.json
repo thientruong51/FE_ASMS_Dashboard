@@ -33,5 +33,18 @@
   "fetchFailed": "Failed to load storage types",
   "deleteSuccess": "Delete successful",
   "deleteFailed": "Delete failed",
-  "loadingAlt": "Loading..."
+  "loadingAlt": "Loading...",
+   "storageTypeNames": {
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large",
+    "small_ac": "Small (AC)",
+    "medium_ac": "Medium (AC)",
+    "large_ac": "Large (AC)",
+    "warehouse": "Warehouse",
+    "warehouse_ac": "Warehouse (AC)",
+    "warehouse_expired": "Expired Warehouse",
+    "warehouse_oversize": "Oversize Warehouse",
+    "noData": "-"
+  }
 }

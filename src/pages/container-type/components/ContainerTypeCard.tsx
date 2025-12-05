@@ -21,6 +21,7 @@ import { OrbitControls, useGLTF, Html, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import type { ContainerType } from "./types";
 import { useTranslation } from "react-i18next";
+import { translateContainerTypeName } from "@/utils/containerTypeNames"; 
 
 function GLBModelFit({ url }: { url: string }) {
   const gltf = useGLTF(url);
@@ -81,7 +82,7 @@ export default function ContainerTypeCard({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState<boolean>(!!forceVisible);
-  const { t } = useTranslation("containerType");
+  const { t } = useTranslation(["containerType", "containerTypeNames"]);
 
   useEffect(() => {
     if (forceVisible) setVisible(true);
@@ -109,6 +110,8 @@ export default function ContainerTypeCard({
 
   const hasModel = !!item.imageUrl && /\.(glb|gltf|obj)$/i.test(item.imageUrl ?? "");
   const hasImage = !!item.imageUrl && /\.(jpe?g|png|webp|gif)$/i.test(item.imageUrl ?? "");
+
+  const displayName = translateContainerTypeName(t, item.type);
 
   return (
     <Card
@@ -168,7 +171,7 @@ export default function ContainerTypeCard({
           <Box
             component="img"
             src={item.imageUrl ?? undefined}
-            alt={item.type}
+            alt={displayName}
             className="media"
             sx={{ width: "100%", height: 220, objectFit: "cover", zIndex: 1 }}
           />
@@ -189,13 +192,22 @@ export default function ContainerTypeCard({
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
           <Box>
             <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>
-              {item.type}
+              {displayName}
             </Typography>
           </Box>
 
           <Stack direction="column" spacing={1} alignItems="flex-end">
-            <Chip size="small" label={t("card.dimensions", { l: (item.length ?? 0).toFixed(2), w: (item.width ?? 0).toFixed(2), h: (item.height ?? 0).toFixed(2) })} />
-            {typeof item.price !== "undefined" && <Chip size="small" label={t("card.price", { price: Number(item.price).toLocaleString() })} />}
+            <Chip
+              size="small"
+              label={t("card.dimensions", {
+                l: (item.length ?? 0).toFixed(2),
+                w: (item.width ?? 0).toFixed(2),
+                h: (item.height ?? 0).toFixed(2)
+              })}
+            />
+            {typeof item.price !== "undefined" && (
+              <Chip size="small" label={t("card.price", { price: Number(item.price).toLocaleString() })} />
+            )}
           </Stack>
         </Box>
       </CardContent>

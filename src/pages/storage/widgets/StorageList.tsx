@@ -26,13 +26,15 @@ import type { Building } from "@/pages/building/components/types";
 
 import { useTranslation } from "react-i18next";
 
+import { translateBuildingName, canonicalBuildingKey } from "@/utils/buildingNames";
+import { translateStatus, canonicalStatusKey } from "@/utils/statusHelper";
 type Props = {
   onSelectStorage?: (s: StorageRespItem) => void;
   selectedStorage?: StorageRespItem | null;
 };
 
 export default function StorageList({ onSelectStorage, selectedStorage }: Props) {
-  const { t } = useTranslation("storagePage");
+  const { t } = useTranslation(["storagePage", "buildingNames"]);
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [loadingBuildings, setLoadingBuildings] = useState(true);
   const [buildingsError, setBuildingsError] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
   const [searchText, setSearchText] = useState("");
 
   const theme = useTheme();
-  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); 
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
 
   useEffect(() => {
     let mounted = true;
@@ -116,14 +118,18 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
     return list;
   }, [storages, tab, searchText]);
 
-  const colorMap: Record<string, string> = {
-    Arriving: "#fbc02d",
-    Loading: "#1976d2",
-    Unloading: "#2e7d32",
-    Available: "#0288d1",
-    Departed: "#757575",
-    Ready: "#2e7d32",
-  };
+ const colorMap: Record<string, string> = {
+  arriving: "#fbc02d",
+  loading: "#1976d2",
+  unloading: "#2e7d32",
+  available: "#0288d1",
+  departed: "#757575",
+  ready: "#2e7d32",
+  active: "#3CBD96",
+  reserved: "#ff9800",
+  rented: "#8e24aa",
+  occupied: "#d32f2f",
+};
 
   const tabLabels = [
     t("storageList.tabAll"),
@@ -132,6 +138,20 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
     t("storageList.tabArriving"),
     t("storageList.tabPreparing"),
   ];
+
+  const buildingOptions = useMemo(() => {
+    return (buildings ?? []).map((b) => ({
+      ...b,
+      _label: translateBuildingName(t as any, b.name ?? null, undefined),
+    }));
+  }, [buildings, t]);
+
+  const renderBuildingLabel = (b?: Building | null) => {
+    if (!b) return t("storageList.buildingFallback");
+    const anyB = b as any;
+    if (anyB._label) return anyB._label;
+    return translateBuildingName(t as any, b.name ?? null, undefined);
+  };
 
   return (
     <Card
@@ -179,12 +199,27 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
               </Typography>
             ) : (
               <Autocomplete
-                options={buildings}
-                getOptionLabel={(opt) =>
-                  opt ? `${opt.name ?? opt.buildingCode ?? t("storageList.buildingFallback")} (${opt.buildingCode ?? opt.buildingId ?? ""})` : ""
+                options={buildingOptions}
+                getOptionLabel={(opt) => (opt ? String(opt._label ?? opt.name ?? opt.buildingCode ?? "") : "")}
+                renderOption={(props, opt) => (
+                  <li {...props} key={opt.buildingId ?? opt.buildingCode ?? opt.name}>
+                    <Box display="flex" flexDirection="column">
+                      <Typography variant="body2">{opt._label}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {String(opt.buildingCode ?? opt.buildingId ?? "")}
+                      </Typography>
+                    </Box>
+                  </li>
+                )}
+                value={
+                  selectedBuilding
+                    ? 
+                    { ...(selectedBuilding as any), _label: renderBuildingLabel(selectedBuilding) }
+                    : null
                 }
-                value={selectedBuilding}
-                onChange={(_, v) => setSelectedBuilding(v)}
+                onChange={(_, v) => {
+                  setSelectedBuilding((v as Building | null));
+                }}
                 inputValue={buildingInputValue}
                 onInputChange={(_, v) => setBuildingInputValue(v)}
                 renderInput={(params) => (
@@ -202,6 +237,18 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                     }}
                   />
                 )}
+                isOptionEqualToValue={(opt, val) => {
+                  const idOpt = String(opt?.buildingId ?? opt?.buildingCode ?? "");
+                  const idVal = String(val?.buildingId ?? val?.buildingCode ?? "");
+                  if (idOpt && idVal) return idOpt === idVal;
+                  try {
+                    const k1 = canonicalBuildingKey(opt?.name ?? String(opt?.buildingCode ?? opt?.buildingId ?? ""));
+                    const k2 = canonicalBuildingKey(val?.name ?? String(val?.buildingCode ?? val?.buildingId ?? ""));
+                    return k1 === k2;
+                  } catch {
+                    return false;
+                  }
+                }}
                 clearOnEscape
                 fullWidth
                 aria-label={t("storageList.buildingAutocompleteAria")}
@@ -220,7 +267,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
           gap={isSmUp ? 0 : 1}
         >
           <Typography fontSize={13} fontWeight={600} color="text.secondary">
-            {selectedBuilding ? t("storageList.showingFor", { name: selectedBuilding.name ?? selectedBuilding.buildingCode }) : t("storageList.chooseBuilding")}
+            {selectedBuilding ? t("storageList.showingFor", { name: renderBuildingLabel(selectedBuilding) }) : t("storageList.chooseBuilding")}
           </Typography>
 
           <Box display="flex" alignItems="center" gap={0.5} width={isSmUp ? "auto" : "100%"}>
@@ -313,10 +360,10 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                   sx={{
                     borderRadius: 2,
                     p: 1.25,
-                    borderColor: (selectedStorage?.storageCode === v.storageCode) ? "#90caf9" : "#e0e0e0",
+                    borderColor: (selectedStorage?.storageCode === v.storageCode) ? "#3CBD96" : "#e0e0e0",
                     cursor: "pointer",
                     transition: "0.18s",
-                    "&:hover": { borderColor: "#90caf9", bgcolor: "#f9fbff" },
+                    "&:hover": { borderColor: "#3CBD96", bgcolor: "#f9fbff" },
                   }}
                   role="button"
                   aria-label={t("storageList.storageCardAria", { code: v.storageCode })}
@@ -327,11 +374,11 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                       {v.storageCode}
                     </Typography>
                     <Chip
-                      label={v.status ?? t("storageList.unknownStatus")}
+                      label={translateStatus(t as any, v.status) ?? (v.status ?? t("storageList.unknownStatus"))}
                       size="small"
                       sx={{
-                        color: colorMap[v.status ?? "Ready"] ?? "text.primary",
-                        borderColor: colorMap[v.status ?? "Ready"] ?? "#e0e0e0",
+                        color: colorMap[canonicalStatusKey(v.status) ?? "ready"] ?? "text.primary",
+                        borderColor: colorMap[canonicalStatusKey(v.status) ?? "ready"] ?? "#e0e0e0",
                         borderWidth: 1.3,
                         borderStyle: "solid",
                         fontSize: 12,
@@ -346,10 +393,11 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                   <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1} flexWrap="wrap">
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box display="flex" alignItems="center" mb={0.35}>
-                        <FiberManualRecordIcon sx={{ fontSize: 8, color: "#64b5f6", mr: 1 }} />
+                        <FiberManualRecordIcon sx={{ fontSize: 8, color: "#3CBD96", mr: 1 }} />
                         <Typography fontSize={13} color="text.secondary" noWrap>
-                          {t("storageList.type")}: {v.storageTypeName ?? t("storageList.na")}
+                          {t("storageList.type")}: {translateBuildingName(t as any, v.storageTypeName ?? null, undefined) ?? t("storageList.na")}
                         </Typography>
+
                         <Typography fontSize={13} color="text.secondary" sx={{ ml: "auto" }} noWrap>
                           {t("storageList.active")}: {v.isActive ? t("common.yes") : t("common.no")}
                         </Typography>
@@ -369,7 +417,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
                   <Box display="flex" alignItems="center" justifyContent="flex-end" mt={1} gap={0.5}>
                     <RoomOutlinedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
                     <Typography fontSize={13} color="text.secondary" noWrap>
-                      {selectedBuilding?.address ?? ""}
+                      {renderBuildingLabel(selectedBuilding)}
                     </Typography>
                   </Box>
                 </Card>

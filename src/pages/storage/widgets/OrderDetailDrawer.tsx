@@ -18,8 +18,11 @@ import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRound
 
 import { findSuitableContainers, placeContainer } from "@/api/clpApi";
 import { getContainerType } from "@/api/containerTypeApi";
-
+import { getAuthClaimsFromStorage } from "@/utils/auth";
 import { useTranslation } from "react-i18next";
+
+import { translateStatus } from "@/utils/statusHelper"; 
+import { translatePaymentStatus } from "@/utils/paymentStatusHelper"; 
 
 type Props = {
   data: any | null;
@@ -32,7 +35,7 @@ type Dims = { length: number; width: number; height: number };
 const LOCAL_CONTAINER_TYPES_FILE = "/mnt/data/da999d8c-b4eb-43af-ace3-d202c3e7042e.png";
 
 export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
-  const { t } = useTranslation("storagePage");
+  const { t } = useTranslation(["storagePage", "statusNames", "paymentStatus"]);
   const theme = useTheme();
   const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
 
@@ -46,6 +49,9 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
 
   const [containerTypeCache, setContainerTypeCache] = useState<Record<string | number, any>>({});
   const [localContainerTypesCache, setLocalContainerTypesCache] = useState<any[] | null>(null);
+
+  const [derivedOrderStatusLabel, setDerivedOrderStatusLabel] = useState<string | null>(null);
+  const [derivedOrderPaymentLabel, setDerivedOrderPaymentLabel] = useState<string | null>(null);
 
   const computeStorageDays = (deposit?: string | null, ret?: string | null) => {
     if (!deposit || !ret) return null;
@@ -78,8 +84,22 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
     setClpPayload(null);
     setClpResponseRaw(null);
     setClpLoading(false);
+    setDerivedOrderStatusLabel(null);
+    setDerivedOrderPaymentLabel(null);
 
     if (!data) return;
+
+    try {
+      const rawOrderStatus = data._orderStatus ?? data.status ?? null;
+      const rawPaymentStatus = data._orderPaymentStatus ?? data.paymentStatus ?? null;
+
+      const statusLabel = translateStatus(t, rawOrderStatus);
+      const paymentLabel = translatePaymentStatus(t, rawPaymentStatus);
+
+      setDerivedOrderStatusLabel(statusLabel);
+      setDerivedOrderPaymentLabel(paymentLabel);
+    } catch (err) {
+    }
 
     (async () => {
       setClpSuggestions(null);
@@ -222,7 +242,7 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
         setClpLoading(false);
       }
     })();
-  }, [data, containerTypeCache]); 
+  }, [data, containerTypeCache, t]); 
 
   const handlePlaceContainer = async (suggestion: any) => {
     if (!suggestion || !data) return;
@@ -231,7 +251,10 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
 
     const orderDetailId = data.orderDetailId ?? data.id ?? data._id ?? null;
 
-    const payload = {
+    const claims = getAuthClaimsFromStorage(); 
+    const employeeCode = claims?.EmployeeCode ?? null;
+
+    const payload: any = {
       containerCode: suggestion.containerCode,
       floorCode: suggestion.floorCode ?? suggestion.shelfCode ?? null,
       layer: suggestion.layer ?? 0,
@@ -243,19 +266,19 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
       requiresRearrangement: suggestion.requiresRearrangement ?? false,
       rearrangeContainerCode: suggestion.rearrangeContainerCode ?? null,
       ...(orderDetailId != null ? { orderDetailId: Number(orderDetailId) } : {}),
+      ...(data._orderCode ?? data.orderCode ? { orderCode: data._orderCode ?? data.orderCode } : {}),
+      ...(employeeCode ? { performedBy: String(employeeCode) } : {}),
     };
 
     try {
       const resp = await placeContainer(payload);
       setLastPlaceResp(resp);
 
-      // notify parent
       onPlaced?.({ success: true, data: resp });
     } catch (err) {
       const errObj = { error: (err as any)?.message ?? err };
       setLastPlaceResp(errObj);
 
-      // notify parent about failure
       onPlaced?.({ success: false, data: errObj });
     } finally {
       setPlacing(false);
@@ -263,6 +286,9 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
   };
 
   if (!data) return <Box sx={{ p: 3 }} />;
+
+  const orderStatusLabel = data._orderStatusLabel ?? data._orderStatus ?? derivedOrderStatusLabel ?? "-";
+  const paymentStatusLabel = data._orderPaymentStatusLabel ?? data._orderPaymentStatus ?? derivedOrderPaymentLabel ?? "-";
 
   return (
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
@@ -348,9 +374,7 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
             <Typography fontWeight={600} sx={{ fontSize: isSmUp ? 16 : 14 }}>
               {data._orderCode ?? data.orderCode ?? "-"}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: isSmUp ? 13 : 12 }}>
-              {t("statusPayment", { status: data._orderStatus ?? data.status ?? "-", payment: data._orderPaymentStatus ?? data.paymentStatus ?? "-" })}
-            </Typography>
+            
           </Box>
         </Box>
       </Box>
@@ -544,7 +568,7 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
               {t("statusPaymentLabel")}
             </Typography>
             <Typography variant="body2" mb={1.5}>
-              {data._orderStatus ?? "-"} / {data._orderPaymentStatus ?? "-"}
+              {orderStatusLabel} / {paymentStatusLabel}
             </Typography>
 
             <Typography fontSize={14} fontWeight={600}>

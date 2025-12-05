@@ -36,5 +36,21 @@
   "saveFailed": "Lưu thất bại",
   "deleteFailed": "Xóa thất bại",
   "tableActions": "Hành động",
-  "vsLastMonth": "so với tháng trước"
+  "vsLastMonth": "so với tháng trước",
+   "buildingNames": {
+    "self_storage": "Nhà kho tự quản",
+    "self_storage_ac": "Nhà kho tự quản (Có điều hòa)",
+    "warehouse": "Nhà kho dịch vụ",
+    "warehouse_ac": "Nhà kho dịch vụ (Có điều hòa)",
+    "warehouse_expired": "Kho hết hạn",
+    "warehouse_oversize": "Kho quá cỡ",
+    "noData": "-"
+  },
+  "roleNames": {
+    "manager": "Quản lý",
+    "warehouse_staff": "Nhân viên kho",
+    "delivery_staff": "Nhân viên giao hàng",
+    "admin": "Quản trị viên",
+    "noData": "-"
+  }
 }

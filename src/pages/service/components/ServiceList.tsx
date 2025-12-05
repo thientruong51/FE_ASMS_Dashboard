@@ -4,10 +4,12 @@ import type { Service } from "../../../api/serviceApi";
 
 export default function ServiceList({
   list,
-  onEdit
+  onEdit,
+  nameRenderer
 }: {
   list: Service[];
   onEdit: (s: Service) => void;
+  nameRenderer?: (s: Service) => string;
 }) {
   return (
     <Box
@@ -32,7 +34,7 @@ export default function ServiceList({
             maxWidth: 270
           }}
         >
-          <ServiceCard item={s} onEdit={onEdit} />
+          <ServiceCard item={s} onEdit={onEdit} nameRenderer={nameRenderer} />
         </Box>
       ))}
     </Box>

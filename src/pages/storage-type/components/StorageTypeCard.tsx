@@ -1,5 +1,16 @@
 import React, { useEffect, useRef, useState, Suspense } from "react";
-import { Card, CardContent, CardActions, Typography, IconButton, Box, Chip, Stack, Paper, CircularProgress } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CardActions,
+  Typography,
+  IconButton,
+  Box,
+  Chip,
+  Stack,
+  Paper,
+  CircularProgress
+} from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import WidgetsIcon from "@mui/icons-material/Widgets";
@@ -10,6 +21,7 @@ import { OrbitControls, useGLTF, Html, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import type { StorageType } from "./types";
 import { useTranslation } from "react-i18next";
+import { translateStorageTypeName } from "@/utils/storageTypeNames"; 
 
 function GLBModelFit({ url }: { url: string }) {
   const gltf = useGLTF(url);
@@ -75,7 +87,7 @@ export default function StorageTypeCard({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
-  const { t } = useTranslation("storageTypePage");
+  const { t } = useTranslation(["storageTypePage", "storageTypeNames"]);
 
   useEffect(() => {
     if (!ref.current) return;
@@ -98,8 +110,10 @@ export default function StorageTypeCard({
   const hasModel = !!item.imageUrl && /\.(glb|gltf|obj)$/i.test(item.imageUrl ?? "");
   const hasImage = !!item.imageUrl && /\.(jpe?g|png|webp|gif)$/i.test(item.imageUrl ?? "");
 
-  const priceLabel = typeof item.price === "number" ? `${Number(item.price).toLocaleString()} đ` : t("priceNA");
-  const dims = t("dimensions", { l: (item.length ?? 0).toFixed(2), w: (item.width ?? 0).toFixed(2), h: (item.height ?? 0).toFixed(2) });
+  const priceLabel = typeof item.price === "number" ? `${Number(item.price).toLocaleString()} đ` : t("priceNA", { ns: "storageTypePage" });
+  const dims = t("dimensions", { l: (item.length ?? 0).toFixed(2), w: (item.width ?? 0).toFixed(2), h: (item.height ?? 0).toFixed(2), ns: "storageTypePage" });
+
+  const displayName = translateStorageTypeName(t, item.name, (item as any).nameEn);
 
   return (
     <Card
@@ -145,7 +159,7 @@ export default function StorageTypeCard({
             <Environment preset="warehouse" />
           </Canvas>
         ) : visible && hasImage ? (
-          <Box component="img" src={item.imageUrl ?? undefined} alt={item.name} style={{ width: "100%", height: 260, objectFit: "cover" }} />
+          <Box component="img" src={item.imageUrl ?? undefined} alt={displayName} style={{ width: "100%", height: 260, objectFit: "cover" }} />
         ) : (
           <Box display="flex" alignItems="center" justifyContent="center" height={260} bgcolor="#f4f6f8">
             <WidgetsIcon sx={{ fontSize: 44, color: "text.secondary" }} />
@@ -173,10 +187,10 @@ export default function StorageTypeCard({
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
           <Box>
             <Typography variant="subtitle2" color="text.secondary">
-              {t("idLabel", { id: item.storageTypeId })}
+              {t("idLabel", { id: item.storageTypeId, ns: "storageTypePage" })}
             </Typography>
             <Typography variant="h6" noWrap sx={{ fontWeight: 700 }}>
-              {item.name}
+              {displayName}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               {dims}
@@ -191,24 +205,24 @@ export default function StorageTypeCard({
         <Stack direction="row" spacing={2} alignItems="center" mb={1}>
           <Stack direction="row" alignItems="center" spacing={0.5}>
             <StraightenIcon fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary">{t("area", { area: (item.area ?? 0).toFixed(2) })}</Typography>
+            <Typography variant="body2" color="text.secondary">{t("area", { area: (item.area ?? 0).toFixed(2), ns: "storageTypePage" })}</Typography>
           </Stack>
 
           <Stack direction="row" alignItems="center" spacing={0.5}>
             <HeightIcon fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary">{t("volume", { vol: (item.totalVolume ?? 0).toFixed(2) })}</Typography>
+            <Typography variant="body2" color="text.secondary">{t("volume", { vol: (item.totalVolume ?? 0).toFixed(2), ns: "storageTypePage" })}</Typography>
           </Stack>
         </Stack>
       </CardContent>
 
       <CardActions sx={{ px: 1 }}>
         {onEdit && (
-          <IconButton size="small" aria-label={t("edit")} onClick={(e) => { e.stopPropagation(); onEdit(item); }}>
+          <IconButton size="small" aria-label={t("edit", { ns: "storageTypePage" })} onClick={(e) => { e.stopPropagation(); onEdit(item); }}>
             <EditIcon fontSize="small" />
           </IconButton>
         )}
         {onDelete && (
-          <IconButton size="small" aria-label={t("delete")} onClick={(e) => { e.stopPropagation(); onDelete(item.storageTypeId); }}>
+          <IconButton size="small" aria-label={t("delete", { ns: "storageTypePage" })} onClick={(e) => { e.stopPropagation(); onDelete(item.storageTypeId); }}>
             <DeleteIcon fontSize="small" />
           </IconButton>
         )}

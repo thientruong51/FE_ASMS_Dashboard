@@ -80,5 +80,45 @@
 
   "export": {
     "filenamePrefix": "orders_export"
-  }
+  },
+  "styleNames": {
+  "full": "Full service",
+  "self": "Self service",
+  "noData": "-"
+},
+"paymentStatus": {
+"paid": "Paid",
+"unpaid": "Unpaid",
+"pending": "Pending",
+"refunded": "Refund"
+},
+"statusNames": {
+"processing": "Processing",
+"retrieved": "Received",
+"pending": "Pending",
+"wait_pick_up": "Waiting for pickup",
+"verify": "Verify",
+"checkout": "Completed",
+"pick_up": "Pick up",
+"renting": "Renting",
+"stored": "Stored",
+"overdue": "Overdue",
+"store_in_expired_storage": "Storage expired",
+"order_created": "Order just created",
+"processing_order": "Order processing",
+"order_retrieved": "Order received back",
+"noData": "-"
+},
+"serviceNames": {
+"protecting": "Protecting",
+"product_packaging": "Packaging",
+"delivery": "Delivery"
+},
+"productTypeNames": {
+"fragile": "Fragile",
+"electronics": "Electronics",
+"cold_storage": "Requires cold storage",
+"heavy": "Heavy goods"
+}
+
 }

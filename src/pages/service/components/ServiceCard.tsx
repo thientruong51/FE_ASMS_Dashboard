@@ -3,6 +3,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import EditIcon from "@mui/icons-material/Edit";
 import { useTranslation } from "react-i18next";
 import type { Service } from "../../../api/serviceApi";
+import { translateServiceName } from "@/utils/serviceNameUtils";
 
 const PACKAGE_COLOR_THEME = {
   basic: { hex: "#10B981", textContrast: "#fff" },
@@ -77,7 +78,15 @@ function pickPalette(item: Service) {
   return { color: "#6B7280", border: "#e5e7eb", textContrast: "#fff", highlighted: false, type: "generic" };
 }
 
-export default function ServiceCard({ item, onEdit }: { item: Service; onEdit: (s: Service) => void }) {
+export default function ServiceCard({
+  item,
+  onEdit,
+  nameRenderer
+}: {
+  item: Service;
+  onEdit: (s: Service) => void;
+  nameRenderer?: (s: Service) => string;
+}) {
   const { t } = useTranslation("servicePage");
   const palette = pickPalette(item);
 
@@ -89,6 +98,11 @@ export default function ServiceCard({ item, onEdit }: { item: Service; onEdit: (
   const priceLabel = item.price && item.price > 0 ? `${Number(item.price).toLocaleString()} VND` : t("contactUs");
 
   const isAddon = palette.type === "addon";
+
+  const computedTitle = nameRenderer ? nameRenderer(item) : translateServiceName(t, item.name, (item as any).nameEn);
+  const showSubName =
+    (!nameRenderer && (item.name ?? "").trim() && (item as any).nameEn && (item.name ?? "").trim() !== ((item as any).nameEn ?? "").trim()) ||
+    false;
 
   return (
     <Paper
@@ -126,9 +140,15 @@ export default function ServiceCard({ item, onEdit }: { item: Service; onEdit: (
           {isAddon ? t("addonTag") : t("packageTag")}
         </Typography>
 
-        <Typography variant="h6" sx={{ mt: 1, fontWeight: 900 }}>
-          {item.name}
+        <Typography variant="h6" sx={{ mt: 1, fontWeight: 700, wordBreak: "break-word" }}>
+          {computedTitle}
         </Typography>
+
+        {showSubName && (
+          <Typography color="text.secondary" sx={{ mt: 0.5, fontSize: 13 }}>
+            {(item as any).nameEn}
+          </Typography>
+        )}
 
         {features.length <= 1 && item.description && (
           <Typography color="text.secondary" sx={{ mt: 1, fontSize: 13 }}>
@@ -143,7 +163,7 @@ export default function ServiceCard({ item, onEdit }: { item: Service; onEdit: (
         </Typography>
 
         <Stack spacing={1}>
-          <Typography variant="h4" sx={{ fontWeight: 900, fontSize: 26 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, fontSize: 26 }}>
             {priceLabel}
           </Typography>
 

@@ -31,5 +31,13 @@
   "priceNonNegative": "Price cannot be negative",
   "validUrl": "Must be a valid URL",
   "loadingAlt": "Loading...",
-  "contact": "Contact us"
+  "contact": "Contact us",
+  "shelfTypeNames": {
+    "shelf_storage": "Shelf Storage",
+    "shelf_logistics": "Shelf Logistics",
+    "pallet_rack": "Pallet Rack",
+    "cantilever": "Cantilever Rack",
+    "mezzanine": "Mezzanine",
+    "noData": "-"
+  }
 }

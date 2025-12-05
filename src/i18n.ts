@@ -35,6 +35,10 @@ import enSidebar from "./locales/en/sidebar.json";
 import viSidebar from "./locales/vi/sidebar.json";
 import enStoragePage from "./locales/en/storagePage.json";
 import viStoragePage from "./locales/vi/storagePage.json";
+import viDashboard from "./locales/vi/dashboard.json";
+import enDashboard from "./locales/en/dashboard.json";
+
+
 i18n
   .use(initReactI18next)
   .init({
@@ -56,7 +60,9 @@ i18n
         trackingHistoryPage: enTracking,
         topbar: enTopbar,
         sidebar: enSidebar,
-        storagePage: enStoragePage
+        storagePage: enStoragePage,
+        dashboard: enDashboard
+
       },
       vi: {
         auth: authVi,
@@ -75,7 +81,9 @@ i18n
         trackingHistoryPage: viTracking,
         topbar: viTopbar,
         sidebar: viSidebar,
-        storagePage: viStoragePage
+        storagePage: viStoragePage,
+        dashboard: viDashboard
+
       }
     },
     lng: "vi", 

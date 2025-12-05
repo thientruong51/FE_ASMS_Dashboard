@@ -24,6 +24,12 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import * as trackingApi from "@/api/trackingHistoryApi";
 import TrackingHistoryDetailDrawer from "./components/TrackingHistoryDetailDrawer";
 import { useTranslation } from "react-i18next";
+import { getAuthClaimsFromStorage } from "@/utils/auth";
+
+import {
+  translateStatus,
+  translateActionType,
+} from "@/utils/translationHelpers";
 
 function ToolbarExtras({ onExport, onRefresh }: { onExport: () => void; onRefresh: () => void }) {
   const { t } = useTranslation("trackingHistoryPage");
@@ -53,18 +59,35 @@ export default function TrackingHistoryPage() {
   const [density, setDensity] = useState<"compact" | "standard" | "comfortable">("standard");
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
 
+  const claims = useMemo(() => getAuthClaimsFromStorage(), []);
+  const userCode = String(claims?.EmployeeCode ?? "");
+  const roleId = Number(claims?.EmployeeRoleId ?? 0);
+
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const resp = await trackingApi.getTrackingHistories({ page: 1, pageSize: 1000, orderCode: filterOrderCode || undefined, q: search || undefined });
-      setItems(resp.data ?? []);
+      const params: Record<string, any> = { page: 1, pageSize: 1000 };
+      if (filterOrderCode) params.orderCode = filterOrderCode;
+      if (search) params.q = search;
+      if (roleId === 2 || roleId === 3) {
+        params.currentAssign = userCode || undefined;
+      }
+
+      const resp = await trackingApi.getTrackingHistories(params);
+      let data = resp.data ?? [];
+
+      if ((roleId === 2 || roleId === 3) && userCode) {
+        data = data.filter((it) => String(it.currentAssign ?? "") === String(userCode));
+      }
+
+      setItems(data);
     } catch (err) {
       console.error("getTrackingHistories failed", err);
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, [filterOrderCode, search]);
+  }, [filterOrderCode, search, roleId, userCode]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -129,7 +152,12 @@ export default function TrackingHistoryPage() {
         if (!String(r.orderCode).includes(filterOrderCode)) return false;
       }
       if (!q) return true;
-      return String(r.orderCode ?? "").toLowerCase().includes(q) || String(r.actionType ?? "").toLowerCase().includes(q) || String(r.newStatus ?? "").toLowerCase().includes(q) || String(r.oldStatus ?? "").toLowerCase().includes(q);
+      return String(r.orderCode ?? "").toLowerCase().includes(q)
+        || String(r.actionType ?? "").toLowerCase().includes(q)
+        || String(r.newStatus ?? "").toLowerCase().includes(q)
+        || String(r.oldStatus ?? "").toLowerCase().includes(q)
+        || String(r.currentAssign ?? "").toLowerCase().includes(q)
+        || String(r.nextAssign ?? "").toLowerCase().includes(q);
     });
 
     const rows: any[] = [];
@@ -179,14 +207,74 @@ export default function TrackingHistoryPage() {
       headerName: t("details"),
       minWidth: 200,
       flex: 1,
-      renderCell: (params: any) => params.row._isChild ? <Typography variant="body2" sx={{ ml: 2 }}>{params.value ?? `#${params.row.trackingHistoryId}`}</Typography> : <Typography variant="body2" sx={{ fontWeight: 600 }}>{params.value ?? `#${params.row.trackingHistoryId}`}</Typography>
+      renderCell: (params: any) => {
+        const raw = String(params.value ?? "");
+        const translated = translateActionType(t, raw);
+        return params.row._isChild ? (
+          <Tooltip title={raw || "-"}>
+            <Typography variant="body2" sx={{ ml: 2 }}>{translated || raw}</Typography>
+          </Tooltip>
+        ) : (
+          <Tooltip title={raw || "-"}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>{translated || raw}</Typography>
+          </Tooltip>
+        );
+      }
     },
-    { field: "oldStatus", headerName: t("oldStatus"), minWidth: 120, flex: 0.6, renderCell: (p: any) => <span>{String(p.value ?? "-")}</span> },
-    { field: "newStatus", headerName: t("newStatus"), minWidth: 120, flex: 0.6, renderCell: (p: any) => <span>{String(p.value ?? "-")}</span> },
-    { field: "createAt", headerName: t("created"), minWidth: 160, flex: 0.9, renderCell: (p: any) => p.row._isChild ? <Typography variant="body2" sx={{ ml: 2 }}>{fmtDate(p.value)}</Typography> : <span>{fmtDate(p.value)}</span> },
+    {
+      field: "oldStatus",
+      headerName: t("oldStatus"),
+      minWidth: 120,
+      flex: 0.6,
+      renderCell: (p: any) => {
+        const raw = String(p.value ?? "");
+        const translated = translateStatus(t, raw);
+        return (
+          <Tooltip title={raw || "-"}>
+            <span style={{ marginLeft: p.row._isChild ? 8 : 0 }}>{translated || "-"}</span>
+          </Tooltip>
+        );
+      }
+    },
+    {
+      field: "newStatus",
+      headerName: t("newStatus"),
+      minWidth: 120,
+      flex: 0.6,
+      renderCell: (p: any) => {
+        const raw = String(p.value ?? "");
+        const translated = translateStatus(t, raw);
+        return (
+          <Tooltip title={raw || "-"}>
+            <span style={{ marginLeft: p.row._isChild ? 8 : 0 }}>{translated || "-"}</span>
+          </Tooltip>
+        );
+      }
+    },
+    {
+      field: "currentAssign",
+      headerName: t("currentAssign"),
+      minWidth: 160,
+      flex: 0.7,
+      renderCell: (p: any) => p.row._isChild ? <Typography variant="body2" sx={{ ml: 2 }}>{String(p.value ?? "-")}</Typography> : <span>{String(p.value ?? "-")}</span>
+    },
+    {
+      field: "nextAssign",
+      headerName: t("nextAssign"),
+      minWidth: 160,
+      flex: 0.7,
+      renderCell: (p: any) => p.row._isChild ? <Typography variant="body2" sx={{ ml: 2 }}>{String(p.value ?? "-")}</Typography> : <span>{String(p.value ?? "-")}</span>
+    },
+    {
+      field: "createAt",
+      headerName: t("created"),
+      minWidth: 160,
+      flex: 0.9,
+      renderCell: (p: any) => p.row._isChild ? <Typography variant="body2" sx={{ ml: 2 }}>{fmtDate(p.value)}</Typography> : <span>{fmtDate(p.value)}</span>
+    },
     {
       field: "actions",
-      headerName: "Actions",
+      headerName: t("actionType"),
       width: 140,
       sortable: false,
       renderCell: (params: any) => {
@@ -221,13 +309,48 @@ export default function TrackingHistoryPage() {
   const handleExportCsv = () => {
     if (!latestPerOrder || latestPerOrder.length === 0) return;
     const rows = latestPerOrder;
-    const keys = ["trackingHistoryId","orderCode","actionType","oldStatus","newStatus","createAt","currentAssign","nextAssign","image"];
+    const keys = [
+      "trackingHistoryId",
+      "orderCode",
+      "actionType",
+      "actionType_translated",
+      "oldStatus",
+      "oldStatus_translated",
+      "newStatus",
+      "newStatus_translated",
+      "currentAssign",
+      "nextAssign",
+      "createAt",
+      "image"
+    ];
     const header = keys.join(",");
-    const csv = [header].concat(rows.map((r) => keys.map((k) => {
-      const v = (r as any)[k];
-      if (v == null) return "";
-      return `"${String(v).replace(/"/g, '""')}"`;
-    }).join(","))).join("\n");
+    const csv = [header].concat(rows.map((r) => {
+      const oldRaw = (r as any)["oldStatus"] ?? "";
+      const newRaw = (r as any)["newStatus"] ?? "";
+      const oldT = translateStatus(t, oldRaw);
+      const newT = translateStatus(t, newRaw);
+      const actionRaw = (r as any)["actionType"] ?? "";
+      const actionT = translateActionType(t, actionRaw);
+      const record: Record<string, any> = {
+        trackingHistoryId: r.trackingHistoryId ?? "",
+        orderCode: r.orderCode ?? "",
+        actionType: actionRaw,
+        actionType_translated: actionT,
+        oldStatus: oldRaw,
+        oldStatus_translated: oldT,
+        newStatus: newRaw,
+        newStatus_translated: newT,
+        currentAssign: r.currentAssign ?? "",
+        nextAssign: r.nextAssign ?? "",
+        createAt: r.createAt ?? "",
+        image: r.image ?? "",
+      };
+      return keys.map((k) => {
+        const v = record[k];
+        if (v == null) return "";
+        return `"${String(v).replace(/"/g, '""')}"`;
+      }).join(",");
+    })).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -272,17 +395,25 @@ export default function TrackingHistoryPage() {
                 }
                 const q = (search ?? "").trim().toLowerCase();
                 if (!q) return true;
-                return String(r.orderCode ?? "").toLowerCase().includes(q) || String(r.actionType ?? "").toLowerCase().includes(q) || String(r.newStatus ?? "").toLowerCase().includes(q) || String(r.oldStatus ?? "").toLowerCase().includes(q);
+                return String(r.orderCode ?? "").toLowerCase().includes(q) || String(r.actionType ?? "").toLowerCase().includes(q) || String(r.newStatus ?? "").toLowerCase().includes(q) || String(r.oldStatus ?? "").toLowerCase().includes(q) || String(r.currentAssign ?? "").toLowerCase().includes(q) || String(r.nextAssign ?? "").toLowerCase().includes(q);
               }).map((latest) => {
                 const orderCode = latest.orderCode!;
                 const expanded = !!expandedOrders[orderCode];
                 const older = olderEntriesFor(orderCode, latest.trackingHistoryId);
+
+                const actionTranslated = translateActionType(t, String(latest.actionType ?? ""));
+                const newStatusTranslated = translateStatus(t, String(latest.newStatus ?? ""));
+                const currentAssign = latest.currentAssign ?? "-";
+                const nextAssign = latest.nextAssign ?? "-";
+
                 return (
                   <Card key={latest.trackingHistoryId} variant="outlined">
                     <CardContent sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <Box>
-                        <Typography fontWeight={700}>{latest.actionType ?? `#${latest.trackingHistoryId}`}</Typography>
-                        <Typography color="text.secondary">{latest.orderCode ?? "-"} • {fmtDate(latest.createAt)} • New: {latest.newStatus ?? "-"}</Typography>
+                        <Typography fontWeight={700}>{actionTranslated ?? (latest.actionType ?? `#${latest.trackingHistoryId}`)}</Typography>
+                        <Typography color="text.secondary">
+                          {latest.orderCode ?? "-"} • {fmtDate(latest.createAt)} • {t("new")}: {newStatusTranslated || (latest.newStatus ?? "-")} • {t("curr")}: {currentAssign} → {nextAssign}
+                        </Typography>
                       </Box>
                       <Box>
                         <Tooltip title={t("viewDetails")}>
@@ -295,8 +426,10 @@ export default function TrackingHistoryPage() {
                       <CardContent key={o.trackingHistoryId} sx={{ borderTop: "1px solid #eee" }}>
                         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <Box>
-                            <Typography fontWeight={600} sx={{ fontSize: 13 }}>{o.actionType ?? `#${o.trackingHistoryId}`}</Typography>
-                            <Typography color="text.secondary" sx={{ fontSize: 12 }}>{fmtDate(o.createAt)} • {o.oldStatus ?? "-"} → {o.newStatus ?? "-"}</Typography>
+                            <Typography fontWeight={600} sx={{ fontSize: 13 }}>{translateActionType(t, String(o.actionType ?? "")) ?? (o.actionType ?? `#${o.trackingHistoryId}`)}</Typography>
+                            <Typography color="text.secondary" sx={{ fontSize: 12 }}>
+                              {fmtDate(o.createAt)} • {translateStatus(t, String(o.oldStatus ?? "")) || (o.oldStatus ?? "-")} → {translateStatus(t, String(o.newStatus ?? "")) || (o.newStatus ?? "-")} • {o.currentAssign ?? "-"} → {o.nextAssign ?? "-"}
+                            </Typography>
                           </Box>
                           <Button size="small" onClick={() => openDrawerFor(o)}>{t("details")}</Button>
                         </Box>

@@ -59,5 +59,12 @@
   "tooltips": {
     "edit": "Sửa",
     "delete": "Xóa"
+  },
+  "containerTypeNames": {
+    "a_storage": "A Dịch vụ",
+    "b_storage": "B Dịch vụ",
+    "c_storage": "C Dịch vụ",
+    "d_storage": "D Dịch vụ",
+    "noData": "-"
   }
 }

@@ -44,5 +44,40 @@
   "updateStatusConfirmMsg": "Update status for order {{code}}?",
   "retrievedNotice": "Order has been retrieved. No actions available.",
   "newReturnDateLabel": "New return date",
-  "imageAlt": "tracking"
+  "imageAlt": "tracking",
+  "currentAssign": "Current Assign",
+  "nextAssign": "Next Assign",
+  "actionType": "Action",
+   "statusNames": {
+  "processing": "Processing",
+  "retrieved": "Retrieved",
+  "pending": "Pending",
+  "wait_pick_up": "Waiting for Pickup",
+  "verify": "Verifying",
+  "checkout": "Checkout Completed",
+  "pick_up": "Picked Up",
+  "renting": "Renting",
+  "stored": "Stored",
+  "overdue": "Overdue",
+  "store_in_expired_storage": "Stored in Expired Storage",
+  "order_created": "Order Created",
+  "processing_order": "Processing Order",
+  "order_retrieved": "Order Retrieved",
+  "noData": "-"
+},
+"actionTypeNames": {
+  "order_retrieved": "Order Retrieved",
+  "order_created": "Order Created",
+  "processing_order": "Processing Order",
+  "stored_in_warehouse": "Stored in Warehouse",
+  "picked_up": "Picked Up",
+  "checkout_completed": "Checkout Completed",
+  "verification": "Verification",
+  "ready_for_pickup": "Ready for Pickup",
+  "customer_retrieved_from_expired-storage":"Customer Retrieved from Expired Storage",
+  "renting_active":"Renting Active",
+  "noData": "-"
+}
+
+
 }

@@ -1,4 +1,4 @@
-import  { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Card,
@@ -25,7 +25,24 @@ import orderApi from "@/api/orderApi";
 import OrderDetailDrawer from "./components/OrderDetailDrawer";
 import { useTranslation } from "react-i18next";
 
-function ToolbarExtras({ onExport, onRefresh, exportLabel, refreshLabel }: { onExport: () => void; onRefresh: () => void; exportLabel: string; refreshLabel: string }) {
+import {
+  translateStatus,
+  translatePaymentStatus,
+
+  translateStyle,
+} from "@/utils/translationHelpers";
+
+function ToolbarExtras({
+  onExport,
+  onRefresh,
+  exportLabel,
+  refreshLabel,
+}: {
+  onExport: () => void;
+  onRefresh: () => void;
+  exportLabel: string;
+  refreshLabel: string;
+}) {
   return (
     <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1, flexWrap: "wrap" }}>
       <Button startIcon={<DownloadIcon />} size="small" onClick={onExport}>
@@ -119,6 +136,19 @@ export default function OrderPage() {
 
   const fmtMoney = (v: any) => (v == null ? "-" : Number(v).toLocaleString());
 
+  const withTooltip = (original?: string | null, translated?: string | null) => {
+    const orig = original ?? "";
+    const trans = translated ?? orig ?? "-";
+    if (!orig) return <span>{trans}</span>;
+    return (
+      <Tooltip title={orig}>
+        <span style={{ display: "inline-block", maxWidth: 320, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {trans}
+        </span>
+      </Tooltip>
+    );
+  };
+
   const columns = useMemo<GridColDef<any, any, any>[]>(() => {
     return [
       {
@@ -150,20 +180,23 @@ export default function OrderPage() {
         headerName: t("table.status"),
         minWidth: 120,
         flex: 0.8,
-        renderCell: (params: any) => <Chip label={String(params.value ?? "-")} size="small" />,
+        renderCell: (params: any) => {
+          const raw = String(params.value ?? "");
+          const translated = translateStatus(t, raw);
+          return <Chip label={withTooltip(raw, translated)} size="small" />;
+        },
       },
       {
         field: "paymentStatus",
         headerName: t("table.payment"),
         minWidth: 120,
         flex: 0.9,
-        renderCell: (params: any) => (
-          <Chip
-            label={String(params.value ?? "-")}
-            size="small"
-            color={String(params.value ?? "").toLowerCase() === "paid" ? "success" : "default"}
-          />
-        ),
+        renderCell: (params: any) => {
+          const raw = String(params.value ?? "");
+          const translated = translatePaymentStatus(t, raw);
+          const isPaid = raw.toLowerCase() === "paid";
+          return <Chip label={withTooltip(raw, translated)} size="small" color={isPaid ? "success" : "default"} />;
+        },
       },
       {
         field: "totalPrice",
@@ -174,7 +207,17 @@ export default function OrderPage() {
         type: "number",
       },
 
-      { field: "style", headerName: t("table.style"), minWidth: 100, flex: 0.6 },
+      {
+        field: "style",
+        headerName: t("table.style"),
+        minWidth: 100,
+        flex: 0.6,
+        renderCell: (params: any) => {
+          const raw = params.value ?? "";
+          const translated = translateStyle(t, String(raw));
+          return withTooltip(String(raw), translated);
+        },
+      },
       {
         field: "actions",
         headerName: t("table.actions"),
@@ -205,10 +248,7 @@ export default function OrderPage() {
     return all
       .filter((o) => {
         if (!q) return true;
-        return (
-          String(o.orderCode ?? "").toLowerCase().includes(q) ||
-          String(o.customerCode ?? "").toLowerCase().includes(q)
-        );
+        return String(o.orderCode ?? "").toLowerCase().includes(q) || String(o.customerCode ?? "").toLowerCase().includes(q);
       })
       .map((r) => ({ id: r.orderCode, __orderFull: r, ...r }));
   }
@@ -310,27 +350,27 @@ export default function OrderPage() {
 
           {isSm ? (
             <Stack spacing={2}>
-              {rowsWithFull.map((o: any) => (
-                <Card key={o.orderCode} variant="outlined">
-                  <CardContent sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Box>
-                      <Typography fontWeight={700}>{o.orderCode}</Typography>
-                      <Typography color="text.secondary">{o.customerCode ?? "-"}</Typography>
-                    </Box>
-                    <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                      <Button
-                        size="small"
-                        onClick={() => openDrawerFor(o)}
-                        startIcon={<VisibilityIcon />}
-                        disabled={orderLoading && selectedOrderCode === o.orderCode}
-                      >
-                        {t("actions.details")}
-                      </Button>
-                      {orderLoading && selectedOrderCode === o.orderCode && <CircularProgress size={18} />}
-                    </Box>
-                  </CardContent>
-                </Card>
-              ))}
+              {rowsWithFull.map((o: any) => {
+                const styleTranslated = translateStyle(t, String(o.style ?? ""));
+                return (
+                  <Card key={o.orderCode} variant="outlined">
+                    <CardContent sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <Box>
+                        <Typography fontWeight={700}>{o.orderCode}</Typography>
+                        <Typography color="text.secondary">
+                          {o.customerCode ?? "-"} {o.style ? <>• {withTooltip(String(o.style ?? ""), styleTranslated)}</> : null}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                        <Button size="small" onClick={() => openDrawerFor(o)} startIcon={<VisibilityIcon />} disabled={orderLoading && selectedOrderCode === o.orderCode}>
+                          {t("actions.details")}
+                        </Button>
+                        {orderLoading && selectedOrderCode === o.orderCode && <CircularProgress size={18} />}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </Stack>
           ) : (
             <Box sx={{ width: "100%", overflowX: "auto" }}>
@@ -359,12 +399,7 @@ export default function OrderPage() {
         </CardContent>
       </Card>
 
-      <OrderDetailDrawer
-        orderCode={selectedOrderCode}
-        open={drawerOpen}
-        onClose={closeDrawer}
-        orderFull={orderFull}
-      />
+      <OrderDetailDrawer orderCode={selectedOrderCode} open={drawerOpen} onClose={closeDrawer} orderFull={orderFull} />
     </Box>
   );
 }

@@ -19,6 +19,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Tooltip,
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
@@ -31,11 +32,19 @@ import * as trackingApi from "@/api/trackingHistoryApi";
 import * as orderStatusApi from "@/api/orderStatusApi";
 import { useTranslation } from "react-i18next";
 
+import {
+  translateStatus,
+  translateActionType,
+  translatePaymentStatus,
+  translateServiceName,
+  translateProductType,
+} from "@/utils/translationHelpers";
+
 type Props = {
   trackingId: number | null;
   open: boolean;
   onClose: () => void;
-  item?: trackingApi.TrackingHistoryItem;
+  item?: trackingApi.TrackingHistoryItem & Record<string, any>;
   onActionComplete?: () => void;
 };
 
@@ -62,7 +71,9 @@ function ConfirmDialog({
         <DialogContentText>{message ?? t("deleteConfirmMsg")}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel} disabled={loading}>{t("cancelBtn")}</Button>
+        <Button onClick={onCancel} disabled={loading}>
+          {t("cancelBtn")}
+        </Button>
         <Button onClick={onConfirm} variant="contained" disabled={loading}>
           {loading ? <CircularProgress size={16} /> : t("confirmBtn")}
         </Button>
@@ -82,8 +93,12 @@ export default function TrackingHistoryDetailDrawer({
 
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [data, setData] = useState<trackingApi.TrackingHistoryItem | null>(item ?? null);
-  const [snackbar, setSnackbar] = useState<{ open: boolean; severity?: "success" | "error" | "info"; message: string }>({ open: false, severity: "info", message: "" });
+  const [data, setData] = useState<trackingApi.TrackingHistoryItem & Record<string, any> | null>(item ?? null);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; severity?: "success" | "error" | "info"; message: string }>({
+    open: false,
+    severity: "info",
+    message: "",
+  });
 
   const [extendDate, setExtendDate] = useState<Date | null>(null);
 
@@ -118,15 +133,36 @@ export default function TrackingHistoryDetailDrawer({
       }
     })();
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [open, trackingId, item]);
 
-  useEffect(() => { if (item) setData(item); }, [item]);
+  useEffect(() => {
+    if (item) setData(item);
+  }, [item]);
 
   const has = (v: any) => v !== null && v !== undefined && v !== "";
 
+  const isChild = useMemo(() => Boolean((data as any)?._isChild), [data]);
+
+  const withTooltip = (original?: string | null, translated?: string | null) => {
+    const orig = original ?? "";
+    const trans = translated ?? orig ?? "-";
+    if (!orig) return <span>{trans}</span>;
+    return (
+      <Tooltip title={orig}>
+        <span style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{trans}</span>
+      </Tooltip>
+    );
+  };
+
   const headerTitle = useMemo(() => {
     if (!data) return t("trackingFor", { id: trackingId ?? "" });
+    const translatedAction = translateActionType(t, data.actionType ?? "");
+    if (translatedAction && translatedAction !== (data.actionType ?? "")) {
+      return `${translatedAction} (${data.trackingHistoryId})`;
+    }
     return data.actionType ? `${data.actionType} (${data.trackingHistoryId})` : t("trackingFor", { id: data.trackingHistoryId });
   }, [data, trackingId, t]);
 
@@ -155,7 +191,16 @@ export default function TrackingHistoryDetailDrawer({
       const resp = await orderStatusApi.getOrderStatus(orderCode);
       const info = resp?.data;
       if (info) {
-        setData((d) => d ? { ...d, newStatus: info.status ?? d.newStatus, paymentStatus: info.paymentStatus ?? (d as any).paymentStatus, returnDate: info.returnDate ?? (d as any).returnDate } : d);
+        setData((d) =>
+          d
+            ? {
+                ...d,
+                newStatus: info.status ?? d.newStatus,
+                paymentStatus: info.paymentStatus ?? (d as any).paymentStatus,
+                returnDate: info.returnDate ?? (d as any).returnDate,
+              }
+            : d
+        );
       }
     } catch (err) {
       console.warn("refreshOrderStatus failed", err);
@@ -169,10 +214,16 @@ export default function TrackingHistoryDetailDrawer({
     setConfirmOpen(true);
   };
 
-  const handleConfirmCancel = () => { setConfirmOpen(false); setConfirmAction(null); };
+  const handleConfirmCancel = () => {
+    setConfirmOpen(false);
+    setConfirmAction(null);
+  };
 
   const handleConfirmOk = async () => {
-    if (!confirmAction) { setConfirmOpen(false); return; }
+    if (!confirmAction) {
+      setConfirmOpen(false);
+      return;
+    }
     setActionLoading(true);
     try {
       await confirmAction();
@@ -189,7 +240,10 @@ export default function TrackingHistoryDetailDrawer({
   };
 
   const handleUpdateStatus = (newStatus: string) => {
-    if (!data?.orderCode) { openSnackbar(t("orderCodeMissing"), "error"); return; }
+    if (!data?.orderCode) {
+      openSnackbar(t("orderCodeMissing"), "error");
+      return;
+    }
     const orderCode = data.orderCode!;
     openConfirm(t("updateStatusConfirmTitle"), t("updateStatusConfirmMsg", { code: orderCode }), async () => {
       const prev = data;
@@ -207,10 +261,19 @@ export default function TrackingHistoryDetailDrawer({
   };
 
   const handleExtendOrder = () => {
-    if (!data?.orderCode) { openSnackbar(t("orderCodeMissing"), "error"); return; }
-    if (!extendDate) { openSnackbar(t("selectExtendDate"), "error"); return; }
+    if (!data?.orderCode) {
+      openSnackbar(t("orderCodeMissing"), "error");
+      return;
+    }
+    if (!extendDate) {
+      openSnackbar(t("selectExtendDate"), "error");
+      return;
+    }
     const isoDate = toDateISO(extendDate);
-    if (!isoDate) { openSnackbar(t("invalidDate"), "error"); return; }
+    if (!isoDate) {
+      openSnackbar(t("invalidDate"), "error");
+      return;
+    }
     const orderCode = data.orderCode!;
     openConfirm(t("extendConfirmTitle"), t("extendConfirmMsg", { code: orderCode, date: isoDate }), async () => {
       const prev = data;
@@ -228,7 +291,10 @@ export default function TrackingHistoryDetailDrawer({
   };
 
   const handleMoveToExpiredStorage = () => {
-    if (!data?.orderCode) { openSnackbar(t("orderCodeMissing"), "error"); return; }
+    if (!data?.orderCode) {
+      openSnackbar(t("orderCodeMissing"), "error");
+      return;
+    }
     const orderCode = data.orderCode!;
     openConfirm(t("moveExpiredConfirmTitle"), t("moveExpiredConfirmMsg", { code: orderCode }), async () => {
       const prev = data;
@@ -247,7 +313,7 @@ export default function TrackingHistoryDetailDrawer({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: "100%", sm: 640, md: 760 } } }}>
+      <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: "100%", sm: 640, md: 700 } } }}>
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 2 }}>
             <Box display="flex" alignItems="center" gap={1}>
@@ -256,15 +322,21 @@ export default function TrackingHistoryDetailDrawer({
               </IconButton>
               <Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography fontWeight={700} sx={{ fontSize: 18 }}>{headerTitle}</Typography>
+                  <Typography fontWeight={700} sx={{ fontSize: 18 }}>
+                    {headerTitle}
+                  </Typography>
                   {loading && <CircularProgress size={16} />}
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13 }}>{t("subtitle")}</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13 }}>
+                  {t("subtitle")}
+                </Typography>
               </Box>
             </Box>
 
             <Box>
-              <IconButton onClick={onClose} size="small"><CloseRoundedIcon /></IconButton>
+              <IconButton onClick={onClose} size="small">
+                <CloseRoundedIcon />
+              </IconButton>
             </Box>
           </Box>
 
@@ -272,15 +344,22 @@ export default function TrackingHistoryDetailDrawer({
 
           <Box sx={{ overflow: "auto", p: { xs: 2, sm: 3 }, flex: "1 1 auto" }}>
             <Box sx={{ mb: 2, display: "flex", gap: 2, alignItems: "center" }}>
-              <Avatar sx={{ bgcolor: "#eef2ff", color: "primary.main" }}><VisibilityRoundedIcon /></Avatar>
+              <Avatar sx={{ bgcolor: "#eef2ff", color: "primary.main" }}>
+                <VisibilityRoundedIcon />
+              </Avatar>
               <Box>
-                <Typography fontWeight={700}>{data?.actionType ?? "-"}</Typography>
-                <Typography variant="caption" color="text.secondary">{t("created")}: {data?.createAt ?? "-"}</Typography>
+                <Typography fontWeight={700}>
+                  {/* show translated actionType (fallback original) */}
+                  {withTooltip(data?.actionType ?? "", translateActionType(t, data?.actionType ?? ""))}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {t("created")}: {data?.createAt ?? "-"}
+                </Typography>
               </Box>
               <Box sx={{ ml: "auto", display: "flex", gap: 1, alignItems: "center" }}>
-                {has(data?.currentAssign) && <Chip label={`From: ${data?.currentAssign}`} size="small" />}
-                {has(data?.nextAssign) && <Chip label={`To: ${data?.nextAssign}`} size="small" />}
-                {has(statusRaw) && <Chip label={`${t("newStatus")}: ${statusRaw}`} size="small" />}
+                {has(data?.currentAssign) && <Chip label={`${t("currentAssign") ?? "From"}: ${data?.currentAssign}`} size="small" />}
+                {has(data?.nextAssign) && <Chip label={`${t("nextAssign") ?? "To"}: ${data?.nextAssign}`} size="small" />}
+                
               </Box>
             </Box>
 
@@ -311,14 +390,35 @@ export default function TrackingHistoryDetailDrawer({
                   {has(data?.oldStatus) && (
                     <Box sx={{ display: "flex", gap: 2 }}>
                       <Box sx={{ width: 160, color: "text.secondary" }}>{t("oldStatus")}</Box>
-                      <Box sx={{ flex: 1 }}>{data?.oldStatus}</Box>
+                      <Box sx={{ flex: 1 }}>{withTooltip(data?.oldStatus ?? "", translateStatus(t, data?.oldStatus ?? ""))}</Box>
                     </Box>
                   )}
 
                   {has(data?.newStatus) && (
                     <Box sx={{ display: "flex", gap: 2 }}>
                       <Box sx={{ width: 160, color: "text.secondary" }}>{t("newStatus")}</Box>
-                      <Box sx={{ flex: 1 }}>{data?.newStatus}</Box>
+                      <Box sx={{ flex: 1 }}>{withTooltip(data?.newStatus ?? "", translateStatus(t, data?.newStatus ?? ""))}</Box>
+                    </Box>
+                  )}
+
+                  {has(data?.paymentStatus) && (
+                    <Box sx={{ display: "flex", gap: 2 }}>
+                      <Box sx={{ width: 160, color: "text.secondary" }}>{t("paymentStatus")}</Box>
+                      <Box sx={{ flex: 1 }}>{withTooltip(data?.paymentStatus ?? "", translatePaymentStatus(t, data?.paymentStatus ?? ""))}</Box>
+                    </Box>
+                  )}
+
+                  {has(data?.serviceName) && (
+                    <Box sx={{ display: "flex", gap: 2 }}>
+                      <Box sx={{ width: 160, color: "text.secondary" }}>{t("service")}</Box>
+                      <Box sx={{ flex: 1 }}>{withTooltip(data?.serviceName ?? "", translateServiceName(t, data?.serviceName ?? ""))}</Box>
+                    </Box>
+                  )}
+
+                  {has(data?.productType) && (
+                    <Box sx={{ display: "flex", gap: 2 }}>
+                      <Box sx={{ width: 160, color: "text.secondary" }}>{t("productType")}</Box>
+                      <Box sx={{ flex: 1 }}>{withTooltip(data?.productType ?? "", translateProductType(t, data?.productType ?? ""))}</Box>
                     </Box>
                   )}
 
@@ -343,7 +443,22 @@ export default function TrackingHistoryDetailDrawer({
 
                   {data &&
                     Object.keys(data)
-                      .filter((k) => !["trackingHistoryId","orderCode","orderDetailCode","oldStatus","newStatus","actionType","createAt","currentAssign","nextAssign","image"].includes(k))
+                      .filter(
+                        (k) =>
+                          ![
+                            "trackingHistoryId",
+                            "orderCode",
+                            "orderDetailCode",
+                            "oldStatus",
+                            "newStatus",
+                            "actionType",
+                            "createAt",
+                            "currentAssign",
+                            "nextAssign",
+                            "image",
+                            "_isChild", // <-- exclude internal flag from listing
+                          ].includes(k)
+                      )
                       .map((k) => {
                         const v = (data as any)[k];
                         if (!has(v)) return null;
@@ -359,17 +474,13 @@ export default function TrackingHistoryDetailDrawer({
             </Card>
 
             <Box sx={{ mb: 2 }}>
-              {!isRetrieved && (
+              {/* If this item is a child entry (inside the dropdown), hide action buttons */}
+              {!isRetrieved && !isChild && (
                 <Stack direction="row" spacing={1} alignItems="center">
                   {isOverdue ? (
                     <>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <DatePicker
-                          label={t("newReturnDateLabel")}
-                          value={extendDate}
-                          onChange={(d: Date | null) => setExtendDate(d)}
-                          slotProps={{ textField: { size: "small" } as any }}
-                        />
+                        <DatePicker label={t("newReturnDateLabel")} value={extendDate} onChange={(d: Date | null) => setExtendDate(d)} slotProps={{ textField: { size: "small" } as any }} />
                       </Box>
 
                       <Button variant="contained" size="small" onClick={handleExtendOrder} disabled={actionLoading} startIcon={actionLoading ? <CircularProgress size={16} /> : null}>
@@ -381,25 +492,23 @@ export default function TrackingHistoryDetailDrawer({
                       </Button>
                     </>
                   ) : (
-                    <>
-                      <Button variant="contained" size="small" onClick={() => handleUpdateStatus("SomeNewStatus")} disabled={actionLoading}>
-                        {t("updateStatus")}
-                      </Button>
-                    </>
+                    <Button variant="contained" size="small" onClick={() => handleUpdateStatus("SomeNewStatus")} disabled={actionLoading}>
+                      {t("updateStatus")}
+                    </Button>
                   )}
                 </Stack>
               )}
 
-              {isRetrieved && (
-                <Typography variant="body2" color="text.secondary">{t("retrievedNotice")}</Typography>
-              )}
+              {isRetrieved && <Typography variant="body2" color="text.secondary">{t("retrievedNotice")}</Typography>}
             </Box>
           </Box>
 
           <Box sx={{ p: 2, borderTop: "1px solid #f0f0f0", display: "flex", gap: 1, justifyContent: "space-between", alignItems: "center" }}>
             <Box />
             <Box sx={{ display: "flex", gap: 1 }}>
-              <Button variant="outlined" onClick={onClose}>{t("close")}</Button>
+              <Button variant="outlined" onClick={onClose}>
+                {t("close")}
+              </Button>
             </Box>
           </Box>
         </Box>
@@ -407,7 +516,9 @@ export default function TrackingHistoryDetailDrawer({
         <ConfirmDialog open={confirmOpen} title={confirmTitle} message={confirmMessage} loading={actionLoading} onCancel={handleConfirmCancel} onConfirm={handleConfirmOk} />
 
         <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={handleCloseSnackbar}>
-          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>{snackbar.message}</Alert>
+          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>
+            {snackbar.message}
+          </Alert>
         </Snackbar>
       </Drawer>
     </LocalizationProvider>

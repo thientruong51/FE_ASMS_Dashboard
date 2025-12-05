@@ -41,5 +41,12 @@
     "deleted": "Đã xóa",
     "deleteFailed": "Xóa thất bại",
     "fetchFailed": "Lấy danh sách thất bại"
+  },
+  "roleNames": {
+    "manager": "Quản lý",
+    "warehouse_staff": "Nhân viên kho",
+    "delivery_staff": "Nhân viên giao hàng",
+    "admin": "Quản trị viên",
+    "noData": "-"
   }
 }

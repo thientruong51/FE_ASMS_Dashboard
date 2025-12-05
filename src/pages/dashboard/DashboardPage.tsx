@@ -3,8 +3,7 @@ import RecentOrders from "./widgets/RecentOrders";
 import LoadingTrucks from "./widgets/LoadingTrucks";
 import OrderRequests from "./widgets/OrderRequests";
 import LatestShipping from "./widgets/LatestShipping";
-import UnloadingCargo from "./widgets/UnloadingCargo";
-import AvailableCargo from "./widgets/AvailableCargo";
+import RevenueCard from "./widgets/RevenueCard"; 
 
 export default function DashboardPage() {
   return (
@@ -19,6 +18,7 @@ export default function DashboardPage() {
         gridTemplateAreas: {
           xs: `
             "orders"
+            "revenue"
             "trucks"
             "requests"
             "shipping"
@@ -26,7 +26,7 @@ export default function DashboardPage() {
             "available"
           `,
           lg: `
-            "orders trucks requests"
+            "orders revenue trucks"
             "shipping shipping requests"
             "unloading available requests"
           `,
@@ -37,24 +37,20 @@ export default function DashboardPage() {
         <RecentOrders />
       </Box>
 
-      <Box sx={{ gridArea: "trucks" }}>
-        <LoadingTrucks />
+      <Box sx={{ gridArea: "revenue" }}>
+        <RevenueCard />
       </Box>
 
-      <Box sx={{ gridArea: "requests" }}>
-        <OrderRequests />
+      <Box sx={{ gridArea: "trucks" }}>
+        <LoadingTrucks />
       </Box>
 
       <Box sx={{ gridArea: "shipping" }}>
         <LatestShipping />
       </Box>
 
-      <Box sx={{ gridArea: "unloading" }}>
-        <UnloadingCargo />
-      </Box>
-
-      <Box sx={{ gridArea: "available" }}>
-        <AvailableCargo />
+      <Box sx={{ gridArea: "requests" }}>
+        <OrderRequests />
       </Box>
     </Box>
   );

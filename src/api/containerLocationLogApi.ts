@@ -4,7 +4,7 @@ export type ContainerLocationLogItem = {
   containerLocationLogId: number;
   containerCode: string;
   orderCode: string | null;
-  assign: string | null;
+  performedBy: string | null;
   updatedDate: string;
   oldFloor: string | null;
   currentFloor: string | null;

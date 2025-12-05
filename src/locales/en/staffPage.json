@@ -36,5 +36,21 @@
   "saveFailed": "Save failed",
   "deleteFailed": "Delete failed",
   "tableActions": "Actions",
-  "vsLastMonth": "vs last month"
+  "vsLastMonth": "vs last month",
+  "buildingNames": {
+"self_storage": "Self-Storage",
+"self_storage_ac": "Self-Storage (Air Conditioned)",
+"warehouse": "Service Warehouse",
+"warehouse_ac": "Service Warehouse (Air Conditioned)",
+"warehouse_expired": "Expired Warehouse",
+"warehouse_oversize": "Oversize Warehouse",
+"noData": "-"
+},
+"roleNames": {
+"manager": "Manager",
+"warehouse_staff": "Warehouse Staff",
+"delivery_staff": "Delivery Staff",
+"admin": "Admin",
+"noData": "-"
+}
 }

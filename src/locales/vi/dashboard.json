@@ -1,0 +1,134 @@
+{
+  "latestTrackingHistories": "Lịch sử theo dõi mới nhất",
+  "order": "Đơn hàng",
+  "details": "Chi tiết",
+  "status": "Trạng thái",
+  "from": "Nhân viên hiện tại",
+  "to": "Nhân viên tiếp theo",
+  "created": "Ngày tạo",
+  "view": "Xem",
+  "noData": "-",
+  "chip_from": "Từ:",
+  "arrow": "→",
+ "statusNames": {
+  "processing": "Đang xử lý",
+  "retrieved": "Đã nhận lại",
+  "pending": "Đang chờ",
+  "wait_pick_up": "Chờ lấy hàng",
+  "verify": "Xác minh",
+  "checkout": "Hoàn tất",
+  "pick_up": "Lấy hàng",
+  "renting": "Đang cho thuê",
+  "stored": "Đã lưu kho",
+  "overdue": "Quá hạn",
+  "store_in_expired_storage": "Lưu kho hết hạn",
+  "order_created": "Đơn vừa tạo",
+  "processing_order": "Đang xử lý đơn hàng",
+  "order_retrieved": "Đơn đã nhận lại",
+  "noData": "-"
+},
+  "orderStatus": {
+    "title": "Phân bố trạng thái đơn hàng",
+    "viewAll": "Xem tất cả",
+    "totalOrders": "Tổng đơn"
+  },
+   "orderRequest": {
+    "title": "Chi tiết yêu cầu đơn hàng",
+    "orderDetails": "Chi tiết đơn hàng",
+    "customerDetails": "Chi tiết khách hàng",
+    "viewCustomer": "Xem khách hàng",
+    "viewOrder": "Xem đơn hàng",
+    "customerInfo": "Thông tin khách hàng",
+    "accept": "Chấp nhận",
+    "reject": "Từ chối",
+    "orderId": "Mã đơn",
+    "orderPlacedOn": "Ngày đặt",
+    "status": "Trạng thái",
+    "paymentStatus": "Trạng thái thanh toán",
+    "pickupAddress": "Địa chỉ lấy hàng",
+    "deliveryAddress": "Địa chỉ giao hàng",
+    "total": "Tổng",
+    "items": "Sản phẩm",
+    "noItems": "Không có chi tiết sản phẩm",
+    "item": "Sản phẩm",
+    "quantity": "Số lượng",
+    "price": "Giá",
+    "subTotal": "Tạm tính",
+    "services": "Dịch vụ",
+    "customerName": "Tên khách hàng",
+    "company": "Công ty",
+    "email": "Email",
+    "phone": "Số điện thoại",
+    "address": "Địa chỉ"
+  },
+  "paymentStatus": {
+  "paid": "Đã thanh toán",
+  "unpaid": "Chưa thanh toán",
+  "pending": "Đang chờ",
+  "refunded": "Hoàn tiền"
+},
+"serviceNames": {
+    "protecting": "Bảo vệ",
+    "product_packaging": "Đóng gói sản phẩm",
+    "delivery": "Giao hàng"
+  },
+   "productTypeNames": {
+    "fragile": "Hàng dễ vỡ",
+    "electronics": "Hàng điện tử",
+    "cold_storage": "Cần kho lạnh",
+    "heavy": "Hàng nặng"
+  },
+  "orderRequests": {
+    "title": "Yêu cầu đơn hàng",
+    "viewAll": "Xem tất cả",
+    "deposit": "Ngày đặt cọc",
+    "return": "Ngày trả",
+    "pickupLabel": "Nơi lấy:",
+    "destinationLabel": "Đích đến:",
+    "viewDetails": "Xem chi tiết"
+  },
+  "recentOrders": {
+    "title": "Đơn hàng gần đây",
+    "period": {
+      "month": "Tháng",
+      "week": "Tuần",
+    "day":"Ngày"
+
+    },
+    "groups": {
+      "active": "Đơn đang thuê",
+      "pending": "Yêu cầu đang chờ",
+      "completed": "Đã hoàn thành"
+    },
+    "comparisonText": "so với kỳ trước"
+  },
+  "revenue": {
+    "title": "Doanh thu",
+    "period": {
+      "day": "Ngày",
+      "week": "Tuần",
+      "month": "Tháng",
+      "year": "Năm"
+    },
+    "thisPeriod": "Kỳ này",
+    "changeVsPrev": "Thay đổi so với kỳ trước",
+    "noChartData": "Không có dữ liệu biểu đồ",
+    "noData": "Không có dữ liệu",
+    "noPreviousData": "Không có dữ liệu kỳ trước",
+    "comparisonText": "so với kỳ trước"
+  },
+  "actionTypeNames": {
+  "order_retrieved": "Đơn đã nhận lại",
+  "order_created": "Đơn vừa tạo",
+  "processing_order": "Đang xử lý đơn hàng",
+  "stored_in_warehouse": "Đã lưu kho",
+  "picked_up": "Đã lấy hàng",
+  "checkout_completed": "Hoàn tất đơn hàng",
+  "verification": "Xác minh",
+  "ready_for_pickup": "Sẵn sàng để lấy",
+  "customer_retrieved_from_expired-storage":"Đã lấy lại từ kho lưu trữ đã hết hạn",
+  "renting_active":"Đang cho thuê",
+  "noData": "-"
+}
+
+}
