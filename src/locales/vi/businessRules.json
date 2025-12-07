@@ -1,0 +1,47 @@
+{
+  "title": "Quy tắc nghiệp vụ",
+  "subtitle": "Xem, quản lý và chỉnh sửa các quy tắc nghiệp vụ",
+  "id": "ID",
+  "ruleCode": "Mã quy tắc",
+  "ruleName": "Tên quy tắc",
+  "category": "Danh mục",
+  "ruleDescription": "Mô tả",
+  "ruleType": "Loại",
+  "priority": "Độ ưu tiên",
+  "isActive": "Đang hoạt động",
+  "effectiveDate": "Ngày hiệu lực",
+  "expiryDate": "Ngày hết hiệu lực",
+  "createdDate": "Ngày tạo",
+  "updatedDate": "Ngày cập nhật",
+  "createdBy": "Người tạo",
+  "updatedBy": "Người cập nhật",
+  "notes": "Ghi chú",
+
+  "save": "Lưu",
+  "delete": "Xóa",
+  "newRule": "Quy tắc mới",
+  "export": "Xuất",
+  "exportCsv": "Xuất CSV",
+  "refresh": "Làm mới",
+  "viewDetails": "Xem chi tiết",
+  "copyRuleCode": "Sao chép mã quy tắc",
+
+  "loadFailed": "Tải quy tắc thất bại",
+  "saveFailed": "Lưu quy tắc thất bại",
+  "createSuccess": "Tạo quy tắc thành công",
+  "updateSuccess": "Cập nhật quy tắc thành công",
+  "deleteSuccess": "Xóa quy tắc thành công",
+  "deleteFailed": "Xóa quy tắc thất bại",
+
+  "deleteConfirmTitle": "Xóa quy tắc nghiệp vụ",
+  "deleteConfirmMessage": "Bạn có chắc muốn xóa quy tắc này không?",
+
+  "ruleCodeRequired": "Vui lòng nhập mã quy tắc",
+  "ruleNameRequired": "Vui lòng nhập tên quy tắc",
+
+  "toggleDensity": "Thay đổi mật độ",
+  "close": "Đóng",
+  "active": "Đang hoạt động",
+  "inactive": "Không hoạt động",
+  "subtitleDrawer": "Xem hoặc chỉnh sửa quy tắc nghiệp vụ"
+}

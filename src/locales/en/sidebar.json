@@ -2,6 +2,7 @@
   "dashboard": "Dashboard",
   "orders": "Orders",
   "trackingHistorys": "Tracking History",
+  "contacts": "Contacts",
   "storages": "Storages",
   "customers": "Customers",
   "paymentHistorys": "Payment History",
@@ -13,5 +14,7 @@
   "shelfsTypes": "Shelves Types",
   "containerTypes": "Container Types",
   "productTypes": "Product Types",
-  "settings": "Settings"
+  "settings": "Settings",
+  "prices":"Prices",
+  "businessRules":"Business Rules"
 }

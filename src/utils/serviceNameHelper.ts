@@ -5,6 +5,7 @@ const normalize = (s?: string | null) =>
 
 const serviceKeyMap: Record<string, string> = {
   "protecting": "protecting",
+  "Protecting": "protecting",
   "product packaging": "product_packaging",
   "product_packaging": "product_packaging",
   "delivery": "delivery",

@@ -54,7 +54,7 @@
   "pending": "Đang chờ",
   "wait_pick_up": "Chờ lấy hàng",
   "verify": "Xác minh",
-  "checkout": "Hoàn tất",
+  "checkout": "Hoàn tất thanh toán",
   "pick_up": "Lấy hàng",
   "renting": "Đang cho thuê",
   "stored": "Đã lưu kho",
@@ -63,7 +63,9 @@
   "order_created": "Đơn vừa tạo",
   "processing_order": "Đang xử lý đơn hàng",
   "order_retrieved": "Đơn đã nhận lại",
-  "noData": "-"
+  "noData": "-",
+  "delivered":"Đã vận chuyển xong",
+  "completed":"Hoàn thành"
 },
 "actionTypeNames": {
   "order_retrieved": "Đơn đã nhận lại",
@@ -71,12 +73,14 @@
   "processing_order": "Đang xử lý đơn hàng",
   "stored_in_warehouse": "Đã lưu kho",
   "picked_up": "Đã lấy hàng",
-  "checkout_completed": "Hoàn tất đơn hàng",
+  "checkout_completed": "Hoàn tất thanh toán đơn hàng",
   "verification": "Xác minh",
   "ready_for_pickup": "Sẵn sàng để lấy",
   "customer_retrieved_from_expired-storage":"Đã lấy lại từ kho lưu trữ đã hết hạn",
   "renting_active":"Đang cho thuê",
-  "noData": "-"
+  "noData": "-",
+  "order_overdue":"Đơn hàng quá hạn",
+  "delivered_to_warehouse/customer":"Đã giao đến Kho/Khách hàng"
 }
 
 

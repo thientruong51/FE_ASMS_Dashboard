@@ -1,4 +1,3 @@
-// src/api/orderApi.ts
 import axiosClient from "./axiosClient";
 
 export interface OrderRespItem {
@@ -10,9 +9,16 @@ export interface OrderRespItem {
   status?: string | null;
   paymentStatus?: string | null;
   totalPrice?: number | null;
-  unpaidAmount?: number | null;
+  unpaidAmount?: number | null;        
   style?: "full" | "self" | string | null;
-  // NOTE: summary may contain only these fields; full order may have many more
+
+  customerName?: string | null;
+  phoneContact?: string | null;
+  email?: string | null;
+  note?: string | null;
+  address?: string | null;
+  imageUrls?: string[] | null;         
+
 }
 
 export interface OrderListResponse {
@@ -43,6 +49,11 @@ export interface OrderDetailItem {
   productTypeIds?: number[];
   serviceIds?: number[];
   isPlaced?: boolean | null;
+
+  length?: number | null;
+  width?: number | null;
+  height?: number | null;
+  isOversize?: boolean | null;
 }
 
 export interface OrderDetailListResponse {
@@ -51,26 +62,65 @@ export interface OrderDetailListResponse {
   data: OrderDetailItem[];
 }
 
+
+
 export async function getOrders(params?: Record<string, any>): Promise<OrderListResponse> {
   const resp = await axiosClient.get<OrderListResponse>("/api/Order", { params });
   return resp.data;
 }
 
-/**
- * Get full order by orderCode.
- * Backend endpoint assumed: GET /api/Order/{orderCode}
- * If your backend uses a different URL, change it here.
- */
-export async function getOrder(orderCode: string, params?: Record<string, any>): Promise<any> {
+
+export async function getOrder(orderCode: string, params?: Record<string, any>): Promise<OrderRespItem> {
   const url = `/api/Order/${encodeURIComponent(orderCode)}`;
-  const resp = await axiosClient.get<any>(url, { params });
+  const resp = await axiosClient.get<OrderRespItem>(url, { params });
   return resp.data;
+}
+
+function toNumberOrNull(v: any): number | null {
+  if (v === null || typeof v === "undefined") return null;
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  if (typeof v === "string") {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
 }
 
 export async function getOrderDetails(orderCode: string, params?: Record<string, any>): Promise<OrderDetailListResponse> {
   const url = `/api/Order/${encodeURIComponent(orderCode)}/details`;
   const resp = await axiosClient.get<OrderDetailListResponse>(url, { params });
-  return resp.data;
+
+  const raw = resp.data?.data ?? [];
+  const normalized = (raw as any[]).map((it) => {
+    const length = toNumberOrNull(it.length ?? it?.length);
+    const width = toNumberOrNull(it.width ?? it?.width);
+    const height = toNumberOrNull(it.height ?? it?.height);
+
+    let isOversize: boolean | null = null;
+    if (typeof it.isOversize === "boolean") isOversize = it.isOversize;
+    else if (typeof it.isOversize === "number") isOversize = it.isOversize === 1;
+    else if (typeof it.isOversize === "string") {
+      const s = it.isOversize.toLowerCase();
+      isOversize = s === "true" || s === "1" ? true : s === "false" || s === "0" ? false : null;
+    } else {
+      isOversize = null;
+    }
+
+    return {
+      ...it,
+      length,
+      width,
+      height,
+      isOversize,
+      price: toNumberOrNull(it.price),
+      subTotal: toNumberOrNull(it.subTotal ?? it.subtotal),
+    } as OrderDetailItem;
+  });
+
+  return {
+    ...resp.data,
+    data: normalized,
+  };
 }
 
 export async function getOrdersWithDetails(

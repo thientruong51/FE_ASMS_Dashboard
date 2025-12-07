@@ -1,0 +1,93 @@
+{
+  "page": {
+    "title": "Pricing",
+    "subtitle": "Manage service pricing & shipping rates",
+    "searchPlaceholder": "Search...",
+    "clickToView": "View details"
+  },
+
+  "tabs": {
+    "all": "All",
+    "shipping": "Shipping"
+  },
+
+  "labels": {
+    "pricing": "Pricing",
+    "shippingRate": "Shipping Rate"
+  },
+
+  "table": {
+    "id": "ID",
+    "serviceType": "Service Type",
+    "itemCode": "Item Code",
+    "ac": "Air Conditioning",
+    "month": "Monthly",
+    "week": "Weekly",
+    "trip": "Per Trip",
+    "info": "Information",
+    "actions": "Actions",
+    "distance": "Distance",
+    "containerQty": "Container Qty",
+    "basePrice": "Base Price",
+    "priceUnit": "Unit",
+    "specialSurcharge": "Special Item Surcharge",
+    "monthlyRentalDiscount": "Monthly Rental Discount"
+  },
+
+  "actions": {
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "refresh": "Refresh",
+    "export": "Export",
+    "exportCsv": "Export CSV"
+  },
+
+  "confirm": "Confirm",
+  "deleteConfirmMsg": "Are you sure you want to delete this item?",
+
+  "confirmDeleteTitle": "Confirm Delete",
+  "confirmDeletePricingMsg": "Are you sure you want to delete pricing {{id}}?",
+  "confirmDeleteShippingMsg": "Are you sure you want to delete shipping rate {{id}}?",
+
+  "yes": "Yes",
+  "no": "No",
+
+  "serviceType": {
+    "RoomRental": "Room Rental",
+    "ShelfRental": "Shelf Rental",
+    "BoxSelfManaged": "Self-Managed Box",
+    "BoxShared": "Shared Box",
+    "Shipping": "Shipping"
+  },
+
+  "itemCode": {
+    "Small": "Small",
+    "Medium": "Medium",
+    "Large": "Large",
+    "A": "Type A",
+    "B": "Type B",
+    "C": "Type C",
+    "D": "Type D"
+  },
+
+  "acOptions": {
+    "true": "Air-conditioned",
+    "false": "Non A/C"
+  },
+
+  "priceUnit": {
+    "Fixed": "Fixed",
+    "PerKm": "Per KM"
+  },
+
+  "shipping": {
+    "distanceRange": "{{min}}–{{max}} km",
+    "distanceAbove": "> {{min}} km",
+    "containerRange": "{{min}}–{{max}} containers",
+    "containerAbove": "> {{min}} containers"
+  }
+}

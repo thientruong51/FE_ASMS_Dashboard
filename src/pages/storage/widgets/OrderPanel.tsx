@@ -139,7 +139,7 @@ export default function OrderPanel() {
                 };
               });
 
-              return mapped.filter((it: any) => it.isPlaced === false);
+              return mapped.filter((it: any) => !it.storageCode && it.isPlaced !== true);
             } catch (err) {
               console.error("Error fetching details for", o.orderCode, err);
               return [];

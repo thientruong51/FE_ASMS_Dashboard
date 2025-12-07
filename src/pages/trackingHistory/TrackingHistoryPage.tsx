@@ -61,23 +61,35 @@ export default function TrackingHistoryPage() {
 
   const claims = useMemo(() => getAuthClaimsFromStorage(), []);
   const userCode = String(claims?.EmployeeCode ?? "");
-  const roleId = Number(claims?.EmployeeRoleId ?? 0);
+  const roleId = claims && claims.EmployeeRoleId != null ? Number(claims.EmployeeRoleId) : undefined;
+
+  const isFullAccess = roleId === 1 || roleId === 4;
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
+      if (!isFullAccess && !userCode) {
+        console.warn("No EmployeeCode in token - refusing to load tracking histories for safety (no full access).");
+        setItems([]);
+        setLoading(false);
+        return;
+      }
+
       const params: Record<string, any> = { page: 1, pageSize: 1000 };
+
       if (filterOrderCode) params.orderCode = filterOrderCode;
       if (search) params.q = search;
-      if (roleId === 2 || roleId === 3) {
-        params.currentAssign = userCode || undefined;
+
+      if (!isFullAccess) {
+        params.currentAssign = userCode;
+      } else {
       }
 
       const resp = await trackingApi.getTrackingHistories(params);
       let data = resp.data ?? [];
 
-      if ((roleId === 2 || roleId === 3) && userCode) {
-        data = data.filter((it) => String(it.currentAssign ?? "") === String(userCode));
+      if (!isFullAccess && userCode) {
+        data = data.filter((it: any) => String(it.currentAssign ?? "") === String(userCode));
       }
 
       setItems(data);
@@ -87,7 +99,7 @@ export default function TrackingHistoryPage() {
     } finally {
       setLoading(false);
     }
-  }, [filterOrderCode, search, roleId, userCode]);
+  }, [filterOrderCode, search, isFullAccess, userCode]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -230,9 +242,7 @@ export default function TrackingHistoryPage() {
         const raw = String(p.value ?? "");
         const translated = translateStatus(t, raw);
         return (
-          <Tooltip title={raw || "-"}>
-            <span style={{ marginLeft: p.row._isChild ? 8 : 0 }}>{translated || "-"}</span>
-          </Tooltip>
+          <Tooltip title={raw || "-"}><span style={{ marginLeft: p.row._isChild ? 8 : 0 }}>{translated || "-"}</span></Tooltip>
         );
       }
     },
@@ -245,9 +255,7 @@ export default function TrackingHistoryPage() {
         const raw = String(p.value ?? "");
         const translated = translateStatus(t, raw);
         return (
-          <Tooltip title={raw || "-"}>
-            <span style={{ marginLeft: p.row._isChild ? 8 : 0 }}>{translated || "-"}</span>
-          </Tooltip>
+          <Tooltip title={raw || "-"}><span style={{ marginLeft: p.row._isChild ? 8 : 0 }}>{translated || "-"}</span></Tooltip>
         );
       }
     },

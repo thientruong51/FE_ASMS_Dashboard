@@ -91,7 +91,7 @@
   "pending": "Đang chờ",
   "wait_pick_up": "Chờ lấy hàng",
   "verify": "Xác minh",
-  "checkout": "Hoàn tất",
+  "checkout": "Hoàn tất thanh toán",
   "pick_up": "Lấy hàng",
   "renting": "Đang cho thuê",
   "stored": "Đã lưu kho",
@@ -100,7 +100,9 @@
   "order_created": "Đơn vừa tạo",
   "processing_order": "Đang xử lý đơn hàng",
   "order_retrieved": "Đơn đã nhận lại",
-  "noData": "-"
+  "noData": "-",
+  "delivered":"Đã vận chuyển xong",
+  "completed":"Hoàn thành"
 },
 "serviceNames": {
     "protecting": "Bảo vệ",

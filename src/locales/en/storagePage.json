@@ -143,7 +143,14 @@
     "yes": "Yes",
     "no": "No",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "close":"Close"
+
+  },
+   "serviceNames": {
+    "protecting": "Protecting",
+    "product_packaging": "Product packaging",
+    "delivery": "Delivery"
   },
   "storageList": {
     "title": "Storages",
@@ -233,7 +240,9 @@
 "active": "Active",
 "ready": "Ready",
 "reserved": "Reserved",
-"rented": "Rented"
+"rented": "Rented",
+"delivered":"Delivered",
+"completed":"Completed"
 },
 "paymentStatus": {
 "paid": "Paid",
@@ -255,6 +264,47 @@
     "notes": "Notes",
     "containerAboveCode": "Container Above Code",
     "status": "Status"
+  },
+      "fields": {
+    "orderDetailId": "Order Detail ID",
+    "storageCode": "Storage Code",
+    "containerCode": "Container Code",
+    "floorCode": "Floor Code",
+    "floorNumber": "Floor Number",
+    "price": "Price",
+    "quantity": "Quantity",
+    "subTotal": "Subtotal",
+    "image": "Image",
+    "containerType": "Container Type",
+    "containerQuantity": "Container Quantity",
+    "storageTypeId": "Storage Type ID",
+    "shelfTypeId": "Shelf Type ID",
+    "shelfQuantity": "Shelf Quantity",
+    "isPlaced": "Placed",
+    "length": "Length",
+    "width": "Width",
+    "height": "Height",
+    "productTypeNames": "Product Types",
+    "serviceNames": "Services",
+    "isOversize": "Oversize",
+    "_orderCode": "Order Code",
+    "_orderStatus": "Order Status",
+    "_orderPaymentStatus": "Payment Status",
+    "_orderTotalPrice": "Order Total Price",
+    "_orderDepositDate": "Deposit Date",
+    "_orderReturnDate": "Return Date"
+  },
+  "storageTypeNames": {
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large",
+    "small_ac": "Small (AC)",
+    "medium_ac": "Medium (AC)",
+    "large_ac": "Large (AC)",
+    "warehouse": "Warehouse",
+    "warehouse_ac": "Warehouse (AC)",
+    "warehouse_expired": "Expired Warehouse",
+    "warehouse_oversize": "Oversize Warehouse",
+    "noData": "-"
   }
- 
 }

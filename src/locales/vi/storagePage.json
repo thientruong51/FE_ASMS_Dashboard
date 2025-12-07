@@ -94,6 +94,11 @@
     "requestFailedWithMsg": "Yêu cầu thất bại: {{msg}}",
     "closeAria": "Đóng hộp thoại kệ"
   },
+  "serviceNames": {
+    "protecting": "Bảo vệ",
+    "product_packaging": "Đóng gói sản phẩm",
+    "delivery": "Giao hàng"
+  },
   "shelfFloor": {
     "ordersOnFloor": "Đơn trên Tầng {{floor}}",
     "shelfAndCount": "Kệ: {{shelf}} • Thùng: {{count}}",
@@ -118,7 +123,7 @@
     "serverReloadUnexpected": "Đã áp dụng — nhưng tải lại server trả về định dạng không mong đợi.",
     "reloadFailedKeepLocal": "Đã cập nhật nhưng không thể tải lại từ server. Giữ chế độ xem cục bộ.",
     "applyMergeFailed": "Áp dụng hoàn tất nhưng hợp nhất thất bại. Kiểm tra console.",
-    "applyFinished": "Hoàn tất áp dụng cập nhật.",
+    "applyFinished": "Hoàn tất thanh toán áp dụng cập nhật.",
     "containerOptional": "Thùng (tùy chọn)",
     "noneOption": "— không —",
     "editOrderTitle": "Sửa đơn",
@@ -143,7 +148,8 @@
     "yes": "Có",
     "no": "Không",
     "cancel": "Hủy",
-    "save": "Lưu"
+    "save": "Lưu",
+    "close":"Đóng"
   },
   "storageList": {
     "title": "Kho lưu trữ",
@@ -219,7 +225,7 @@
   "pending": "Đang chờ",
   "wait_pick_up": "Chờ lấy hàng",
   "verify": "Xác minh",
-  "checkout": "Hoàn tất",
+  "checkout": "Hoàn tất thanh toán",
   "pick_up": "Lấy hàng",
   "renting": "Đang cho thuê",
   "stored": "Đã lưu kho",
@@ -233,7 +239,9 @@
    "active": "Hoạt động",
   "ready": "Có sẵn",
   "reserved": "Đang giữ chỗ",
-  "rented": "Đã được thuê"
+  "rented": "Đã được thuê",
+  "delivered":"Đã vận chuyển xong",
+  "completed":"Hoàn thành"
 },
 
 "paymentStatus": {
@@ -267,5 +275,47 @@
     "status": "Trạng thái"
   },
  "yes": "Có",
-  "no": "Không"
+  "no": "Không",
+  "fields": {
+    "orderDetailId": "Mã chi tiết đơn",
+    "storageCode": "Mã kho",
+    "containerCode": "Mã container",
+    "floorCode": "Mã tầng",
+    "floorNumber": "Số tầng",
+    "price": "Giá",
+    "quantity": "Số lượng",
+    "subTotal": "Tạm tính",
+    "image": "Hình ảnh",
+    "containerType": "Loại container",
+    "containerQuantity": "Số lượng container",
+    "storageTypeId": "Loại kho",
+    "shelfTypeId": "Loại kệ",
+    "shelfQuantity": "Số lượng kệ",
+    "isPlaced": "Đã xếp vào kho",
+    "length": "Chiều dài",
+    "width": "Chiều rộng",
+    "height": "Chiều cao",
+    "productTypeNames": "Loại hàng hóa",
+    "serviceNames": "Dịch vụ",
+    "isOversize": "Quá khổ",
+    "_orderCode": "Mã đơn",
+    "_orderStatus": "Trạng thái đơn",
+    "_orderPaymentStatus": "Trạng thái thanh toán",
+    "_orderTotalPrice": "Tổng số tiền",
+    "_orderDepositDate": "Ngày cọc",
+    "_orderReturnDate": "Ngày trả"
+  },
+   "storageTypeNames": {
+    "small": "Nhỏ",
+    "medium": "Vừa",
+    "large": "Lớn",
+    "small_ac": "Nhỏ (Có điều hòa)",
+    "medium_ac": "Vừa (Có điều hòa)",
+    "large_ac": "Lớn (Có điều hòa)" ,
+    "warehouse": "Nhà kho dịch vụ",
+    "warehouse_ac": "Nhà kho dịch vụ (Có điều hòa)",
+    "warehouse_expired": "Kho hết hạn",
+    "warehouse_oversize": "Kho quá cỡ",
+    "noData": "-"
+  }
 }
