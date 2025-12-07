@@ -25,7 +25,9 @@
   "order_created": "Order Created",
   "processing_order": "Processing Order",
   "order_retrieved": "Order Retrieved",
-  "noData": "-"
+  "noData": "-",
+  "delivered":"Delivered",
+  "completed":"Completed"
 },
   "orderStatus": {
     "title": "Order Status Distribution",
@@ -127,7 +129,9 @@
   "ready_for_pickup": "Ready for Pickup",
   "customer_retrieved_from_expired-storage":"Customer Retrieved from Expired Storage",
   "renting_active":"Renting Active",
-  "noData": "-"
+  "noData": "-",
+  "order_overdue":"Order Overdue",
+  "delivered_to_warehouse/customer":"Delivered to Warehouse/Customer"
 }
 
   

@@ -1,0 +1,49 @@
+{
+  "page": {
+    "title": "Liên hệ",
+    "subtitle": "Quản lý yêu cầu liên hệ và hỗ trợ từ khách hàng",
+    "searchPlaceholder": "Tìm kiếm liên hệ",
+    "clickToView": "Nhấn để xem chi tiết"
+  },
+
+  "table": {
+    "id": "Mã",
+    "customerCode": "Mã khách hàng",
+    "customerName": "Tên khách hàng",
+    "orderCode": "Mã đơn hàng",
+    "phone": "Số điện thoại",
+    "actions": "Thao tác"
+  },
+
+  "actions": {
+    "view": "Xem chi tiết",
+    "close": "Đóng",
+    "export": "Xuất",
+    "exportCsv": "Xuất CSV",
+    "refresh": "Làm mới",
+    "openOrder": "Xem đơn hàng"
+  },
+
+  "tabs": {
+    "contact": "Liên hệ",
+    "support": "Cần hỗ trợ"
+  },
+
+  "labels": {
+    "contact": "Thông tin liên hệ",
+    "contactInformation": "Thông tin người liên hệ",
+    "name": "Họ và tên",
+    "phone": "Số điện thoại",
+    "email": "Email",
+    "message": "Tin nhắn",
+    "orderCode": "Mã đơn hàng"
+  },
+
+  "support": {
+    "hint": "Đây là yêu cầu liên hệ liên quan đến đơn hàng. Bạn có thể xem chi tiết đơn hàng hoặc liên hệ khách."
+  },
+
+  "export": {
+    "filenamePrefix": "Danh_sach_lien_he"
+  }
+}

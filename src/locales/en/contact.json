@@ -1,0 +1,49 @@
+{
+  "page": {
+    "title": "Contacts",
+    "subtitle": "Manage customer contact and support requests",
+    "searchPlaceholder": "Search contacts",
+    "clickToView": "Click to view details"
+  },
+
+  "table": {
+    "id": "ID",
+    "customerCode": "Customer Code",
+    "customerName": "Customer Name",
+    "orderCode": "Order Code",
+    "phone": "Phone Number",
+    "actions": "Actions"
+  },
+
+  "actions": {
+    "view": "View",
+    "close": "Close",
+    "export": "Export",
+    "exportCsv": "Export CSV",
+    "refresh": "Refresh",
+    "openOrder": "Open Order"
+  },
+
+  "tabs": {
+    "contact": "Contact",
+    "support": "Support Needed"
+  },
+
+  "labels": {
+    "contact": "Contact Information",
+    "contactInformation": "Contact Information",
+    "name": "Full Name",
+    "phone": "Phone Number",
+    "email": "Email",
+    "message": "Message",
+    "orderCode": "Order Code"
+  },
+
+  "support": {
+    "hint": "This contact request is related to an order. You can open order details or contact the customer."
+  },
+
+  "export": {
+    "filenamePrefix": "Contact_List"
+  }
+}

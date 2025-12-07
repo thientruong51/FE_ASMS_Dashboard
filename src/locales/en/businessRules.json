@@ -1,0 +1,47 @@
+{
+  "title": "Business Rules",
+  "subtitle": "Get, view and manage business rules",
+  "id": "ID",
+  "ruleCode": "Rule code",
+  "ruleName": "Rule name",
+  "category": "Category",
+  "ruleDescription": "Description",
+  "ruleType": "Type",
+  "priority": "Priority",
+  "isActive": "Active",
+  "effectiveDate": "Effective date",
+  "expiryDate": "Expiry date",
+  "createdDate": "Created date",
+  "updatedDate": "Updated date",
+  "createdBy": "Created by",
+  "updatedBy": "Updated by",
+  "notes": "Notes",
+
+  "save": "Save",
+  "delete": "Delete",
+  "newRule": "New rule",
+  "export": "Export",
+  "exportCsv": "Export CSV",
+  "refresh": "Refresh",
+  "viewDetails": "View details",
+  "copyRuleCode": "Copy rule code",
+
+  "loadFailed": "Failed to load business rule",
+  "saveFailed": "Failed to save business rule",
+  "createSuccess": "Business rule created",
+  "updateSuccess": "Business rule updated",
+  "deleteSuccess": "Business rule deleted",
+  "deleteFailed": "Failed to delete business rule",
+
+  "deleteConfirmTitle": "Delete business rule",
+  "deleteConfirmMessage": "Are you sure you want to delete this business rule?",
+
+  "ruleCodeRequired": "Rule code is required",
+  "ruleNameRequired": "Rule name is required",
+
+  "toggleDensity": "Toggle density",
+  "close": "Close",
+  "active": "Active",
+  "inactive": "Inactive",
+  "subtitleDrawer": "View or edit business rule"
+}

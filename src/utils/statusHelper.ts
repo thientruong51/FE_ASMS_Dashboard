@@ -25,7 +25,11 @@ const statusKeyMap: Record<string, string> = {
   Active:"active",
   Ready:"ready",
   Reserved:"reserved",
-  Rented:"rented"
+  Rented:"rented",
+  delivered:"delivered",
+  Delivered:"delivered",
+  Completed:"completed",
+  completed:"completed"
 };
 
 export const canonicalStatusKey = (s?: string | null) => {

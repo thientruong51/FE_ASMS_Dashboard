@@ -67,7 +67,7 @@ export default function RecentOrders() {
       {
         key: "active",
         label: t("recentOrders.groups.active"),
-        statuses: ["Renting", "Stored", "Pick up", "Processing", "Checkout"],
+        statuses: ["Renting", "Stored", "Pick up", "Processing", "Checkout","Delivered"],
         icon: <InboxIcon color="primary" />,
       },
       {
@@ -79,7 +79,7 @@ export default function RecentOrders() {
       {
         key: "completed",
         label: t("recentOrders.groups.completed"),
-        statuses: ["Retrieved"],
+        statuses: ["Retrieved","Completed"],
         icon: <CheckCircleOutlineIcon color="primary" />,
       },
     ],

@@ -17,17 +17,20 @@ import * as orderApi from "@/api/orderApi";
 
 type UiOrderRow = {
   id: string;
-  customer: string;
+  customer: string; 
+  phone?: string | null;
+  address?: string | null;
   location?: string;
   destination?: string;
   date?: string;
+  imageUrls?: string[] | null;
   raw: orderApi.OrderRespItem;
 };
 
 export default function OrderRequests() {
   const { t } = useTranslation("dashboard");
   const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down("sm")); // mobile
+  const isXs = useMediaQuery(theme.breakpoints.down("sm")); 
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<any>(null);
 
@@ -42,10 +45,13 @@ export default function OrderRequests() {
       const list = resp.data ?? [];
       const mapped: UiOrderRow[] = list.map((o) => ({
         id: o.orderCode,
-        customer: o.customerCode ?? "-",
+        customer: o.customerName ?? o.customerCode ?? "-",
+        phone: o.phoneContact ?? null,
+        address: o.address ?? null,
         location: o.depositDate ? `${t("orderRequests.deposit")}: ${o.depositDate}` : "-",
         destination: o.returnDate ? `${t("orderRequests.return")}: ${o.returnDate}` : "-",
         date: o.orderDate ?? o.depositDate ?? "-",
+        imageUrls: o.imageUrls ?? null,
         raw: o,
       }));
       setRows(mapped);
@@ -62,7 +68,18 @@ export default function OrderRequests() {
   }, []);
 
   const handleView = async (item: UiOrderRow) => {
-    setSelected(null);
+    setSelected({
+      id: item.id,
+      customer: item.customer,
+      phone: item.phone ?? null,
+      address: item.address ?? null,
+      location: item.location,
+      destination: item.destination,
+      date: item.date,
+      rawOrder: item.raw,
+      orderDetails: [],
+      orderMeta: { success: false, message: "" },
+    });
     setOpen(true);
     setDetailLoading(true);
 
@@ -80,9 +97,11 @@ export default function OrderRequests() {
 
       const composed = {
         id: item.id,
-        customer: orderFull?.customerCode ?? item.customer,
-        location: orderFull?.pickupAddress ?? item.location ?? "-",
-        destination: orderFull?.deliveryAddress ?? item.destination ?? "-",
+        customer: orderFull?.customerName ?? item.customer,
+        phone: orderFull?.phoneContact ?? item.phone ?? null,
+        address: orderFull?.address ?? item.address ?? null,
+        location: orderFull?.address ?? item.address ?? "-",
+        destination: orderFull?.address ?? item.address ?? "-",
         date: orderFull?.orderDate ?? item.date,
         rawOrder: orderFull ?? item.raw,
         orderDetails: detailsResp?.data ?? [],
@@ -92,15 +111,21 @@ export default function OrderRequests() {
       setSelected(composed);
     } catch (err) {
       console.error("handleView error", err);
-      setSelected({
-        id: item.id,
-        customer: item.customer,
-        location: item.location,
-        destination: item.destination,
-        date: item.date,
-        rawOrder: item.raw,
-        orderDetails: [],
-      });
+      setSelected((prev: any) =>
+        prev
+          ? { ...prev, orderDetails: [] }
+          : {
+              id: item.id,
+              customer: item.customer,
+              phone: item.phone ?? null,
+              address: item.address ?? null,
+              location: item.location,
+              destination: item.destination,
+              date: item.date,
+              rawOrder: item.raw,
+              orderDetails: [],
+            }
+      );
     } finally {
       setDetailLoading(false);
     }
@@ -167,28 +192,36 @@ export default function OrderRequests() {
                   </Box>
 
                   <Typography fontSize={13} color="text.secondary">
-                    <b>{t("orderRequests.pickupLabel")}</b> {item.location}
+                    <b>{t("orderRequests.pickupLabel")}</b> {item.address}
                   </Typography>
                   <Typography fontSize={13} color="text.secondary">
-                    <b>{t("orderRequests.destinationLabel")}</b> {item.destination}
+                    <b>{t("orderRequests.destinationLabel")}</b> {item.address}
                   </Typography>
 
                   <Box display="flex" justifyContent="space-between" alignItems="center" mt={1.25}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <Avatar
+                        src={item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls[0] : undefined}
                         sx={{
                           width: { xs: 32, sm: 28 },
                           height: { xs: 32, sm: 28 },
-                          bgcolor: "#e3f2fd",
+                          bgcolor: item.imageUrls && item.imageUrls.length > 0 ? undefined : "#e3f2fd",
                           color: "#1976d2",
                           fontSize: 13,
                         }}
                       >
                         {String((item.customer ?? "C").slice(0, 2)).toUpperCase()}
                       </Avatar>
-                      <Typography fontWeight={600} fontSize={13.5}>
-                        {item.customer}
-                      </Typography>
+
+                      <Box>
+                        <Typography fontWeight={600} fontSize={13.5}>
+                          {item.customer}
+                        </Typography>
+                        {/* show phone and address if available */}
+                        <Typography fontSize={12} color="text.secondary">
+                          {item.phone ? `${item.phone}` : item.address ? `${item.address}` : ""}
+                        </Typography>
+                      </Box>
                     </Box>
 
                     {/* On mobile we rely on tapping the card; on desktop show explicit button */}

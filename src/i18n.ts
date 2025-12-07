@@ -37,8 +37,12 @@ import enStoragePage from "./locales/en/storagePage.json";
 import viStoragePage from "./locales/vi/storagePage.json";
 import viDashboard from "./locales/vi/dashboard.json";
 import enDashboard from "./locales/en/dashboard.json";
-
-
+import contact_vi from "./locales/vi/contact.json";
+import contact_en from "./locales/en/contact.json";
+import viPricing from "@/locales/vi/price.json";    
+import enPricing from "@/locales/en/price.json"; 
+import businessRules_en from "@/locales/en/businessRules.json";
+import businessRules_vi from "@/locales/vi/businessRules.json";
 i18n
   .use(initReactI18next)
   .init({
@@ -61,7 +65,10 @@ i18n
         topbar: enTopbar,
         sidebar: enSidebar,
         storagePage: enStoragePage,
-        dashboard: enDashboard
+        dashboard: enDashboard,
+        contact: contact_en,
+        pricing: enPricing,
+        businessRules: businessRules_en,
 
       },
       vi: {
@@ -82,7 +89,10 @@ i18n
         topbar: viTopbar,
         sidebar: viSidebar,
         storagePage: viStoragePage,
-        dashboard: viDashboard
+        dashboard: viDashboard,
+         contact: contact_vi,
+         pricing: viPricing,
+         businessRules: businessRules_vi,
 
       }
     },

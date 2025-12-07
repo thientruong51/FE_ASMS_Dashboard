@@ -20,15 +20,14 @@ import {
 } from "@/api/trackingHistoryApi";
 import TrackingHistoryDetailDrawer from "@/pages/trackingHistory/components/TrackingHistoryDetailDrawer";
 import {
-  canonicalStatusKey,
-  translateStatus,
+  translateStatus as importedTranslateStatus,
   translateActionType,
-  canonicalActionTypeKey,
 } from "@/utils/translationHelpers";
+
 export default function LatestShipping() {
   const { t } = useTranslation("dashboard");
   const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down("sm")); 
+  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [items, setItems] = useState<TrackingHistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -59,21 +58,6 @@ export default function LatestShipping() {
   const normalize = (s?: string | null) =>
     (s ?? "").toString().trim().toLowerCase();
 
-  const statusColorMap: Record<string, string> = {
-    pending: "#0f62fe", 
-    "wait pick up": "#0f62fe", 
-    verify: "#99cfff",
-    checkout: "#ff6b6b", 
-    "pick up": "#a259ff", 
-    processing: "#f5a623", 
-    renting: "#ff4d4f", 
-    stored: "#ff4d4f", 
-    retrieved: "#2ecc71", 
-    overdue: "#5b3a29", 
-    "store in expired storage": "#7a0b0b",
-    default: "#bdbdbd",
-  };
-
   const statusKeyMap: Record<string, string> = {
     "processing order": "processing",
     "order retrieved": "retrieved",
@@ -81,27 +65,65 @@ export default function LatestShipping() {
     pending: "pending",
     processing: "processing",
     retrieved: "retrieved",
-    "wait pick up": "wait pick up",
+    "wait pick up": "wait_pick_up",
+    "wait_pick_up": "wait_pick_up",
+    "wait-pick-up": "wait_pick_up",
+    "waitpickup": "wait_pick_up",
     verify: "verify",
     checkout: "checkout",
-    "pick up": "pick up",
+    "pick up": "pick_up",
+    "pick_up": "pick_up",
+    "pick-up": "pick_up",
+    pick: "pick_up",
+    delivered: "delivered",
     renting: "renting",
     stored: "stored",
+    "store in expired storage": "store_in_expired_storage",
+    "store_in_expired_storage": "store_in_expired_storage",
     overdue: "overdue",
-    "store in expired storage": "store in expired storage",
+    completed: "completed",
   };
 
   const canonicalStatusKey = (s?: string | null) => {
     const n = normalize(s);
     if (!n) return "";
-    return statusKeyMap[n] ?? n; 
+    return statusKeyMap[n] ?? n.replace(/[\s-]+/g, "_");
   };
 
   const translateStatus = (s?: string | null) => {
     const key = canonicalStatusKey(s);
     if (!key) return t("noData");
+    try {
+      // @ts-ignore
+      if (typeof importedTranslateStatus === "function") {
+
+        // @ts-ignore
+        const res = importedTranslateStatus(t, s);
+        if (res && typeof res === "string") return res;
+      }
+    } catch {
+      // ignore and use fallback below
+    }
+
     const looked = t(`statusNames.${key}`);
     return looked !== `statusNames.${key}` ? looked : key;
+  };
+
+  const statusColorMap: Record<string, string> = {
+    pending: "#0f62fe",
+    wait_pick_up: "#0f62fe",
+    verify: "#99cfff",
+    checkout: "#ff6b6b",
+    pick_up: "#a259ff",
+    delivered: "#ff9800",
+    processing: "#f5a623",
+    renting: "#00d146",
+    stored: "#00bfa5",
+    retrieved: "#2ecc71",
+    overdue: "#5b3a29",
+    store_in_expired_storage: "#7a0b0b",
+    completed: "#6a1b9a",
+    default: "#bdbdbd",
   };
 
   const latest = useMemo(() => {
@@ -155,7 +177,7 @@ export default function LatestShipping() {
             const row = params?.row as TrackingHistoryItem | undefined;
             if (!row) return null;
 
-            const canKey = canonicalStatusKey(row.newStatus);
+            const canKey = canonicalStatusKey(row.newStatus) || canonicalStatusKey(row.newStatus);
             const label = translateStatus(row.newStatus);
             const color = statusColorMap[canKey] ?? statusColorMap.default;
 
@@ -188,8 +210,8 @@ export default function LatestShipping() {
                       }}
                     />
                     <Typography variant="caption" color="text.secondary">
-  {translateActionType(t, row.actionType)}
-</Typography>
+                      {translateActionType(t, row.actionType)}
+                    </Typography>
                   </Box>
 
                   <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
@@ -221,17 +243,17 @@ export default function LatestShipping() {
     return [
       { field: "orderCode", headerName: t("order"), width: 150 },
       {
-  field: "actionType",
-  headerName: t("details"),
-  flex: 1,
-  minWidth: 160,
-  renderCell: (params: any) => {
-    const row = params?.row as TrackingHistoryItem | undefined;
-    if (!row) return null;
-    const translated = translateActionType(t, row.actionType);
-    return <Typography variant="body2" noWrap>{translated}</Typography>;
-  },
-},
+        field: "actionType",
+        headerName: t("details"),
+        flex: 1,
+        minWidth: 160,
+        renderCell: (params: any) => {
+          const row = params?.row as TrackingHistoryItem | undefined;
+          if (!row) return null;
+          const translated = translateActionType(t, row.actionType);
+          return <Typography variant="body2" noWrap>{translated}</Typography>;
+        },
+      },
       {
         field: "newStatus",
         headerName: t("status"),
@@ -239,7 +261,7 @@ export default function LatestShipping() {
         renderCell: (params: any) => {
           const row = params?.row as TrackingHistoryItem | undefined;
           if (!row) return null;
-          const canKey = canonicalStatusKey(row.newStatus);
+          const canKey = canonicalStatusKey(row.newStatus) || canonicalStatusKey(row.newStatus);
           const label = translateStatus(row.newStatus);
           const color = statusColorMap[canKey] ?? statusColorMap.default;
           return (

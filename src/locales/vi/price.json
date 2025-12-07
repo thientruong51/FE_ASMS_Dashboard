@@ -1,0 +1,93 @@
+{
+  "page": {
+    "title": "Bảng giá",
+    "subtitle": "Quản lý giá dịch vụ & phí vận chuyển",
+    "searchPlaceholder": "Tìm kiếm...",
+    "clickToView": "Xem chi tiết"
+  },
+
+  "tabs": {
+    "all": "Tất cả",
+    "shipping": "Vận chuyển"
+  },
+
+  "labels": {
+    "pricing": "Giá dịch vụ",
+    "shippingRate": "Giá vận chuyển"
+  },
+
+  "table": {
+    "id": "ID",
+    "serviceType": "Loại dịch vụ",
+    "itemCode": "Mã hạng mục",
+    "ac": "Điều hòa",
+    "month": "Theo tháng",
+    "week": "Theo tuần",
+    "trip": "Theo chuyến",
+    "info": "Mô tả",
+    "actions": "Thao tác",
+    "distance": "Khoảng cách",
+    "containerQty": "Số lượng thùng",
+    "basePrice": "Giá cơ bản",
+    "priceUnit": "Đơn vị",
+    "specialSurcharge": "Phụ phí hàng đặc biệt",
+    "monthlyRentalDiscount": "Giảm giá thuê theo tháng"
+  },
+
+  "actions": {
+    "view": "Xem",
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "close": "Đóng",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "refresh": "Tải lại",
+    "export": "Xuất",
+    "exportCsv": "Xuất CSV"
+  },
+
+  "confirm": "Xác nhận",
+  "deleteConfirmMsg": "Bạn có chắc chắn muốn xóa mục này?",
+
+  "confirmDeleteTitle": "Xác nhận xóa",
+  "confirmDeletePricingMsg": "Bạn có chắc muốn xóa bảng giá {{id}}?",
+  "confirmDeleteShippingMsg": "Bạn có chắc muốn xóa giá vận chuyển {{id}}?",
+
+  "yes": "Có",
+  "no": "Không",
+
+  "serviceType": {
+    "RoomRental": "Cho thuê phòng",
+    "ShelfRental": "Cho thuê kệ",
+    "BoxSelfManaged": "Hộp tự quản lý",
+    "BoxShared": "Hộp Dịch vụ",
+    "Shipping": "Vận chuyển"
+  },
+
+  "itemCode": {
+    "Small": "Nhỏ",
+    "Medium": "Vừa",
+    "Large": "Lớn",
+    "A": "Loại A",
+    "B": "Loại B",
+    "C": "Loại C",
+    "D": "Loại D"
+  },
+
+  "acOptions": {
+    "true": "Có điều hòa",
+    "false": "Không điều hòa"
+  },
+
+  "priceUnit": {
+    "Fixed": "Cố định",
+    "PerKm": "Theo KM"
+  },
+
+  "shipping": {
+    "distanceRange": "{{min}}–{{max}} km",
+    "distanceAbove": "> {{min}} km",
+    "containerRange": "{{min}}–{{max}} thùng",
+    "containerAbove": "> {{min}} thùng"
+  }
+}

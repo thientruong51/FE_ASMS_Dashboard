@@ -1,8 +1,9 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, Typography, Box, Stack, CircularProgress } from "@mui/material";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { useTranslation } from "react-i18next";
 import dashboardApi from "@/api/dashboardApi";
+
 
 const statusesList = [
   "Pending",
@@ -10,26 +11,28 @@ const statusesList = [
   "Verify",
   "Checkout",
   "Pick up",
+  "Delivered",
   "Processing",
-  "Renting",
   "Stored",
-  "Retrieved",
+  "Renting",
   "Overdue",
-  "Store in Expired Storage",
+  "Retrieved",
+  "Completed",
 ];
 
 const COLORS = [
-  "#0d47a1",
-  "#1976d2",
-  "#64b5f6",
-  "#ef5350",
-  "#9c27b0",
-  "#ff9800",
-  "#f44336",
-  "#f44336",
-  "#00d146ff",
-  "#795548",
-  "#9c0202ff",
+  "#0d47a1", // Pending
+  "#1976d2", // Wait pick up
+  "#64b5f6", // Verify
+  "#ef5350", // Checkout
+  "#9c27b0", // Pick up
+  "#ff9800", // Delivered
+  "#f44336", // Processing
+  "#00bfa5", // Stored
+  "#00d146", // Renting
+  "#795548", // Overdue
+  "#9c0202", // Retrieved
+  "#6a1b9a", // Completed
 ];
 
 export default function LoadingTrucks() {
@@ -40,6 +43,7 @@ export default function LoadingTrucks() {
   const [loading, setLoading] = useState(true);
 
   const normalize = (s?: string | null) => (s ?? "").toString().trim().toLowerCase();
+
   const statusKeyMap: Record<string, string> = {
     "processing order": "processing",
     "order retrieved": "retrieved",
@@ -47,19 +51,26 @@ export default function LoadingTrucks() {
     pending: "pending",
     processing: "processing",
     retrieved: "retrieved",
-    "wait pick up": "wait pick up",
+    "wait pick up": "wait_pick_up",
+    "wait_pick_up": "wait_pick_up",
+    "wait-pick-up": "wait_pick_up",
     verify: "verify",
     checkout: "checkout",
-    "pick up": "pick up",
+    "pick up": "pick_up",
+    "pick_up": "pick_up",
+    "pick-up": "pick_up",
+    delivered: "delivered",
     renting: "renting",
     stored: "stored",
     overdue: "overdue",
-    "store in expired storage": "store in expired storage",
+    "store in expired storage": "store_in_expired_storage",
+    completed: "completed",
   };
+
   const canonicalStatusKey = (s?: string | null) => {
     const n = normalize(s);
     if (!n) return "";
-    return statusKeyMap[n] ?? n;
+    return statusKeyMap[n] ?? n.replace(/\s+/g, "_");
   };
 
   useEffect(() => {
@@ -108,21 +119,24 @@ export default function LoadingTrucks() {
     return key ? t(`statusNames.${key}`, { defaultValue: name }) : name;
   };
 
+  const mapKeyToIndex: Record<string, number> = {
+    pending: 0,
+    wait_pick_up: 1,
+    verify: 2,
+    checkout: 3,
+    pick_up: 4,
+    delivered: 5,
+    processing: 6,
+    stored: 7,
+    renting: 8,
+    overdue: 9,
+    retrieved: 10,
+    completed: 11,
+    store_in_expired_storage: 9, 
+  };
+
   const statusColorFor = (name: string, idx: number) => {
     const key = canonicalStatusKey(name);
-    const mapKeyToIndex: Record<string, number> = {
-      pending: 0,
-      "wait pick up": 1,
-      verify: 2,
-      checkout: 3,
-      "pick up": 4,
-      processing: 5,
-      renting: 6,
-      stored: 7,
-      retrieved: 8,
-      overdue: 9,
-      "store in expired storage": 10,
-    };
     return COLORS[mapKeyToIndex[key] ?? (idx % COLORS.length)];
   };
 
@@ -145,11 +159,12 @@ export default function LoadingTrucks() {
             ) : (
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={data?.filter((d) => d.value > 0) ?? []}
-                       innerRadius={45}
-                       outerRadius={70}
-                       paddingAngle={2}
-                       dataKey="value"
+                  <Pie
+                    data={data?.filter((d) => d.value > 0) ?? []}
+                    innerRadius={45}
+                    outerRadius={70}
+                    paddingAngle={2}
+                    dataKey="value"
                   >
                     {(data?.filter((d) => d.value > 0) ?? []).map((entry, index) => (
                       <Cell key={entry.name} fill={statusColorFor(entry.name, index)} />

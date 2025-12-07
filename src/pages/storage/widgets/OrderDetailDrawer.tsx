@@ -11,6 +11,7 @@ import {
   CardContent,
   useTheme,
   useMediaQuery,
+  Chip,
 } from "@mui/material";
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
@@ -21,8 +22,10 @@ import { getContainerType } from "@/api/containerTypeApi";
 import { getAuthClaimsFromStorage } from "@/utils/auth";
 import { useTranslation } from "react-i18next";
 
-import { translateStatus } from "@/utils/statusHelper"; 
-import { translatePaymentStatus } from "@/utils/paymentStatusHelper"; 
+import { translateStatus } from "@/utils/statusHelper";
+import { translatePaymentStatus } from "@/utils/paymentStatusHelper";
+
+import { updateOrderDetail } from "@/api/orderDetailApi"; // ensure this exists
 
 type Props = {
   data: any | null;
@@ -45,7 +48,7 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
   const [_clpPayload, setClpPayload] = useState<any | null>(null);
   const [clpResponseRaw, setClpResponseRaw] = useState<any | null>(null);
   const [placing, setPlacing] = useState(false);
-  const [lastPlaceResp, setLastPlaceResp] = useState<any | null>(null);
+  const [lastPlaceResp, setLastPlaceResp] = useState<Record<string, any> | null>(null);
 
   const [containerTypeCache, setContainerTypeCache] = useState<Record<string | number, any>>({});
   const [localContainerTypesCache, setLocalContainerTypesCache] = useState<any[] | null>(null);
@@ -99,6 +102,7 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
       setDerivedOrderStatusLabel(statusLabel);
       setDerivedOrderPaymentLabel(paymentLabel);
     } catch (err) {
+      // ignore
     }
 
     (async () => {
@@ -108,12 +112,13 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
       setClpLoading(true);
 
       try {
+        // ưu tiên data.length/width/height nếu có
         const explicitLength =
-          data.packageLength ?? data.length ?? data.containerLength ?? data.dimensions?.length ?? null;
+          data.length ?? data.packageLength ?? data.containerLength ?? data.dimensions?.length ?? null;
         const explicitWidth =
-          data.packageWidth ?? data.width ?? data.containerWidth ?? data.dimensions?.width ?? null;
+          data.width ?? data.packageWidth ?? data.containerWidth ?? data.dimensions?.width ?? null;
         const explicitHeight =
-          data.packageHeight ?? data.height ?? data.containerHeight ?? data.dimensions?.height ?? null;
+          data.height ?? data.packageHeight ?? data.containerHeight ?? data.dimensions?.height ?? null;
 
         let dims: Dims | null = null;
 
@@ -225,7 +230,7 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
 
         setClpPayload(payloadSingle);
         const res2 = await findSuitableContainers(payloadSingle as any);
-        setClpResponseRaw((prev: any) => ({ ...prev, trySingle: res2 }));
+        setClpResponseRaw((prev: any) => ({ ...(prev ?? {}), trySingle: res2 }));
         const list2 = Array.isArray(res2) ? res2 : (res2?.data ?? []);
         if (Array.isArray(list2) && list2.length > 0) {
           setClpSuggestions(list2);
@@ -242,17 +247,46 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
         setClpLoading(false);
       }
     })();
-  }, [data, containerTypeCache, t]); 
+  }, [data, containerTypeCache, t]);
 
   const handlePlaceContainer = async (suggestion: any) => {
     if (!suggestion || !data) return;
     setPlacing(true);
     setLastPlaceResp(null);
 
-    const orderDetailId = data.orderDetailId ?? data.id ?? data._id ?? null;
+    const orderDetailIdRaw = data.orderDetailId ?? data.id ?? data._id ?? null;
+    const orderDetailId = orderDetailIdRaw != null ? Number(orderDetailIdRaw) : null;
 
-    const claims = getAuthClaimsFromStorage(); 
+    const claims = getAuthClaimsFromStorage();
     const employeeCode = claims?.EmployeeCode ?? null;
+
+    let updateResult: any = null;
+
+    if (suggestion?.buildingId === 5 && orderDetailId) {
+      const storageCode = "BLD005-STR001"; 
+      try {
+        const payload: any = { storageCode };
+        if (employeeCode) payload.performedBy = String(employeeCode);
+
+        const updateResp = await updateOrderDetail(orderDetailId, payload);
+
+        updateResult = { success: true, resp: updateResp, storageCode };
+
+        setLastPlaceResp((prev) => ({ ...(prev ?? {}), updateStorageCodeResp: updateResp, storageCode }));
+      } catch (err) {
+        updateResult = { success: false, error: (err as any)?.message ?? err };
+        setLastPlaceResp((prev) => ({ ...(prev ?? {}), updateStorageCodeError: (err as any)?.message ?? err }));
+        console.warn("updateOrderDetail failed", err);
+      }
+    }
+
+    if (updateResult?.success) {
+      const returned = updateResult.resp?.data ?? updateResult.resp ?? { storageCode: updateResult.storageCode };
+      setPlacing(false);
+      setLastPlaceResp((prev) => ({ ...(prev ?? {}), finalResult: returned, updateResult }));
+      onPlaced?.({ success: true, data: returned });
+      return;
+    }
 
     const payload: any = {
       containerCode: suggestion.containerCode,
@@ -272,13 +306,11 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
 
     try {
       const resp = await placeContainer(payload);
-      setLastPlaceResp(resp);
-
+      setLastPlaceResp((prev) => ({ ...(prev ?? {}), placeContainerResp: resp, updateResult }));
       onPlaced?.({ success: true, data: resp });
     } catch (err) {
       const errObj = { error: (err as any)?.message ?? err };
-      setLastPlaceResp(errObj);
-
+      setLastPlaceResp((prev) => ({ ...(prev ?? {}), placeContainerError: errObj, updateResult }));
       onPlaced?.({ success: false, data: errObj });
     } finally {
       setPlacing(false);
@@ -288,7 +320,7 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
   if (!data) return <Box sx={{ p: 3 }} />;
 
   const orderStatusLabel = data._orderStatusLabel ?? data._orderStatus ?? derivedOrderStatusLabel ?? "-";
-  const paymentStatusLabel = data._orderPaymentStatusLabel ?? data._orderPaymentStatus ?? derivedOrderPaymentLabel ?? "-";
+  const paymentStatusLabel = data._orderPaymentStatusLabel ?? data.paymentStatus ?? derivedOrderPaymentLabel ?? "-";
 
   return (
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
@@ -374,7 +406,6 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
             <Typography fontWeight={600} sx={{ fontSize: isSmUp ? 16 : 14 }}>
               {data._orderCode ?? data.orderCode ?? "-"}
             </Typography>
-            
           </Box>
         </Box>
       </Box>
@@ -461,20 +492,47 @@ export default function OrderDetailDrawer({ data, onClose, onPlaced }: Props) {
                       }}
                     >
                       <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
-                        <Typography fontWeight={600} fontSize={15} mb={0.5}>
-                          {t("containerCardTitle", { code: s.containerCode ?? `#${idx}` })}
-                        </Typography>
+                        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                          <Box>
+                            <Typography fontWeight={600} fontSize={15} mb={0.5}>
+                              {t("containerCardTitle", { code: s.containerCode ?? `#${idx}` })}
+                            </Typography>
 
-                        <Typography variant="body2" color="text.secondary" mb={0.25}>
-                          {t("floorLabel", { floor: s.floorCode ?? "-" })}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" mb={0.25}>
-                          {t("serialLabel", { serial: s.serialNumber ?? "-" })}
-                        </Typography>
+                            <Typography variant="body2" color="text.secondary" mb={0.25}>
+                              {t("floorLabel", { floor: s.floorCode ?? "-" })}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" mb={0.25}>
+                              {t("serialLabel", { serial: s.serialNumber ?? "-" })}
+                            </Typography>
 
-                        <Typography variant="body2" color="text.secondary">
-                          {t("scoreLabel", { score: s.score ?? s.fitScore ?? "-" })}
-                        </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {t("scoreLabel", { score: s.score ?? s.fitScore ?? "-" })}
+                            </Typography>
+                          </Box>
+
+                          {/* building info */}
+                          <Box display="flex" flexDirection="column" alignItems="flex-end" gap={0.5} ml={1}>
+                            {s.buildingName || s.buildingId != null ? (
+                              <>
+                                <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                                  {s.buildingName ?? `Building #${s.buildingId}`}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {`ID: ${s.buildingId ?? "-"}`}
+                                </Typography>
+                              </>
+                            ) : null}
+
+                            {/* nổi bật nếu buildingId === 5 */}
+                            {s.buildingId === 5 && (
+                              <Chip
+                                label={s.buildingName ?? "WareHouse Oversized"}
+                                size="small"
+                                sx={{ mt: 0.5, fontWeight: 600 }}
+                              />
+                            )}
+                          </Box>
+                        </Box>
 
                         <Box display="flex" justifyContent="flex-end" mt={1}>
                           <Button

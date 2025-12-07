@@ -40,6 +40,10 @@ const statusKeyMapRaw: Record<string, string> = {
   stored: "stored",
   overdue: "overdue",
   "store in expired storage": "store_in_expired_storage",
+  delivered:"delivered",
+  Delivered:"delivered",
+  Completed:"completed",
+  completed:"completed"
 };
 
 const paymentStatusKeyMapRaw: Record<string, string> = {
@@ -154,7 +158,9 @@ const actionTypeKeyMapRaw: Record<string, string> = {
   "Verification": "verification",
   "Ready for Pickup": "ready_for_pickup",
   "Renting Active":"renting_active",
-  "Customer Retrieved from Expired Storage": "customer_retrieved_from_expired-storage"
+  "Customer Retrieved from Expired Storage": "customer_retrieved_from_expired-storage",
+  "Order Overdue":"order_overdue",
+  "Delivered to Warehouse/Customer":"delivered_to_warehouse/customer"
 };
 
 const actionTypeMaps = buildNormalizedMap(actionTypeKeyMapRaw);

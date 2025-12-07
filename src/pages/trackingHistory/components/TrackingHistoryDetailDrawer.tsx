@@ -456,7 +456,7 @@ export default function TrackingHistoryDetailDrawer({
                             "currentAssign",
                             "nextAssign",
                             "image",
-                            "_isChild", // <-- exclude internal flag from listing
+                            "_isChild", 
                           ].includes(k)
                       )
                       .map((k) => {
