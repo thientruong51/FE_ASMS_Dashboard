@@ -1,4 +1,3 @@
-// src/pages/components/PricingDetailDrawer.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Drawer,
@@ -11,7 +10,6 @@ import {
   Button,
   Card,
   CardContent,
-  Tooltip,
   CircularProgress,
   Dialog,
   DialogTitle,
@@ -80,19 +78,16 @@ export default function PricingDetailDrawer({ item: itemProp, itemIsShipping = f
 
   useEffect(() => {
     if (!open) return;
-    // if we only have summary and want to fetch full detail, attempt to fetch
     let mounted = true;
     (async () => {
       if (!itemProp) return;
       try {
         setLoading(true);
         if (itemIsShipping && itemProp.shippingRateId != null) {
-          // priceApi.getShippingRate may return { success?, data? } or ShippingRateItem directly
           const resp = await priceApi.getShippingRate((itemProp as any).shippingRateId as number | string).catch((e) => {
             console.warn("[PricingDetailDrawer] getShippingRate error", e);
             return null;
           });
-          // normalize possible wrapper
           const data = (resp as any)?.data ?? resp;
           if (mounted) setItem(data ?? itemProp);
         } else if (!itemIsShipping && itemProp.pricingId != null) {
