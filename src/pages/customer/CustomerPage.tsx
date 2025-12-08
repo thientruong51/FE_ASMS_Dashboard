@@ -105,11 +105,16 @@ export default function CustomerPage() {
     }
   };
 
+  // --- SỬA Ở ĐÂY: gọi updateCustomer(payload) theo API PUT /api/Customer (id trong body) ---
   const handleSave = async (data: Partial<Customer>) => {
     try {
       setLoading(true);
       if (editingCustomer) {
-        await customerApi.updateCustomer(editingCustomer.id, data);
+        // backend yêu cầu PUT /api/Customer với id nằm trong body
+        await customerApi.updateCustomer({
+          ...data,
+          id: editingCustomer.id,
+        });
         setSnack({ open: true, message: t("messages.updateSuccess"), severity: "success" });
       } else {
         await customerApi.createCustomer(data);
@@ -118,7 +123,11 @@ export default function CustomerPage() {
       setDialogOpen(false);
       await fetchFullList();
     } catch (err: any) {
-      console.error("save error", err);
+      console.error("save error", {
+        status: err?.response?.status,
+        data: err?.response?.data,
+        message: err?.message,
+      });
       setSnack({ open: true, message: err?.response?.data?.message || t("messages.saveFailed"), severity: "error" });
     } finally {
       setLoading(false);

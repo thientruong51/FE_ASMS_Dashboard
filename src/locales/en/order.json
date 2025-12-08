@@ -43,7 +43,9 @@
     "unplaced": "Unplaced",
     "container": "Container",
     "storage": "Storage",
-    "floor": "Floor"
+    "floor": "Floor",
+    "shelfType":"Shelf Type",
+    "containerType":"Container Type"
   },
 
   "actions": {

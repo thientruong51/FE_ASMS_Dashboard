@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import ProtectedRoute from "@/routes/ProtectedRoute";
+
 import DashboardLayout from "@/layouts/DashboardLayout";
 
 import LoginPage from "@/pages/auth/LoginPage";
@@ -24,15 +25,20 @@ import ContactPage from "@/pages/contact/ContactPage";
 import PricePage from "@/pages/price/PricePage";
 import BusinessRulesPage from "@/pages/businessRule/BusinessRulesPage";
 import ContainerPage from "@/pages/container/ContainerPage";
+import PublicRoute from "./PublicRoute";
 
 const ALL = [1, 2, 3, 4];
 const ROLE_4 = [4];
 
 export const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
+ {
+  path: "/login",
+  element: (
+    <PublicRoute>
+      <LoginPage />
+    </PublicRoute>
+  ),
+},
 
   {
     element: <ProtectedRoute />,
