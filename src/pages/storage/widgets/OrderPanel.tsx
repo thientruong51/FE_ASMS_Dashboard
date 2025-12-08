@@ -11,6 +11,7 @@ import {
   Snackbar,
   Alert,
   Tooltip,
+  CircularProgress,
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -27,7 +28,12 @@ import { getServices } from "@/api/serviceApi";
 import OrderDetailDrawer from "./OrderDetailDrawer";
 
 import { useTranslation } from "react-i18next";
-import { translateStatus, canonicalStatusKey } from "@/utils/statusHelper"; 
+import { translateStatus, canonicalStatusKey } from "@/utils/statusHelper";
+
+import orderDetailApi from "@/api/orderDetailApi";
+import { getContainer as apiGetContainer } from "@/api/containerApi";
+import OrderDetailFullDialog from "../OrderDetailFullDialog";
+import ContainerDetailDialog from "./ContainerDetailDialog";
 
 export default function OrderPanel() {
   const { t } = useTranslation(["storagePage", "statusNames"]);
@@ -43,7 +49,9 @@ export default function OrderPanel() {
 
   const [snackOpen, setSnackOpen] = useState(false);
   const [snackMsg, setSnackMsg] = useState("");
-  const [snackSeverity, setSnackSeverity] = useState<"success" | "error" | "info">("success");
+  const [snackSeverity, setSnackSeverity] = useState<
+    "success" | "error" | "info" | "warning"
+  >("success");
 
   const loadAllDetailsForFullOrders = useCallback(
     async () => {
@@ -196,6 +204,97 @@ export default function OrderPanel() {
     loadAllDetailsForFullOrders();
   };
 
+  // ---------------- Search logic ----------------
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [containerDialogOpen, setContainerDialogOpen] = useState(false);
+  const [containerDialogData, setContainerDialogData] = useState<any | null>(null);
+  const [orderDetailDialogOpen, setOrderDetailDialogOpen] = useState(false);
+  const [orderDetailDialogData, setOrderDetailDialogData] = useState<any | null>(null);
+
+  const extractOrderDetailFromResp = (resp: any) => {
+    if (!resp && resp !== 0) return null;
+    if (resp?.data && typeof resp.data === "object") return resp.data;
+    if (resp?.data?.data && typeof resp.data.data === "object") return resp.data.data;
+    if (typeof resp === "object" && ("orderDetailId" in resp || "orderCode" in resp)) return resp;
+    return null;
+  };
+
+  const handleSearch = async () => {
+    const qRaw = (search ?? "").trim();
+    if (!qRaw) return;
+
+    setSearchLoading(true);
+
+    try {
+      const isPureNumeric = /^\d+$/.test(qRaw);
+
+      const orderDetailPromise = (async () => {
+        try {
+          return await orderDetailApi.getOrderDetail(isPureNumeric ? Number(qRaw) : (qRaw as any));
+        } catch {
+          return null;
+        }
+      })();
+
+      const containerPromise = (async () => {
+        try {
+          return await apiGetContainer(qRaw);
+        } catch {
+          return null;
+        }
+      })();
+
+      const [odResp, containerResp] = await Promise.all([orderDetailPromise, containerPromise]);
+
+      if (isPureNumeric) {
+        const od = extractOrderDetailFromResp(odResp);
+        if (od) {
+          setOrderDetailDialogData(od);
+          setOrderDetailDialogOpen(true);
+          return;
+        }
+
+        if (containerResp) {
+          const container = (containerResp as any)?.data ?? (containerResp as any);
+          setContainerDialogData(container);
+          setContainerDialogOpen(true);
+          return;
+        }
+
+        setSnackMsg(t("orderPanel.searchNotFound") ?? "Không tìm thấy OrderDetail hoặc Container phù hợp");
+        setSnackSeverity("error");
+        setSnackOpen(true);
+        return;
+      }
+
+      if (containerResp) {
+        const container = (containerResp as any)?.data ?? (containerResp as any);
+        setContainerDialogData(container);
+        setContainerDialogOpen(true);
+        return;
+      }
+
+      const odFallback = extractOrderDetailFromResp(odResp);
+      if (odFallback) {
+        setOrderDetailDialogData(odFallback);
+        setOrderDetailDialogOpen(true);
+        return;
+      }
+
+      setSnackMsg(t("orderPanel.searchNotFound") ?? "Không tìm thấy OrderDetail hoặc Container phù hợp");
+      setSnackSeverity("error");
+      setSnackOpen(true);
+    } catch (err: any) {
+      console.error("search failed", err);
+      setSnackMsg(t("orderPanel.searchError") ?? "Có lỗi xảy ra khi tìm kiếm");
+      setSnackSeverity("error");
+      setSnackOpen(true);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+
   return (
     <>
       <Card
@@ -239,10 +338,29 @@ export default function OrderPanel() {
             fullWidth
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSearch();
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <SearchRoundedIcon fontSize="small" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Tooltip title={t("orderPanel.searchTooltip") ?? "Search OrderDetail ID / Container Code"}>
+                    <span>
+                      <IconButton
+                        size="small"
+                        onClick={handleSearch}
+                        disabled={searchLoading}
+                        aria-label="search"
+                      >
+                        {searchLoading ? <CircularProgress size={18} /> : <SearchRoundedIcon fontSize="small" />}
+                      </IconButton>
+                    </span>
+                  </Tooltip>
                 </InputAdornment>
               ),
             }}
@@ -398,6 +516,41 @@ export default function OrderPanel() {
       >
         <OrderDetailDrawer data={selectedDetail} onClose={() => setOpen(false)} onPlaced={handleOnPlaced} />
       </Drawer>
+
+      {/* OrderDetail modal (opened when search finds an order detail) */}
+      <OrderDetailFullDialog
+        open={orderDetailDialogOpen}
+        data={orderDetailDialogData}
+        onClose={() => {
+          setOrderDetailDialogOpen(false);
+          setOrderDetailDialogData(null);
+        }}
+      />
+
+      {/* Container detail dialog (opened when search finds a container) */}
+      <ContainerDetailDialog
+        open={containerDialogOpen}
+        container={containerDialogData}
+        onClose={() => {
+          setContainerDialogOpen(false);
+          setContainerDialogData(null);
+        }}
+        onSaveLocal={() => {
+          // optional: reload list if user edited locally
+          loadAllDetailsForFullOrders();
+        }}
+        onNotify={(msg, sev) => {
+          setSnackMsg(msg);
+          setSnackSeverity(sev ?? "info");
+          setSnackOpen(true);
+        }}
+        onRemoved={(_containerCode) => {
+          // when container removed, refresh list and close dialog
+          loadAllDetailsForFullOrders();
+          setContainerDialogOpen(false);
+          setContainerDialogData(null);
+        }}
+      />
 
       {/* Snackbar */}
       <Snackbar

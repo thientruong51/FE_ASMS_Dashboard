@@ -43,5 +43,31 @@
   "close": "Đóng",
   "active": "Đang hoạt động",
   "inactive": "Không hoạt động",
-  "subtitleDrawer": "Xem hoặc chỉnh sửa quy tắc nghiệp vụ"
+  "subtitleDrawer": "Xem hoặc chỉnh sửa quy tắc nghiệp vụ",
+
+  "categories": {
+    "Payment": "Thanh toán",
+    "Safety": "An toàn",
+    "Business": "Kinh doanh",
+    "Operational": "Vận hành"
+  },
+
+  "priorities": {
+    "Critical": "Nguy cấp",
+    "High": "Cao",
+    "Medium": "Trung bình",
+    "Low": "Thấp"
+  },
+
+  "ruleTypes": {
+    "Validation": "Xác thực",
+    "Transformation": "Chuyển đổi",
+    "System": "Hệ thống",
+    "Manual": "Thủ công",
+    "Payment": "Thanh toán",
+    "Safety": "An toàn",
+    "Business": "Kinh doanh",
+    "Operational": "Vận hành"
+  },
+  "actions":"Chức năng"
 }

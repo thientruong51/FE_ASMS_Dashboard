@@ -53,8 +53,8 @@ export default function ShelfFloorOrders({
 }: Props) {
   const { t } = useTranslation("storagePage");
   const theme = useTheme();
-  const isSmUp = useMediaQuery(theme.breakpoints.up("sm")); 
-  const isMdUp = useMediaQuery(theme.breakpoints.up("md")); 
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
+  const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
 
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -157,6 +157,37 @@ export default function ShelfFloorOrders({
 
     setSelectedContainer(null);
     notify(t("shelfFloor.savedLocally", { code: updated.containerCode }), "info");
+  };
+
+  // NEW: called when a container is successfully removed via ContainerDetailDialog
+  const handleContainerRemoved = (containerCode: string) => {
+    if (!containerCode) return;
+
+    // remove from editedContainers
+    setEditedContainers((prev) => {
+      const copy = { ...prev };
+      delete copy[containerCode];
+      return copy;
+    });
+
+    // remove from localContainers
+    setLocalContainers((prev) => {
+      const next = prev.filter((c) => c.containerCode !== containerCode);
+      // notify parent
+      if (typeof onContainersUpdated === "function") {
+        try {
+          onContainersUpdated(next);
+        } catch (err) {
+          console.error("onContainersUpdated callback error", err);
+        }
+      }
+      return next;
+    });
+
+    // if container was selected in dialog, close it
+    setSelectedContainer((prev) => (prev?.containerCode === containerCode ? null : prev));
+
+    notify(t("shelfFloor.removeSuccess", { code: containerCode }) ?? `${containerCode} removed`, "success");
   };
 
   const applyUpdatesToServer = async () => {
@@ -547,13 +578,14 @@ export default function ShelfFloorOrders({
         </DialogActions>
       </Dialog>
 
-      {/* Container detail dialog: pass onSaveLocal and notify */}
+      {/* Container detail dialog: pass onSaveLocal, onNotify, and onRemoved */}
       <ContainerDetailDialog
         open={!!selectedContainer}
         container={selectedContainer}
         onClose={() => setSelectedContainer(null)}
         onSaveLocal={handleSaveContainerLocally}
         onNotify={(msg, sev) => notify(msg, sev ?? "info")}
+        onRemoved={handleContainerRemoved} // <-- NEW
       />
 
       {/* Snackbar */}

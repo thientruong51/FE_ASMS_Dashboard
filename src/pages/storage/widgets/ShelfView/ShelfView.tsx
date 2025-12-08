@@ -90,6 +90,22 @@ export default function ShelfView({
     setLocalContainersByFloor((prev) => ({ ...prev, [key]: updatedList }));
   };
 
+  // NEW: handle container removed from ContainerDetailDialog
+  const handleContainerRemoved = (containerCode: string) => {
+    if (!selectedFloor) return;
+    const key = resolveFloorKeyForWrite(selectedFloor);
+
+    setLocalContainersByFloor((prev) => {
+      const prevList = prev[key] ?? [];
+      const nextList = prevList.filter((c) => c.containerCode !== containerCode);
+      const copy = { ...prev, [key]: nextList };
+      return copy;
+    });
+
+    // if the dialog is open for the same container, close it
+    setSelectedContainer((prev) => (prev?.containerCode === containerCode ? null : prev));
+  };
+
   const activeContainers: ContainerItem[] = (() => {
     if (!selectedFloor) return [];
 
@@ -305,6 +321,7 @@ export default function ShelfView({
         open={!!selectedContainer}
         container={selectedContainer}
         onClose={() => setSelectedContainer(null)}
+        onRemoved={handleContainerRemoved} // <-- NEW: top-level dialog removal handler
       />
     </Box>
   );

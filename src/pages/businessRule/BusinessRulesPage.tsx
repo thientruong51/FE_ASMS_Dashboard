@@ -1,4 +1,4 @@
-import  { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Card,
@@ -39,18 +39,29 @@ export default function BusinessRulesPage() {
   const [density, setDensity] = useState<"compact" | "standard" | "comfortable">("standard");
 
   const fetchAll = useCallback(async () => {
-    setLoading(true);
-    try {
-      const resp = await businessRulesApi.getBusinessRules?.({ page: 1, pageSize: 1000 });
-      const data = (resp && (resp as any).data) ?? (resp as any) ?? [];
-      setItems(data);
-    } catch (err) {
-      console.error("getBusinessRules failed", err);
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  setLoading(true);
+  try {
+    const resp = await businessRulesApi.getBusinessRules?.({ page: 1, pageSize: 1000 });
+    const data = (resp && (resp as any).data) ?? (resp as any) ?? [];
+
+    const mapped = (data as BusinessRuleItem[]).map((r) => ({
+      ...r,
+      _displayCategory: t(`categories.${String(r.category)}`, { defaultValue: String(r.category ?? "") }),
+      _displayPriority: t(`priorities.${String(r.priority)}`, { defaultValue: String(r.priority ?? "") }),
+      _displayRuleType: t(`ruleTypes.${String(r.ruleType)}`, { defaultValue: String(r.ruleType ?? "") }),
+      _displayIsActive: (r.isActive ? t("active") : t("inactive")),
+      _displayEffectiveDate: r.effectiveDate ? fmtDate(r.effectiveDate) : "",
+      _displayExpiryDate: r.expiryDate ? fmtDate(r.expiryDate) : "",
+    }));
+    setItems(mapped);
+  } catch (err) {
+    console.error("getBusinessRules failed", err);
+    setItems([]);
+  } finally {
+    setLoading(false);
+  }
+}, [t]);
+
 
   useEffect(() => {
     fetchAll();
@@ -82,6 +93,21 @@ export default function BusinessRulesPage() {
     }
   };
 
+  const i18nCategory = (val: any) => {
+    if (val == null || val === "") return "-";
+    return t(`categories.${String(val)}`, { defaultValue: String(val) });
+  };
+
+  const i18nPriority = (val: any) => {
+    if (val == null || val === "") return "-";
+    return t(`priorities.${String(val)}`, { defaultValue: String(val) });
+  };
+
+  const i18nRuleType = (val: any) => {
+    if (val == null || val === "") return "-";
+    return t(`ruleTypes.${String(val)}`, { defaultValue: String(val) });
+  };
+
   const filtered = useMemo(() => {
     const q = (search ?? "").trim().toLowerCase();
     if (!q) return items;
@@ -108,9 +134,36 @@ export default function BusinessRulesPage() {
         flex: 1,
         renderCell: (p: GridRenderCellParams<any>) => <span style={{ fontWeight: 600 }}>{p.value ?? "-"}</span>,
       },
-      { field: "category", headerName: t("category"), minWidth: 160, flex: 0.8 },
-      { field: "ruleType", headerName: t("ruleType"), minWidth: 120, flex: 0.6 },
-      { field: "priority", headerName: t("priority"), minWidth: 100, flex: 0.5 },
+      {
+        field: "category",
+        headerName: t("category"),
+        minWidth: 160,
+        flex: 0.8,
+        renderCell: (p: GridRenderCellParams<any>) => {
+          const val = p.value ?? p.row?.category ?? "";
+          return <span>{i18nCategory(val)}</span>;
+        },
+      },
+      {
+        field: "ruleType",
+        headerName: t("ruleType"),
+        minWidth: 120,
+        flex: 0.6,
+        renderCell: (p: GridRenderCellParams<any>) => {
+          const val = p.value ?? p.row?.ruleType ?? "";
+          return <span>{i18nRuleType(val)}</span>;
+        },
+      },
+      {
+        field: "priority",
+        headerName: t("priority"),
+        minWidth: 100,
+        flex: 0.5,
+        renderCell: (p: GridRenderCellParams<any>) => {
+          const val = p.value ?? p.row?.priority ?? "";
+          return <span>{i18nPriority(val)}</span>;
+        },
+      },
       {
         field: "isActive",
         headerName: t("isActive"),
@@ -193,7 +246,16 @@ export default function BusinessRulesPage() {
     const csv = [header].concat(
       filtered.map((r) => {
         const record: Record<string, any> = {};
-        for (const k of keys) record[k] = (r as any)[k] ?? "";
+        for (const k of keys) {
+          let v = (r as any)[k] ?? "";
+          // dịch các trường cần thiết trước khi xuất CSV bằng i18n
+          if (k === "category") v = i18nCategory(v);
+          if (k === "priority") v = i18nPriority(v);
+          if (k === "ruleType") v = i18nRuleType(v);
+          if (k === "isActive") v = v ? t("active") : t("inactive");
+          if (k === "effectiveDate" || k === "expiryDate") v = v ? fmtDate(v) : "";
+          record[k] = v;
+        }
         return keys
           .map((k) => {
             const v = record[k];
@@ -275,7 +337,7 @@ export default function BusinessRulesPage() {
                     <Box>
                       <Typography fontWeight={700}>{r.ruleName ?? r.ruleCode}</Typography>
                       <Typography color="text.secondary">
-                        {r.ruleCode ?? "-"} • {r.category ?? "-"} • {r.priority ?? "-"} • {r.ruleType ?? "-"}
+                        {r.ruleCode ?? "-"} • {i18nCategory(r.category)} • {i18nPriority(r.priority)} • {i18nRuleType(r.ruleType)}
                       </Typography>
                     </Box>
                     <Box>

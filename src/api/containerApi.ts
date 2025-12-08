@@ -42,6 +42,11 @@ export type ContainerListResponse = {
   data: ContainerItem[];
   pagination?: any;
 };
+export type RemoveContainerPayload = {
+  containerCode: string;
+  performedBy: string;
+  orderCode?: string | null;
+};
 
 export async function getContainers(params?: Record<string, any>): Promise<ContainerListResponse> {
   const resp = await axiosClient.get<ContainerListResponse>("/api/Container", { params });
@@ -103,6 +108,19 @@ export async function deleteContainer(containerCode: string): Promise<void> {
     await axiosClient.delete(`/api/Container/${encodeURIComponent(containerCode)}`);
   } catch (err) {
     console.error("deleteContainer failed", err);
+    throw err;
+  }
+}
+
+export async function removeContainer(payload: RemoveContainerPayload): Promise<void> {
+  try {
+    await axiosClient.post("/api/Container/remove", {
+      containerCode: payload.containerCode,
+      performedBy: payload.performedBy,
+      ...(payload.orderCode ? { orderCode: payload.orderCode } : {}),
+    });
+  } catch (err) {
+    console.error("removeContainer failed", err);
     throw err;
   }
 }
