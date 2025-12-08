@@ -21,7 +21,10 @@ import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import PaymentOutlinedIcon from "@mui/icons-material/PaymentOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+
 import orderApi, { type OrderDetailItem } from "@/api/orderApi";
+import { getContainerTypes } from "@/api/containerTypeApi";
+import shelfTypeApi from "@/api/shelfTypeApi";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -31,6 +34,23 @@ import {
   translateProductType,
   translateStyle,
 } from "@/utils/translationHelpers";
+
+
+const CONTAINER_TYPES_FALLBACK = [
+  { containerTypeId: 1, type: "A", length: 0.5, width: 0.5, height: 0.45, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103944/THUNG_A_s6rirx.glb", price: 35000 },
+  { containerTypeId: 2, type: "B", length: 0.75, width: 0.75, height: 0.45, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103945/THUNG_B_r3eikp.glb", price: 50000 },
+  { containerTypeId: 3, type: "C", length: 1, width: 0.5, height: 0.45, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103946/THUNG_C_cbsgav.glb", price: 60000 },
+  { containerTypeId: 4, type: "D", length: 0.5, width: 0.5, height: 0.8, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103946/THUNG_D_ognjqr.glb", price: 55000 },
+  { containerTypeId: 5, type: "A", length: 0.5, width: 0.5, height: 0.45, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847449/THUNG_A_uu6f3w.glb", price: 25000 },
+  { containerTypeId: 6, type: "B", length: 0.75, width: 0.75, height: 0.45, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847443/THUNG_B_qp8ysr.glb", price: 35000 },
+  { containerTypeId: 7, type: "C", length: 1, width: 0.5, height: 0.45, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847443/THUNG_C_wtagvu.glb", price: 40000 },
+  { containerTypeId: 8, type: "D", length: 0.5, width: 0.5, height: 0.8, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847446/THUNG_D_cs1w1m.glb", price: 38000 },
+];
+
+const SHELF_TYPES_FALLBACK = [
+  { shelfTypeId: 1, name: "Shelf", length: 1.55, width: 1.06, height: 2.45, price: 150000, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847444/KE_1550X1057X2045_jvuubl.glb" },
+  { shelfTypeId: 2, name: "Shelf_Logistics", length: 1.7, width: 1.07, height: 5.2, price: 0, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847452/KE_1700X1070X6200_s2s3ey.glb" },
+];
 
 type Props = {
   orderCode: string | null;
@@ -117,7 +137,51 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
   const [details, setDetails] = useState<OrderDetailItem[]>([]);
   const [, setMeta] = useState<{ success?: boolean; message?: string }>({});
 
+  const [containerMap, setContainerMap] = useState<Record<number, any>>({});
+  const [shelfMap, setShelfMap] = useState<Record<number, any>>({});
+
   const order = orderFull ?? {};
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const containersResp = await getContainerTypes();
+        const containers = Array.isArray(containersResp) ? containersResp :  containersResp;
+        const finalContainers = Array.isArray(containers) && containers.length > 0 ? containers : CONTAINER_TYPES_FALLBACK;
+        const cmap: Record<number, any> = {};
+        finalContainers.forEach((c: any) => {
+          const id = Number(c.containerTypeId ?? c.id ?? c.containerTypeId);
+          if (!Number.isNaN(id)) cmap[id] = c;
+        });
+        if (mounted) setContainerMap(cmap);
+      } catch {
+        const cmap: Record<number, any> = {};
+        CONTAINER_TYPES_FALLBACK.forEach((c) => (cmap[Number(c.containerTypeId)] = c));
+        if (mounted) setContainerMap(cmap);
+      }
+
+      try {
+        const shelfResp = await shelfTypeApi.getShelfTypes();
+        const shelves = shelfResp?.data ?? shelfResp;
+        const finalShelves = Array.isArray(shelves) && shelves.length > 0 ? shelves : SHELF_TYPES_FALLBACK;
+        const smap: Record<number, any> = {};
+        finalShelves.forEach((s: any) => {
+          const id = Number(s.shelfTypeId ?? s.id);
+          if (!Number.isNaN(id)) smap[id] = s;
+        });
+        if (mounted) setShelfMap(smap);
+      } catch {
+        const smap: Record<number, any> = {};
+        SHELF_TYPES_FALLBACK.forEach((s) => (smap[Number(s.shelfTypeId)] = s));
+        if (mounted) setShelfMap(smap);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!open || !orderCode) {
@@ -164,6 +228,29 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
     } catch {
       return String(v);
     }
+  };
+
+  const getContainerLabel = (val: number | string | undefined | null) => {
+    if (val == null || val === "") return null;
+    const id = typeof val === "number" ? val : /^\d+$/.test(String(val)) ? Number(val) : NaN;
+    if (!Number.isNaN(id) && containerMap[id]) {
+      const c = containerMap[id];
+    
+      const type = c.type ?? c.name ?? `#${id}`;
+      return `${type} `;
+    }
+    return String(val);
+  };
+
+  const getShelfLabel = (val: number | string | undefined | null) => {
+    if (val == null || val === "") return null;
+    const id = typeof val === "number" ? val : /^\d+$/.test(String(val)) ? Number(val) : NaN;
+    if (!Number.isNaN(id) && shelfMap[id]) {
+      const s = shelfMap[id];
+      const name = s.name ?? s.type ?? `#${id}`;
+      return `${name} `;
+    }
+    return String(val);
   };
 
   const headerCustomer = useMemo(
@@ -437,15 +524,15 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
 
                       const productTranslated = productNames
                         ? productNames
-                            .split(",")
-                            .map((x) => translateProductType(t, x.trim()))
-                            .join(", ")
+                          .split(",")
+                          .map((x) => translateProductType(t, x.trim()))
+                          .join(", ")
                         : null;
                       const serviceTranslated = serviceNames
                         ? serviceNames
-                            .split(",")
-                            .map((x) => translateServiceName(t, x.trim()))
-                            .join(", ")
+                          .split(",")
+                          .map((x) => translateServiceName(t, x.trim()))
+                          .join(", ")
                         : null;
 
                       const possibleImageFields = [
@@ -454,10 +541,13 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                         (d as any).photo,
                         (d as any).thumbnail,
                         (d as any).photoUrl,
-                        (d as any).images, 
+                        (d as any).images,
                       ];
 
                       const imageCandidates = ([] as any[]).concat(...possibleImageFields.filter(Boolean));
+
+                      const containerLabel = getContainerLabel((d as any).containerType);
+                      const shelfLabel = getShelfLabel((d as any).shelfTypeId);
 
                       return (
                         <Card key={d.orderDetailId} variant="outlined" sx={{ borderRadius: 2 }}>
@@ -492,11 +582,31 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                                 </Box>
                               </Box>
 
+                              {/* chips: hiện mọi field có dữ liệu, và map container/shelf thành label nếu có */}
                               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1, alignItems: "center" }}>
                                 {d.isPlaced != null && <Chip size="small" label={d.isPlaced ? t("item.placed") : t("item.unplaced")} color={d.isPlaced ? "success" : "default"} />}
+
                                 {has(d.containerCode) && <Chip size="small" label={`${t("item.container")}: ${d.containerCode}`} />}
                                 {has(d.storageCode) && <Chip size="small" label={`${t("item.storage")}: ${d.storageCode}`} />}
                                 {has(d.floorCode) && <Chip size="small" label={`${t("item.floor")}: ${d.floorCode}`} />}
+
+                                {containerLabel ? (
+                                  <Chip size="small" label={`${t("item.containerType")}: ${containerLabel}`} color="info" />
+                                ) : (d as any).containerType !== null && (d as any).containerType !== undefined ? (
+                                  <Chip size="small" label={`${t("item.containerType")}: ${(d as any).containerType}`} color="info" />
+                                ) : null}
+
+                                {shelfLabel ? (
+                                  <Chip size="small" label={`${t("item.shelfType")}: ${shelfLabel}`} color="warning" />
+                                ) : (d as any).shelfTypeId !== null && (d as any).shelfTypeId !== undefined ? (
+                                  <Chip size="small" label={`${t("item.shelfType")}: ${(d as any).shelfTypeId}`} color="warning" />
+                                ) : null}
+
+
+                                {has((d as any).length) && <Chip size="small" label={`L: ${(d as any).length}`} />}
+                                {has((d as any).width) && <Chip size="small" label={`W: ${(d as any).width}`} />}
+                                {has((d as any).height) && <Chip size="small" label={`H: ${(d as any).height}`} />}
+
                                 {productNames && <Chip size="small" label={withTooltip(productNames, productTranslated)} />}
                               </Box>
                             </Box>
@@ -507,8 +617,6 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                   </Stack>
                 )}
               </Box>
-
-             
             </Box>
           )}
 
@@ -589,7 +697,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
             <Button variant="outlined" onClick={onClose}>
               {t("actions.close")}
             </Button>
-            
+
           </Box>
         </Box>
       </Box>

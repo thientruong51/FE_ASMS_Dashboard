@@ -10,11 +10,14 @@ export const customerApi = {
   createCustomer: (payload: any) =>
     axiosClient.post("/api/Customer", payload),
 
-  updateCustomer: (id: number | string, payload: any) =>
-    axiosClient.put(`/api/Customer/${id}`, payload),
+  // Backend không nhận PUT /{id}, nên phải PUT /api/Customer và truyền id trong body
+  updateCustomer: (payload: any) =>
+    axiosClient.put(`/api/Customer`, payload),
 
+  // Backend của bạn không có API delete => tạm thời lỗi
+  // Nếu backend hỗ trợ delete theo dạng PUT, cần xác nhận đúng url
   deleteCustomer: (id: number | string) =>
-    axiosClient.put(`/api/Customer/${id}/delete`),
+    axiosClient.put(`/api/Customer/delete`, { id }),
 };
 
 export default customerApi;

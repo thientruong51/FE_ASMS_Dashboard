@@ -43,7 +43,9 @@
     "unplaced": "Chưa đặt",
     "container": "Container",
     "storage": "Kho",
-    "floor": "Tầng"
+    "floor": "Tầng",
+    "shelfType":"Loại kệ",
+    "containerType":"Loại thùng"
   },
 
   "actions": {
