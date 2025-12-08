@@ -65,7 +65,9 @@
   "order_retrieved": "Order Retrieved",
   "noData": "-",
   "delivered":"Delivered",
-  "completed":"Completed"
+  "completed":"Completed",
+  "order_completed":"Order Completed",
+  "auto_update_overdue_detected":"Auto Update Overdue Detected"
 },
 "actionTypeNames": {
   "order_retrieved": "Order Retrieved",
@@ -80,7 +82,9 @@
   "renting_active":"Renting Active",
   "noData": "-",
   "order_overdue":"Order Overdue",
-  "delivered_to_warehouse/customer":"Delivered to Warehouse/Customer"
+  "delivered_to_warehouse/customer":"Delivered to Warehouse/Customer",
+  "order_completed":"Order Completed",
+  "auto_update_overdue_detected":"Auto Update Overdue Detected"
 }
 
 

@@ -160,7 +160,9 @@ const actionTypeKeyMapRaw: Record<string, string> = {
   "Renting Active":"renting_active",
   "Customer Retrieved from Expired Storage": "customer_retrieved_from_expired-storage",
   "Order Overdue":"order_overdue",
-  "Delivered to Warehouse/Customer":"delivered_to_warehouse/customer"
+  "Delivered to Warehouse/Customer":"delivered_to_warehouse/customer",
+  "Auto Update - Overdue Detected":"auto_update_overdue_detected",
+  "Order Completed":"order_completed"
 };
 
 const actionTypeMaps = buildNormalizedMap(actionTypeKeyMapRaw);

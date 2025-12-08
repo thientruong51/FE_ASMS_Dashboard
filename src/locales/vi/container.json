@@ -1,0 +1,97 @@
+{
+  "page": {
+    "title": "Quản lý Container",
+    "subtitle": "Danh sách và thông tin chi tiết các thùng trong kho",
+    "searchPlaceholder": "Tìm kiếm thùng"
+  },
+
+  "tabs": {
+    "all": "Tất cả",
+    "occupied": "Đang chứa",
+    "empty": "Trống",
+    "inactive": "Ngưng hoạt động"
+  },
+
+  "table": {
+    "code": "Mã thùng",
+    "floor": "Tầng / Vị trí",
+    "type": "Loại",
+    "serial": "Số thứ tự",
+    "maxWeight": "Tải tối đa",
+    "currentWeight": "Tải hiện tại",
+    "status": "Trạng thái",
+    "isActive": "Hoạt động",
+    "active": "Có",
+    "inactive": "Không",
+    "actions": "Hành động"
+  },
+
+  "actions": {
+    "refresh": "Làm mới",
+    "export": "Xuất file",
+    "exportCsv": "Xuất CSV",
+    "new": "Tạo thùng",
+    "edit": "Chỉnh sửa",
+    "save": "Lưu",
+    "create": "Tạo",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "view": "Xem",
+    "close": "Đóng",
+    "savePosition": "Lưu vị trí"
+  },
+
+  "dialog": {
+    "createTitle": "Tạo Container mới",
+    "editTitle": "Chỉnh sửa Container"
+  },
+
+  "labels": {
+    "container": "Container",
+    "information": "Thông tin thùng",
+    "position": "Vị trí",
+    "initialsFallback": "CO"
+  },
+
+  "fields": {
+    "containerCode": "Mã thùng",
+    "floorCode": "Mã tầng",
+    "status": "Trạng thái",
+    "type": "Loại",
+    "serialNumber": "Số thứ tự",
+    "layer": "Lớp",
+    "maxWeight": "Tải tối đa",
+    "currentWeight": "Tải hiện tại",
+    "positionX": "Vị trí X",
+    "positionY": "Vị trí Y",
+    "positionZ": "Vị trí Z",
+    "notes": "Ghi chú",
+    "isActive": "Hoạt động"
+  },
+
+  "messages": {
+    "created": "Tạo thùng thành công",
+    "updated": "Cập nhật thùng thành công",
+    "deleted": "Xóa thùng thành công",
+    "updatePositionSuccess": "Đã cập nhật vị trí thùng"
+  },
+
+  "errors": {
+    "missingCode": "Vui lòng nhập mã thùng",
+    "noContainerCode": "Không có mã thùng",
+    "unknown": "Có lỗi xảy ra, vui lòng thử lại"
+  },
+
+  "confirm": {
+    "delete": "Bạn có chắc chắn muốn xóa thùng này?"
+  },
+
+  "export": {
+    "filenamePrefix": "thùng"
+  },
+  "statusMap": {
+  "occupied": "Đang sử dụng",
+  "available": "Trống",
+  "empty": "Trống"
+}
+}

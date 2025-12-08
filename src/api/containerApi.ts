@@ -25,8 +25,8 @@ export type ContainerItem = {
   imageUrl?: string | null;
   notes?: string | null;
 
-  type?: string; 
-  serialNumber?: number; 
+  type?: string;
+  serialNumber?: number;
   layer?: number;
 
   containerAboveCode?: string | null;
@@ -47,6 +47,7 @@ export async function getContainers(params?: Record<string, any>): Promise<Conta
   const resp = await axiosClient.get<ContainerListResponse>("/api/Container", { params });
   return resp.data;
 }
+
 export async function updateContainerPosition(
   containerCode: string,
   params: { serialNumber?: number | null; layer?: number | null }
@@ -58,4 +59,50 @@ export async function updateContainerPosition(
       ...(params.layer !== undefined ? { layer: params.layer } : {}),
     },
   });
+}
+
+
+export async function getContainer(containerCode: string): Promise<ContainerItem | null> {
+  try {
+    const resp = await axiosClient.get(`/api/Container/${encodeURIComponent(containerCode)}`);
+    return (resp.data?.data ?? resp.data) ?? null;
+  } catch (err) {
+    console.warn("getContainer failed", err);
+    return null;
+  }
+}
+
+
+export async function createContainer(payload: Partial<ContainerItem>): Promise<ContainerItem | null> {
+  try {
+    const resp = await axiosClient.post("/api/Container", payload);
+    return (resp.data?.data ?? resp.data) ?? null;
+  } catch (err) {
+    console.error("createContainer failed", err);
+    throw err;
+  }
+}
+
+
+export async function updateContainer(
+  containerCode: string,
+  payload: Partial<ContainerItem>
+): Promise<ContainerItem | null> {
+  try {
+    const resp = await axiosClient.put(`/api/Container/${encodeURIComponent(containerCode)}`, payload);
+    return (resp.data?.data ?? resp.data) ?? null;
+  } catch (err) {
+    console.error("updateContainer failed", err);
+    throw err;
+  }
+}
+
+
+export async function deleteContainer(containerCode: string): Promise<void> {
+  try {
+    await axiosClient.delete(`/api/Container/${encodeURIComponent(containerCode)}`);
+  } catch (err) {
+    console.error("deleteContainer failed", err);
+    throw err;
+  }
 }

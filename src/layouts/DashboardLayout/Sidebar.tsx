@@ -31,7 +31,7 @@ import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
 import ContactPhoneIcon from '@mui/icons-material/ContactPhone';
 import PriceChangeIcon from '@mui/icons-material/PriceChange';
 import AnnouncementIcon from '@mui/icons-material/Announcement';
-
+import AllInboxIcon from '@mui/icons-material/AllInbox';
 import { getAuthClaimsFromStorage } from "@/utils/auth";
 
 type Item = {
@@ -56,7 +56,6 @@ export default function Sidebar() {
     ? Number(claims.EmployeeRoleId)
     : null;
 
-
   const ALL = [1, 2, 3, 4];
 
   const items: Item[] = [
@@ -65,7 +64,7 @@ export default function Sidebar() {
     { label: t("trackingHistorys"), icon: <AssignmentAddIcon />, to: "/trackingHistorys", allowedRoles: ALL },
     { label: t("contacts"), icon: <ContactPhoneIcon />, to: "/contacts", allowedRoles: ALL },
     { label: t("storages"), icon: <InventoryIcon />, to: "/storages", allowedRoles: ALL },
-    { label: t("customers"), icon: <PeopleIcon />, to: "/customers", allowedRoles: [1,4] }, // spec: role1 and role4
+    { label: t("customers"), icon: <PeopleIcon />, to: "/customers", allowedRoles: [1,4] },
     { label: t("paymentHistorys"), icon: <RequestQuoteIcon />, to: "/paymentHistorys", allowedRoles: [1,4] },
     { label: t("employeeRoles"), icon: <ManageAccountsIcon />, to: "/employee-roles", allowedRoles: [4] },
     { label: t("staffs"), icon: <EngineeringIcon />, to: "/staffs", allowedRoles: [1,4] },
@@ -73,6 +72,7 @@ export default function Sidebar() {
     { label: t("buildings"), icon: <ApartmentIcon />, to: "/buildings", allowedRoles: [4] },
     { label: t("storageTypes"), icon: <WarehouseIcon />, to: "/storage-types", allowedRoles: [4] },
     { label: t("shelfsTypes"), icon: <ShelvesIcon />, to: "/shelfs", allowedRoles: [1,4] },
+    { label: t("containers"), icon: <AllInboxIcon />, to: "/containers", allowedRoles: [4] },
     { label: t("containerTypes"), icon: <WidgetsIcon />, to: "/container-types", allowedRoles: [4] },
     { label: t("productTypes"), icon: <LiquorIcon />, to: "/product-types", allowedRoles: [4] },
     { label: t("prices"), icon: <PriceChangeIcon />, to: "/prices", allowedRoles: [1,4] },
@@ -93,6 +93,7 @@ export default function Sidebar() {
     if (isMobile) dispatch(setSidebar(false));
   };
 
+  // --- sidebar content: make scrollable when too long ---
   const sidebarContent = (
     <Box
       sx={{
@@ -104,7 +105,12 @@ export default function Sidebar() {
         alignItems: "center",
         py: 2,
         gap: 1.5,
-        height: "110%",
+        // make the inner box scrollable and constrained to viewport height:
+        overflowY: "auto",
+        maxHeight: "100vh",
+        // keep buttons centered horizontally but allow vertical scroll
+        "&::-webkit-scrollbar": { width: 8 },
+        "&::-webkit-scrollbar-thumb": { borderRadius: 4, backgroundColor: "rgba(0,0,0,0.12)" }
       }}
     >
       {visibleItems.map((item) => {
@@ -147,6 +153,7 @@ export default function Sidebar() {
             top: 0,
             left: 0,
             height: "100%",
+            overflowY: "auto" // ensure drawer can scroll on mobile too
           },
         }}
       >
@@ -156,7 +163,20 @@ export default function Sidebar() {
   }
 
   return (
-    <Box sx={{ width: 70, bgcolor: "#fff", borderRight: "1px solid #e5e7eb", position: "sticky", top: 0, height: "100vh", zIndex: 100 }}>
+    <Box sx={{
+      width: 70,
+      bgcolor: "#fff",
+      borderRight: "1px solid #e5e7eb",
+      position: "sticky",
+      top: 0,
+      height: "100vh", // occupy viewport height
+      zIndex: 100,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      // make outer container allow inner scroll when content overflow
+      overflow: "hidden"
+    }}>
       {sidebarContent}
     </Box>
   );

@@ -43,6 +43,9 @@ import viPricing from "@/locales/vi/price.json";
 import enPricing from "@/locales/en/price.json"; 
 import businessRules_en from "@/locales/en/businessRules.json";
 import businessRules_vi from "@/locales/vi/businessRules.json";
+import viContainer from "@/locales/vi/container.json";
+import enContainer from "@/locales/en/container.json";
+
 i18n
   .use(initReactI18next)
   .init({
@@ -69,7 +72,7 @@ i18n
         contact: contact_en,
         pricing: enPricing,
         businessRules: businessRules_en,
-
+        container:enContainer
       },
       vi: {
         auth: authVi,
@@ -93,6 +96,7 @@ i18n
          contact: contact_vi,
          pricing: viPricing,
          businessRules: businessRules_vi,
+        container:viContainer
 
       }
     },

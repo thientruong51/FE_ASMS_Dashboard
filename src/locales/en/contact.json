@@ -1,49 +1,62 @@
 {
   "page": {
     "title": "Contacts",
-    "subtitle": "Manage customer contact and support requests",
+    "subtitle": "Manage incoming contacts / support requests",
     "searchPlaceholder": "Search contacts",
-    "clickToView": "Click to view details"
+    "clickToView": "Click to view"
   },
-
-  "table": {
-    "id": "ID",
-    "customerCode": "Customer Code",
-    "customerName": "Customer Name",
-    "orderCode": "Order Code",
-    "phone": "Phone Number",
-    "actions": "Actions"
+  "tabs": {
+    "contact": "Contact",
+    "support": "To handle",
+    "processed": "Processed"
   },
-
+  "labels": {
+    "contact": "Contact",
+    "contactInformation": "Contact information",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "message": "Message"
+  },
   "actions": {
-    "view": "View",
-    "close": "Close",
     "export": "Export",
     "exportCsv": "Export CSV",
     "refresh": "Refresh",
-    "openOrder": "Open Order"
+    "view": "View",
+    "close": "Close",
+    "markProcessed": "Mark as processed",
+    "reopen": "Reopen"
   },
-
-  "tabs": {
-    "contact": "Contact",
-    "support": "Support Needed"
-  },
-
-  "labels": {
-    "contact": "Contact Information",
-    "contactInformation": "Contact Information",
-    "name": "Full Name",
-    "phone": "Phone Number",
-    "email": "Email",
-    "message": "Message",
-    "orderCode": "Order Code"
-  },
-
-  "support": {
-    "hint": "This contact request is related to an order. You can open order details or contact the customer."
-  },
-
   "export": {
-    "filenamePrefix": "Contact_List"
+    "filenamePrefix": "contacts"
+  },
+  "table": {
+    "id": "ID",
+    "customerCode": "Customer Code",
+    "customerName": "Customer",
+    "orderCode": "Order",
+    "phone": "Phone",
+    "actions": "Actions",
+    "isActive": "Active",
+    "active":"Unprocessed",
+     "inactive":"Processed"
+  },
+  "messages": {
+    "toggleSuccess": "Updated successfully"
+  },
+  "errors": {
+    "noContactId": "No contact id",
+    "apiMissing": "Toggle API not available",
+    "fetchDetail": "Failed to fetch contact detail",
+    "unknown": "Operation failed"
+  },
+  "fields": {
+    "contactId": "ID",
+    "customerCode": "Customer Code",
+    "customerName": "Customer",
+    "employeeCode": "Employee Code",
+    "employeeName": "Employee",
+    "orderCode": "Order Code",
+    "isActive": "Active"
   }
 }
