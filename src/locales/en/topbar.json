@@ -4,5 +4,7 @@
   "logoAlt": "Logo",
   "notifications": "Notifications",
   "add": "Add",
-  "profile": "Profile"
+  "profile": "Profile",
+    "roleNames": { "manager": "Manager", "warehouse staff": "Warehouse staff", "delivery staff": "Delivery staff", "admin": "Administrator", "noData": "-" }
+
 }

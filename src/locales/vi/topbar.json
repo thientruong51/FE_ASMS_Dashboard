@@ -4,5 +4,12 @@
   "logoAlt": "Logo",
   "notifications": "Thông báo",
   "add": "Thêm",
-  "profile": "Hồ sơ"
+  "profile": "Hồ sơ",
+   "roleNames": {
+    "manager": "Quản lý",
+    "warehouse_staff": "Nhân viên kho",
+    "delivery_staff": "Nhân viên giao hàng",
+    "admin": "Quản trị viên",
+    "noData": "-"
+  }
 }

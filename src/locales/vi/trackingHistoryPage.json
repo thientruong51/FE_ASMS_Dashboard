@@ -65,7 +65,9 @@
   "order_retrieved": "Đơn đã nhận lại",
   "noData": "-",
   "delivered":"Đã vận chuyển xong",
-  "completed":"Hoàn thành"
+  "completed":"Hoàn thành",
+  "order_completed":"Đơn hàng đã hoàn tất",
+  "auto_update_overdue_detected":"Đơn hàng quá hạn tự động cập nhật"
 },
 "actionTypeNames": {
   "order_retrieved": "Đơn đã nhận lại",
@@ -80,7 +82,9 @@
   "renting_active":"Đang cho thuê",
   "noData": "-",
   "order_overdue":"Đơn hàng quá hạn",
-  "delivered_to_warehouse/customer":"Đã giao đến Kho/Khách hàng"
+  "delivered_to_warehouse/customer":"Đã giao đến Kho/Khách hàng",
+  "order_completed":"Đơn hàng đã hoàn tất",
+  "auto_update_overdue_detected":"Đơn hàng quá hạn tự động cập nhật"
 }
 
 

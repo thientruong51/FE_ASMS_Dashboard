@@ -132,7 +132,9 @@
   "renting_active":"Đang cho thuê",
   "noData": "-",
   "order_overdue":"Đơn hàng quá hạn",
-  "delivered_to_warehouse/customer":"Đã giao đến Kho/Khách hàng"
+  "delivered_to_warehouse/customer":"Đã giao đến Kho/Khách hàng",
+  "order_completed":"Đơn hàng đã hoàn tất",
+  "auto_update_overdue_detected":"Đơn hàng quá hạn tự động cập nhật"
 }
 
 

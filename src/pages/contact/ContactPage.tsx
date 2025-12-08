@@ -11,14 +11,20 @@ import {
   Tooltip,
   Tabs,
   Tab,
+  Chip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  type GridColDef,
+  type GridRenderCellParams,
+  type GridRowParams,
+} from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
-import contactApi from "@/api/contactApi"; 
+import contactApi from "@/api/contactApi";
 import ContactDetailDrawer from "./components/ContactDetailDrawer";
 
 function a11yProps(index: number) {
@@ -59,9 +65,10 @@ export default function ContactPage() {
   const [selectedContact, setSelectedContact] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // tab: 0 = Liên hệ (no order), 1 = Cần xử lí (has order)
+  // tab: 0 = Liên hệ (no order, active), 1 = Cần xử lí (has order, active), 2 = Đã xử lí (isActive === false)
   const [tabIndex, setTabIndex] = useState<number>(0);
 
+  // fetchContacts kept here so we can pass it to drawer via onToggled
   const fetchContacts = async () => {
     setLoading(true);
     try {
@@ -90,13 +97,19 @@ export default function ContactPage() {
 
   useEffect(() => {
     fetchContacts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const contactsWithOrder = useMemo(() => contacts.filter((c) => c && c.orderCode), [contacts]);
-  const contactsWithoutOrder = useMemo(() => contacts.filter((c) => !(c && c.orderCode)), [contacts]);
+  const contactsProcessed = useMemo(() => contacts.filter((c) => c && c.isActive === false), [contacts]);
+  const contactsWithOrder = useMemo(
+    () => contacts.filter((c) => c && c.orderCode && c.isActive !== false),
+    [contacts]
+  );
+  const contactsWithoutOrder = useMemo(
+    () => contacts.filter((c) => c && !c.orderCode && c.isActive !== false),
+    [contacts]
+  );
 
-  const currentList = tabIndex === 0 ? contactsWithoutOrder : contactsWithOrder;
+  const currentList = tabIndex === 0 ? contactsWithoutOrder : tabIndex === 1 ? contactsWithOrder : contactsProcessed;
 
   const filteredWithMemo = (all: any[], q: string) => {
     const qq = (q ?? "").trim().toLowerCase();
@@ -111,14 +124,14 @@ export default function ContactPage() {
           String(c.name ?? "").toLowerCase().includes(qq)
         );
       })
-      .map((r) => ({ id: r.contactId ?? r.contactId, __contactFull: r, ...r }));
+      .map((r) => ({ id: r.contactId ?? r.id, __contactFull: r, ...r }));
   };
 
   const rows = useMemo(() => filteredWithMemo(currentList, search), [currentList, search]);
 
   const handleExportCsv = () => {
     if (!currentList || currentList.length === 0) return;
-    const keys = ["contactId", "customerCode", "customerName", "orderCode", "name", "phoneContact", "email", "message"];
+    const keys = ["contactId", "customerCode", "customerName", "orderCode", "name", "phoneContact", "email", "message", "isActive"];
     const header = keys.join(",");
     const csv = [header]
       .concat(
@@ -136,7 +149,7 @@ export default function ContactPage() {
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    const tabSuffix = tabIndex === 0 ? "no_order" : "with_order";
+    const tabSuffix = tabIndex === 0 ? "no_order" : tabIndex === 1 ? "with_order" : "processed";
     a.href = url;
     a.download = `${t("export.filenamePrefix") ?? "contacts"}_${tabSuffix}_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
@@ -150,23 +163,44 @@ export default function ContactPage() {
     setDrawerOpen(true);
   };
 
-  const columns: GridColDef[] = [
+  const columns: GridColDef<any, any, any>[] = [
     { field: "contactId", headerName: t("table.id") ?? "ID", minWidth: 90, flex: 0.5 },
     { field: "customerCode", headerName: t("table.customerCode") ?? "Customer", minWidth: 140, flex: 1 },
     { field: "customerName", headerName: t("table.customerName") ?? "Name", minWidth: 160, flex: 1.2 },
     { field: "orderCode", headerName: t("table.orderCode") ?? "Order", minWidth: 150, flex: 1 },
     { field: "phoneContact", headerName: t("table.phone") ?? "Phone", minWidth: 140, flex: 1 },
     {
+      field: "isActive",
+      headerName: t("table.isActive") ?? "Active",
+      minWidth: 120,
+      flex: 0.6,
+      sortable: true,
+      renderCell: (params: GridRenderCellParams<any>) => {
+        const active = params.row?.isActive;
+        const activeLabel = active === false ? (t("table.inactive") ?? "No") : (t("table.active") ?? "Yes");
+        return active === false ? (
+          <Chip label={activeLabel} size="small" />
+        ) : (
+          <Chip label={activeLabel} size="small" color="success" />
+        );
+      },
+    },
+    {
       field: "actions",
       headerName: t("table.actions") ?? "Actions",
       width: 120,
       sortable: false,
-      renderCell: (params: any) => {
+      renderCell: (params: GridRenderCellParams<any>) => {
         return (
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <Tooltip title={t("actions.view") ?? "View"}>
               <span>
-                <IconButton size="small" onClick={() => openDrawerFor(params.row)}>
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    openDrawerFor(params.row);
+                  }}
+                >
                   <VisibilityIcon fontSize="small" />
                 </IconButton>
               </span>
@@ -198,6 +232,10 @@ export default function ContactPage() {
               <Tab
                 label={`${t("tabs.support") ?? "Cần xử lí"} (${contactsWithOrder.length})`}
                 {...a11yProps(1)}
+              />
+              <Tab
+                label={`${t("tabs.processed") ?? "Đã xử lí"} (${contactsProcessed.length})`}
+                {...a11yProps(2)}
               />
             </Tabs>
 
@@ -244,7 +282,7 @@ export default function ContactPage() {
                 getRowId={(r: any) => r.contactId ?? r.id}
                 density="standard"
                 disableRowSelectionOnClick
-                onRowDoubleClick={(params) => openDrawerFor(params.row)}
+                onRowDoubleClick={(params: GridRowParams<any>) => openDrawerFor(params.row)}
                 sx={{ border: "none", minWidth: 700 }}
               />
             </div>
@@ -256,6 +294,11 @@ export default function ContactPage() {
         contact={selectedContact}
         open={drawerOpen}
         onClose={() => {
+          setDrawerOpen(false);
+          setSelectedContact(null);
+        }}
+        onToggled={() => {
+          fetchContacts();
           setDrawerOpen(false);
           setSelectedContact(null);
         }}

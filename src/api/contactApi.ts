@@ -11,7 +11,7 @@ export type ContactItem = {
   phoneContact?: string | null;
   email?: string | null;
   message?: string | null;
-
+  isActive?: boolean | null;
   [key: string]: any;
 };
 
@@ -24,7 +24,6 @@ export type ContactListResponse = {
   totalPages?: number;
   pagination?: any;
 };
-
 
 export async function getContacts(params?: Record<string, any>): Promise<ContactListResponse> {
   const resp = await axiosClient.get<ContactListResponse>("/api/Contacts", { params });
@@ -41,15 +40,21 @@ export async function createContact(payload: Partial<ContactItem>): Promise<{ su
   return resp.data;
 }
 
-
 export async function updateContact(contactId: number | string, payload: Partial<ContactItem>): Promise<{ success?: boolean; data?: ContactItem }> {
   const resp = await axiosClient.put<{ success?: boolean; data?: ContactItem }>(`/api/Contacts/${encodeURIComponent(String(contactId))}`, payload);
   return resp.data;
 }
 
-
 export async function deleteContact(contactId: number | string): Promise<{ success?: boolean; message?: string }> {
   const resp = await axiosClient.delete<{ success?: boolean; message?: string }>(`/api/Contacts/${encodeURIComponent(String(contactId))}`);
+  return resp.data;
+}
+
+
+export async function toggleActive(contactId: number | string): Promise<{ success?: boolean; data?: ContactItem; message?: string }> {
+  const resp = await axiosClient.patch<{ success?: boolean; data?: ContactItem; message?: string }>(
+    `/api/Contacts/${encodeURIComponent(String(contactId))}/toggle-active`
+  );
   return resp.data;
 }
 
@@ -59,4 +64,5 @@ export default {
   createContact,
   updateContact,
   deleteContact,
+  toggleActive,
 };

@@ -46,13 +46,76 @@ function a11yProps(index: number) {
   };
 }
 
+const imageRegex = /\.(jpeg|jpg|gif|png|webp|avif|svg)$/i;
+const dataImageRegex = /^data:image\/[a-zA-Z]+;base64,/;
+
+const isImageUrl = (v: any) => {
+  if (!v || typeof v !== "string") return false;
+  const trimmed = v.trim();
+  if (dataImageRegex.test(trimmed)) return true;
+  try {
+    const u = new URL(trimmed);
+    return imageRegex.test(u.pathname) || /(\?|\&)format=image/i.test(trimmed);
+  } catch {
+    return imageRegex.test(trimmed);
+  }
+};
+
+function Thumbnail({ src, alt, size = 126 }: { src: string; alt?: string; size?: number }) {
+  return (
+    <Box
+      component="img"
+      src={src}
+      alt={alt ?? "img"}
+      sx={{
+        width: size,
+        height: size,
+        objectFit: "cover",
+        borderRadius: 1,
+        border: "1px solid rgba(0,0,0,0.06)",
+        boxShadow: 0,
+      }}
+    />
+  );
+}
+
+const renderValue = (v: any) => {
+  if (v == null) return "-";
+  if (Array.isArray(v)) {
+    const images = v.filter((x) => typeof x === "string" && isImageUrl(x));
+    const others = v.filter((x) => !images.includes(x));
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+        {images.map((src, i) => (
+          <Thumbnail key={i} src={src} size={152} />
+        ))}
+        {others.length > 0 && <span>{others.join(", ")}</span>}
+      </Box>
+    );
+  }
+
+  if (typeof v === "string" && isImageUrl(v)) {
+    return <Thumbnail src={v} size={56} />;
+  }
+
+  if (typeof v === "object") {
+    try {
+      return String(JSON.stringify(v));
+    } catch {
+      return String(v);
+    }
+  }
+
+  return String(v);
+};
+
 export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull }: Props) {
   const { t } = useTranslation("order");
 
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [details, setDetails] = useState<OrderDetailItem[]>([]);
-  const [meta, setMeta] = useState<{ success?: boolean; message?: string }>({});
+  const [, setMeta] = useState<{ success?: boolean; message?: string }>({});
 
   const order = orderFull ?? {};
 
@@ -333,18 +396,17 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                               "unpaidAmount",
                               "customerCode",
                               "customerName",
-                              "style"
+                              "style",
                             ].includes(k)
                         )
                         .map((k) => {
                           const v = order[k];
                           if (!has(v)) return null;
-                          // pretty-print arrays
-                          const display = Array.isArray(v) ? v.join(", ") : String(v);
+
                           return (
-                            <Box key={k} sx={{ display: "flex", gap: 2 }}>
+                            <Box key={k} sx={{ display: "flex", gap: 2, alignItems: "center" }}>
                               <Box sx={{ width: 140, color: "text.secondary" }}>{labelFor(k)}</Box>
-                              <Box sx={{ flex: 1 }}>{display}</Box>
+                              <Box sx={{ flex: 1 }}>{renderValue(v)}</Box>
                             </Box>
                           );
                         })}
@@ -373,23 +435,42 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                       const productNames = joinIfArray((d as any).productTypeNames);
                       const serviceNames = joinIfArray((d as any).serviceNames);
 
-                      // translated forms
                       const productTranslated = productNames
                         ? productNames
-                          .split(",")
-                          .map((x) => translateProductType(t, x.trim()))
-                          .join(", ")
+                            .split(",")
+                            .map((x) => translateProductType(t, x.trim()))
+                            .join(", ")
                         : null;
                       const serviceTranslated = serviceNames
                         ? serviceNames
-                          .split(",")
-                          .map((x) => translateServiceName(t, x.trim()))
-                          .join(", ")
+                            .split(",")
+                            .map((x) => translateServiceName(t, x.trim()))
+                            .join(", ")
                         : null;
+
+                      const possibleImageFields = [
+                        (d as any).image,
+                        (d as any).imageUrl,
+                        (d as any).photo,
+                        (d as any).thumbnail,
+                        (d as any).photoUrl,
+                        (d as any).images, 
+                      ];
+
+                      const imageCandidates = ([] as any[]).concat(...possibleImageFields.filter(Boolean));
 
                       return (
                         <Card key={d.orderDetailId} variant="outlined" sx={{ borderRadius: 2 }}>
                           <CardContent sx={{ display: "flex", gap: 2, alignItems: "center", p: 1.25 }}>
+                            {/* left: thumbnail column (if any) */}
+                            {imageCandidates && imageCandidates.length > 0 ? (
+                              <Box sx={{ mr: 1, display: "flex", gap: 1, flexDirection: "column" }}>
+                                {imageCandidates.slice(0, 3).map((src, i) =>
+                                  isImageUrl(src) ? <Thumbnail key={i} src={src} size={152} /> : null
+                                )}
+                              </Box>
+                            ) : null}
+
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
                                 <Box sx={{ minWidth: 0 }}>
@@ -427,14 +508,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                 )}
               </Box>
 
-              {/* meta message */}
-              {meta?.message && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    {meta.message}
-                  </Typography>
-                </Box>
-              )}
+             
             </Box>
           )}
 
@@ -489,11 +563,10 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                         .map((k) => {
                           const v = order[k];
                           if (!has(v)) return null;
-                          const display = Array.isArray(v) ? v.join(", ") : String(v);
                           return (
                             <Box key={k} sx={{ display: "flex", gap: 2 }}>
                               <Box sx={{ width: 140, color: "text.secondary" }}>{labelFor(k)}</Box>
-                              <Box sx={{ flex: 1 }}>{display}</Box>
+                              <Box sx={{ flex: 1 }}>{renderValue(v)}</Box>
                             </Box>
                           );
                         })}
@@ -516,9 +589,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
             <Button variant="outlined" onClick={onClose}>
               {t("actions.close")}
             </Button>
-            <Button variant="contained" color="success">
-              {t("actions.markPaid")}
-            </Button>
+            
           </Box>
         </Box>
       </Box>

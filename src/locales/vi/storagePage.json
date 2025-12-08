@@ -317,5 +317,6 @@
     "warehouse_expired": "Kho hết hạn",
     "warehouse_oversize": "Kho quá cỡ",
     "noData": "-"
-  }
+  },
+  "takeOut": "Lấy hàng ra"
 }

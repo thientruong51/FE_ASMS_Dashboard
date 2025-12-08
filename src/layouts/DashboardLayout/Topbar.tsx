@@ -1,8 +1,7 @@
+// src/pages/components/Topbar.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
-  TextField,
-  InputAdornment,
   IconButton,
   Avatar,
   Typography,
@@ -25,6 +24,69 @@ import { toggleSidebar } from "@/features/ui/uiSlice";
 import { getEmployeeRoles } from "@/api/employeeRoleApi";
 import authApi, { clearAuthStorage, getRefreshToken } from "@/api/auth";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+
+/* ====================== ROLE TRANSFORM HELPERS ====================== */
+
+const cleanWhitespace = (s?: string | null) =>
+  (s ?? "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\u00A0/g, " ")
+    .replace(/\s+/g, " ");
+
+const toSnake = (s?: string | null) => cleanWhitespace(s).replace(/\s+/g, "_");
+const normalize = (s?: string | null) => cleanWhitespace(s);
+
+const buildNormalizedMap = (raw: Record<string, string>) => {
+  const spacedMap: Record<string, string> = {};
+  const snakeMap: Record<string, string> = {};
+  for (const k of Object.keys(raw)) {
+    const spaced = cleanWhitespace(k);
+    const snake = spaced.replace(/\s+/g, "_");
+    spacedMap[spaced] = raw[k];
+    snakeMap[snake] = raw[k];
+  }
+  return { spacedMap, snakeMap };
+};
+
+const roleKeyMapRaw: Record<string, string> = {
+  manager: "manager",
+  "warehouse staff": "warehouse_staff",
+  "delivery staff": "delivery_staff",
+  admin: "admin",
+  warehouse: "warehouse_staff",
+  "nhân viên kho": "warehouse_staff",
+  "giao hàng": "delivery_staff",
+  "quản lý": "manager",
+};
+
+const roleMaps = buildNormalizedMap(roleKeyMapRaw);
+
+export const canonicalRoleKey = (s?: string | null) => {
+  const spaced = normalize(s);
+  const snake = toSnake(s);
+  if (roleMaps.spacedMap[spaced]) return roleMaps.spacedMap[spaced];
+  if (roleMaps.snakeMap[snake]) return roleMaps.snakeMap[snake];
+  return snake;
+};
+
+const groupNoData = (t: TFunction, groupKey: string) => {
+  const looked = t(`${groupKey}.noData`);
+  return looked !== `${groupKey}.noData` ? looked : "-";
+};
+
+export const translateRoleName = (t: TFunction, raw?: string | null, alt?: string | null) => {
+  const key = canonicalRoleKey(raw ?? alt);
+  const noData = groupNoData(t, "roleNames");
+  if (!key) return noData;
+  const looked = t(`roleNames.${key}`);
+  if (looked !== `roleNames.${key}`) return looked;
+  return raw ?? alt ?? key ?? noData;
+};
+
+/* ============================ JWT + UI UTILS ============================ */
 
 function parseJwt(token?: string | null) {
   if (!token) return null;
@@ -34,8 +96,7 @@ function parseJwt(token?: string | null) {
     const payload = parts[1];
     const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
     const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
-    const decoded = atob(padded);
-    return JSON.parse(decoded);
+    return JSON.parse(atob(padded));
   } catch {
     return null;
   }
@@ -47,6 +108,8 @@ function getInitials(name?: string | null) {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
+
+/* ======================================================================== */
 
 export default function Topbar() {
   const { t } = useTranslation("topbar");
@@ -60,6 +123,7 @@ export default function Topbar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
+  /* ===== Load employee roles ===== */
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -67,18 +131,21 @@ export default function Topbar() {
         const resp = await getEmployeeRoles({ pageSize: 1000 });
         const arr = resp?.data ?? [];
         if (!mounted) return;
-        const m: Record<number, string> = {};
+        const map: Record<number, string> = {};
         arr.forEach((r) => {
-          if (r?.employeeRoleId != null) m[Number(r.employeeRoleId)] = r.name;
+          if (r?.employeeRoleId != null) map[Number(r.employeeRoleId)] = r.name;
         });
-        setRolesMap(m);
+        setRolesMap(map);
       } catch (err) {
-        console.warn("Failed to load employee roles", err);
+        console.warn("Failed to load roles", err);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
+  /* ====================== FIXED VERSION OF refreshUserFromToken ====================== */
   const refreshUserFromToken = async () => {
     try {
       const token = localStorage.getItem("accessToken");
@@ -93,18 +160,32 @@ export default function Topbar() {
       const username = payload.UserName ?? payload.username ?? null;
 
       let roleName: string | undefined;
-      const roleId = payload.EmployeeRoleId ?? payload.employeeRoleId ?? payload.RoleId ?? null;
-      if (roleId != null) {
-        const idNum = Number(roleId);
-        if (!Number.isNaN(idNum) && rolesMap && rolesMap[idNum]) {
-          roleName = rolesMap[idNum];
-        } else if (payload.EmployeeRoleName || payload.Role || payload.role) {
-          roleName = payload.EmployeeRoleName ?? payload.Role ?? payload.role;
-        } else {
-          roleName = String(roleId);
-        }
+
+      const rawRoleFromToken =
+        payload.EmployeeRoleName ?? payload.Role ?? payload.role ?? null;
+
+      const roleId =
+        payload.EmployeeRoleId ?? payload.employeeRoleId ?? payload.RoleId ?? null;
+
+      /* ------------------------------------------------------------------
+         ✅ FIXED: Always go through translateRoleName (i18n-based)
+         Even if rolesMap gives "Warehouse Staff", convert → warehouse_staff → i18n
+      ------------------------------------------------------------------ */
+
+      if (roleId != null && rolesMap[Number(roleId)]) {
+        // Case: backend returns role ID → use rolesMap → normalize → translate
+        const raw = rolesMap[Number(roleId)];
+        roleName = translateRoleName(t, raw, raw);
       } else {
-        roleName = payload.EmployeeRoleName ?? payload.Role ?? payload.role ?? undefined;
+        // Case: only string available from payload
+        roleName = translateRoleName(t, rawRoleFromToken, rawRoleFromToken);
+      }
+
+      // Clean fallback
+      if (!roleName || roleName.trim() === "") {
+        roleName =
+          rawRoleFromToken ??
+          (roleId != null ? String(roleId) : t("roleNames.noData"));
       }
 
       setUser({ name, username, role: roleName });
@@ -115,6 +196,9 @@ export default function Topbar() {
 
   useEffect(() => {
     refreshUserFromToken();
+  }, [rolesMap, t]);
+
+  useEffect(() => {
     const handler = (ev: StorageEvent) => {
       if (ev.key === "accessToken" || ev.key === null) {
         refreshUserFromToken();
@@ -122,19 +206,20 @@ export default function Topbar() {
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
-  }, [rolesMap]);
+  }, []);
+
+  /* ========================== Derived Fields ========================== */
 
   const displayName = useMemo(() => {
     if (!user) return t("userDefault");
     return user.name ?? user.username ?? t("userDefault");
   }, [user, t]);
 
-  const displayRole = useMemo(() => {
-    if (!user || !user.role) return "";
-    return String(user.role);
-  }, [user]);
+  const displayRole = useMemo(() => (user?.role ? String(user.role) : ""), [user]);
 
   const initials = getInitials(user?.name ?? user?.username ?? "");
+
+  /* ========================== UI ========================== */
 
   const handleAvatarClick = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
@@ -142,10 +227,7 @@ export default function Topbar() {
   const handleLogout = async () => {
     try {
       const refreshToken = getRefreshToken() ?? localStorage.getItem("refreshToken");
-      if (refreshToken) {
-        await authApi.logout({ refreshToken }).catch(() => {});
-      }
-    } catch (err) {
+      if (refreshToken) await authApi.logout({ refreshToken }).catch(() => {});
     } finally {
       clearAuthStorage();
       handleMenuClose();
@@ -169,71 +251,51 @@ export default function Topbar() {
         boxSizing: "border-box",
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+      {/* LEFT */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         {isMobile && (
           <IconButton onClick={() => dispatch(toggleSidebar())}>
             <MenuRoundedIcon />
           </IconButton>
         )}
-
         <Box
           component="img"
           src="https://res.cloudinary.com/dkfykdjlm/image/upload/v1762190185/LOGO-remove_1_o1wgk2.png"
           alt={t("logoAlt")}
-          sx={{ height: { xs: 32, sm: 40 }, cursor: "pointer", userSelect: "none", display: "block" }}
-          onClick={() => { window.location.href = "/"; }}
+          sx={{ height: { xs: 32, sm: 40 }, cursor: "pointer" }}
+          onClick={() => (window.location.href = "/")}
         />
       </Box>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
-        <Tooltip title={t("add")}>
-          <IconButton color="primary">
-            <AddIcon />
-          </IconButton>
-        </Tooltip>
+      {/* RIGHT */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Tooltip title={t("add")}><IconButton><AddIcon /></IconButton></Tooltip>
+        <Tooltip title={t("notifications")}><IconButton><NotificationsNoneIcon /></IconButton></Tooltip>
 
-        <Tooltip title={t("notifications")}>
-          <IconButton>
-            <NotificationsNoneIcon />
-          </IconButton>
-        </Tooltip>
-
+        {/* USER AVATAR */}
         {isMobile ? (
-          <Avatar
-            sx={{ bgcolor: "#f1f1f1", cursor: "pointer" }}
-            onClick={handleAvatarClick}
-            aria-controls={menuOpen ? "topbar-avatar-menu" : undefined}
-            aria-haspopup="true"
-            aria-expanded={menuOpen ? "true" : undefined}
-          >
-            {initials ? <Typography variant="body2">{initials}</Typography> : <AccountCircleIcon color="action" />}
+          <Avatar sx={{ cursor: "pointer" }} onClick={handleAvatarClick}>
+            {initials || <AccountCircleIcon />}
           </Avatar>
         ) : (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
-            <Avatar
-              sx={{ bgcolor: "#e6f7f2", color: "#075", cursor: "pointer" }}
-              onClick={handleAvatarClick}
-              aria-controls={menuOpen ? "topbar-avatar-menu" : undefined}
-              aria-haspopup="true"
-              aria-expanded={menuOpen ? "true" : undefined}
-            >
-              {initials ? <Typography variant="body2">{initials}</Typography> : <AccountCircleIcon color="action" />}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Avatar sx={{ bgcolor: "#e6f7f2", color: "#075", cursor: "pointer" }} onClick={handleAvatarClick}>
+              {initials || <AccountCircleIcon />}
             </Avatar>
-
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="body2" fontWeight={600} noWrap>{displayName}</Typography>
+            <Box>
+              <Typography fontWeight={600} noWrap>{displayName}</Typography>
               <Typography variant="caption" color="text.secondary" noWrap>{displayRole}</Typography>
             </Box>
           </Box>
         )}
       </Box>
 
+      {/* MENU */}
       <Menu
         id="topbar-avatar-menu"
         anchorEl={anchorEl}
         open={menuOpen}
         onClose={handleMenuClose}
-        onClick={handleMenuClose}
         PaperProps={{ elevation: 3, sx: { mt: "6px", minWidth: 140 } }}
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
@@ -242,9 +304,7 @@ export default function Topbar() {
           <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
           {t("profile")}
         </MenuItem>
-
         <Divider />
-
         <MenuItem onClick={handleLogout}>
           <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
           {t("logout")}

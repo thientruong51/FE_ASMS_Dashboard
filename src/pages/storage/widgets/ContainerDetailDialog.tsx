@@ -29,6 +29,7 @@ import { useTranslation } from "react-i18next";
 import type { ContainerItem } from "@/api/containerApi";
 import type { ContainerLocationLogItem } from "@/api/containerLocationLogApi";
 import containerLocationLogApi from "@/api/containerLocationLogApi";
+import { removeContainer } from "@/api/containerApi";
 
 import { translateStatus } from "@/utils/statusHelper";
 import { translatePaymentStatus } from "@/utils/paymentStatusHelper";
@@ -40,6 +41,8 @@ type Props = {
   onClose: () => void;
   onSaveLocal?: (updated: ContainerItem) => void;
   onNotify?: (message: string, severity?: "success" | "info" | "warning" | "error") => void;
+  orderCode?: string;
+  onRemoved?: (containerCode: string) => void; // <-- NEW: gọi parent để reload dữ liệu
 };
 
 const FALLBACK_IMAGE =
@@ -52,7 +55,15 @@ const normalizeKey = (k: string) =>
     .toLowerCase()
     .replace(/\s+/g, "_");
 
-export default function ContainerDetailDialog({ open, container, onClose, onSaveLocal, onNotify }: Props) {
+export default function ContainerDetailDialog({
+  open,
+  container,
+  onClose,
+  onSaveLocal,
+  onNotify,
+  orderCode,
+  onRemoved,
+}: Props) {
   const { t } = useTranslation(["storagePage", "statusNames", "paymentStatus", "common"]);
   const theme = useTheme();
   const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
@@ -68,6 +79,8 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
   const [logTotalRecords, setLogTotalRecords] = React.useState<number>(0);
   const [logLoading, setLogLoading] = React.useState<boolean>(false);
   const [logError, setLogError] = React.useState<string | null>(null);
+
+  const [isRemoving, setIsRemoving] = React.useState<boolean>(false);
 
   const initialSerial = React.useMemo(() => {
     return c && typeof c.serialNumber === "number" ? c.serialNumber : "";
@@ -302,6 +315,70 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
 
     return formatValue(v);
   };
+
+  // helper: lấy EmployeeCode từ accessToken (localStorage)
+  const getEmployeeCodeFromAccessToken = React.useCallback((): string | null => {
+    try {
+      const token = localStorage.getItem("accessToken") || "";
+      if (!token) return null;
+      const parts = token.split(".");
+      if (parts.length < 2) return null;
+      const payloadJson = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+      const payload = JSON.parse(payloadJson);
+      return (
+        payload?.EmployeeCode ??
+        payload?.employeeCode ??
+        payload?.employee_id ??
+        payload?.employeeId ??
+        payload?.sub ??
+        null
+      );
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const handleRemoveContainer = React.useCallback(async () => {
+    if (!c?.containerCode) {
+      onNotify?.(t("noContainerSelected") ?? "No container selected", "warning");
+      return;
+    }
+
+    const emp = getEmployeeCodeFromAccessToken();
+    const performedBy = emp ?? "UNKNOWN";
+
+    // orderCode priority: prop orderCode -> container.orderCode -> container.orderDetailId -> undefined
+    const orderCodeToSend =
+      orderCode ?? (c?.orderCode ?? (c?.orderDetailId ? String(c.orderDetailId) : undefined));
+
+    setIsRemoving(true);
+    try {
+      await removeContainer({
+        containerCode: c.containerCode,
+        performedBy,
+        orderCode: orderCodeToSend,
+      } as any);
+
+      // Thông báo thành công
+      onNotify?.(t("removeContainerSuccess") ?? "Container removed", "success");
+
+      // Gọi callback parent để reload dữ liệu bên ngoài
+      try {
+        onRemoved?.(c.containerCode);
+      } catch (e) {
+        // ignore if parent handler throws
+        console.warn("onRemoved handler error", e);
+      }
+
+      // Đóng dialog
+      onClose();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? err?.message ?? t("removeContainerFailed") ?? "Remove failed";
+      onNotify?.(String(msg), "error");
+    } finally {
+      setIsRemoving(false);
+    }
+  }, [c, getEmployeeCodeFromAccessToken, orderCode, onClose, onNotify, onRemoved, t]);
 
   return (
     <Dialog
@@ -574,6 +651,17 @@ export default function ContainerDetailDialog({ open, container, onClose, onSave
             </Box>
 
             <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 1 }}>
+              <Button
+                size="small"
+                color="error"
+                variant="outlined"
+                onClick={handleRemoveContainer}
+                disabled={!c?.containerCode || isRemoving}
+                sx={{ mr: 1 }}
+              >
+                {isRemoving ? <CircularProgress size={18} /> : t("takeOut") ?? "Lấy hàng ra"}
+              </Button>
+
               <Button
                 variant="contained"
                 color="primary"

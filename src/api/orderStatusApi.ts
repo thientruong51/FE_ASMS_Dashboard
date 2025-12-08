@@ -6,8 +6,6 @@ export type ApiResponse<T = any> = {
   errorMessage?: string | null;
 };
 
-
-
 const BASE = "/api/OrderStatus";
 
 export async function checkOverdue(): Promise<ApiResponse<void>> {
@@ -15,18 +13,25 @@ export async function checkOverdue(): Promise<ApiResponse<void>> {
   return resp.data ?? resp;
 }
 
-
 export async function updateStatus(orderCode: string): Promise<ApiResponse<void>> {
   const resp = await axiosClient.post<ApiResponse<void>>(`${BASE}/${encodeURIComponent(orderCode)}/update-status`);
   return resp.data ?? resp;
 }
 
+/**
+ * Gọi API gia hạn đơn hàng.
+ * Nếu unpaidAmount được truyền (số), sẽ được gửi kèm như query param `unpaidAmount`.
+ */
+export async function extendOrder(orderCode: string, newReturnDate: string, unpaidAmount?: number): Promise<ApiResponse<void>> {
+  const params: Record<string, any> = { newReturnDate };
+  if (unpaidAmount !== undefined && unpaidAmount !== null) {
+    params.unpaidAmount = unpaidAmount;
+  }
 
-export async function extendOrder(orderCode: string, newReturnDate: string): Promise<ApiResponse<void>> {
   const resp = await axiosClient.post<ApiResponse<void>>(
     `${BASE}/${encodeURIComponent(orderCode)}/extend`,
     null,
-    { params: { newReturnDate } }
+    { params }
   );
   return resp.data ?? resp;
 }
@@ -38,18 +43,22 @@ export async function moveToExpiredStorage(orderCode: string): Promise<ApiRespon
   return resp.data ?? resp;
 }
 
-
 export async function togglePayment(orderCode: string): Promise<ApiResponse<void>> {
   const resp = await axiosClient.post<ApiResponse<void>>(`${BASE}/${encodeURIComponent(orderCode)}/toggle-payment`);
   return resp.data ?? resp;
 }
 
-
 export type OrderStatusInfo = {
   orderCode?: string;
   status?: string;
   paymentStatus?: string;
+  style?: string;
   returnDate?: string | null;
+  depositDate?: string | null;
+  totalPrice?: number | null;
+  currentAssignedEmployee?: string | null;
+  buildingCode?: string | null;
+  message?: string | null;
 };
 
 export async function getOrderStatus(orderCode: string): Promise<ApiResponse<OrderStatusInfo>> {

@@ -40,6 +40,8 @@ import {
   translateProductType,
 } from "@/utils/translationHelpers";
 
+import { differenceInCalendarDays, parseISO } from "date-fns";
+
 type Props = {
   trackingId: number | null;
   open: boolean;
@@ -152,7 +154,17 @@ export default function TrackingHistoryDetailDrawer({
     if (!orig) return <span>{trans}</span>;
     return (
       <Tooltip title={orig}>
-        <span style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{trans}</span>
+        <span
+          style={{
+            display: "inline-block",
+            maxWidth: "100%",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {trans}
+        </span>
       </Tooltip>
     );
   };
@@ -171,12 +183,10 @@ export default function TrackingHistoryDetailDrawer({
 
   const statusRaw = (data?.newStatus ?? data?.oldStatus ?? "") as string;
   const statusNorm = String(statusRaw).toLowerCase().trim();
-
+  const isCompleted = statusNorm === "completed";
   const overdueAliases = ["overdue", "late", "expired"];
-  const retrievedAliases = ["retrieved", "returned"];
 
   const isOverdue = overdueAliases.some((a) => statusNorm === a || statusNorm.includes(a));
-  const isRetrieved = retrievedAliases.some((a) => statusNorm === a || statusNorm.includes(a));
 
   const toDateISO = (d: Date | null) => {
     if (!d) return null;
@@ -275,19 +285,111 @@ export default function TrackingHistoryDetailDrawer({
       return;
     }
     const orderCode = data.orderCode!;
-    openConfirm(t("extendConfirmTitle"), t("extendConfirmMsg", { code: orderCode, date: isoDate }), async () => {
-      const prev = data;
-      setData((d) => (d ? { ...d, returnDate: isoDate } : d));
+
+    const fetchOrderInfoIfNeeded = async (): Promise<any | null> => {
       try {
-        await orderStatusApi.extendOrder(orderCode, isoDate);
-        await refreshOrderStatus(orderCode);
+        const hasDeposit = Boolean((data as any)?.depositDate);
+        const hasPrice = (data as any)?.totalPrice !== undefined && (data as any).totalPrice !== null;
+        if (hasDeposit && hasPrice) {
+          return { depositDate: (data as any).depositDate, totalPrice: (data as any).totalPrice, returnDate: (data as any).returnDate };
+        }
+
+        const resp = await orderStatusApi.getOrderStatus(orderCode);
+        const info = resp && ((resp as any).data !== undefined ? (resp as any).data : resp);
+        if (info) {
+          setData((d) => {
+            if (d) {
+              return {
+                ...d,
+                depositDate: d.depositDate ?? info.depositDate,
+                totalPrice: d.totalPrice ?? info.totalPrice,
+                returnDate: d.returnDate ?? info.returnDate,
+              } as typeof d;
+            }
+
+            const minimal: any = {
+              trackingHistoryId: trackingId ?? -1,
+              orderCode: info?.orderCode ?? orderCode,
+              depositDate: info.depositDate ?? null,
+              totalPrice: info.totalPrice ?? null,
+              returnDate: info.returnDate ?? null,
+              oldStatus: (info as any).oldStatus ?? null,
+              newStatus: (info as any).newStatus ?? null,
+              actionType: (info as any).actionType ?? null,
+              createAt: (info as any).createAt ?? null,
+            };
+            return minimal as trackingApi.TrackingHistoryItem & Record<string, any>;
+          });
+
+          return info;
+        }
+
+        return null;
       } catch (err) {
-        console.error("Failed to extend order:", err);
-        openSnackbar(t("saveFailed"), "error");
-        setData(prev);
-        throw err;
+        console.warn("[EXTEND] fetchOrderInfoIfNeeded failed:", err);
+        return null;
       }
-    });
+    };
+
+    openConfirm(
+      t("extendConfirmTitle"),
+      t("extendConfirmMsg", { code: orderCode, date: isoDate }),
+      async () => {
+        const prev = data;
+        const infoFromFetch = await fetchOrderInfoIfNeeded();
+
+        const merged = {
+          ...(prev ?? {}),
+          ...(data ?? {}),
+          ...(infoFromFetch ?? {}),
+        };
+
+        const depositStr = merged.depositDate;
+        const origReturnStr = merged.returnDate;
+        const totalPriceRaw = merged.totalPrice ?? 0;
+
+        let unpaidAmount = 0;
+
+        try {
+          if (depositStr && origReturnStr) {
+            const deposit = parseISO(String(depositStr));
+            const origReturn = parseISO(String(origReturnStr));
+            const newReturn = extendDate;
+
+            const originalDays = differenceInCalendarDays(origReturn, deposit);
+            const extendDays = differenceInCalendarDays(newReturn, origReturn);
+
+            const totalPrice = Number(totalPriceRaw) || 0;
+
+            if (originalDays > 0 && extendDays > 0 && totalPrice > 0) {
+              const perDay = totalPrice / originalDays;
+              unpaidAmount = Math.round(perDay * extendDays);
+              if (unpaidAmount < 0) unpaidAmount = 0;
+            } else {
+              unpaidAmount = 0;
+            }
+          } else {
+            unpaidAmount = 0;
+          }
+        } catch (err) {
+          console.error("[EXTEND] compute error:", err);
+          unpaidAmount = 0;
+        }
+
+        setData((d) => (d ? { ...d, returnDate: isoDate, unpaidAmount } : d));
+
+        try {
+          await orderStatusApi.extendOrder(orderCode, isoDate, unpaidAmount);
+          await refreshOrderStatus(orderCode);
+          openSnackbar(t("confirmActionSuccess"), "success");
+        } catch (err) {
+          console.error("[EXTEND] API CALL failed:", err);
+          openSnackbar(t("saveFailed"), "error");
+          setData(prev);
+          throw err;
+        }
+      }
+    );
   };
 
   const handleMoveToExpiredStorage = () => {
@@ -348,10 +450,7 @@ export default function TrackingHistoryDetailDrawer({
                 <VisibilityRoundedIcon />
               </Avatar>
               <Box>
-                <Typography fontWeight={700}>
-                  {/* show translated actionType (fallback original) */}
-                  {withTooltip(data?.actionType ?? "", translateActionType(t, data?.actionType ?? ""))}
-                </Typography>
+                <Typography fontWeight={700}>{withTooltip(data?.actionType ?? "", translateActionType(t, data?.actionType ?? ""))}</Typography>
                 <Typography variant="caption" color="text.secondary">
                   {t("created")}: {data?.createAt ?? "-"}
                 </Typography>
@@ -359,7 +458,6 @@ export default function TrackingHistoryDetailDrawer({
               <Box sx={{ ml: "auto", display: "flex", gap: 1, alignItems: "center" }}>
                 {has(data?.currentAssign) && <Chip label={`${t("currentAssign") ?? "From"}: ${data?.currentAssign}`} size="small" />}
                 {has(data?.nextAssign) && <Chip label={`${t("nextAssign") ?? "To"}: ${data?.nextAssign}`} size="small" />}
-                
               </Box>
             </Box>
 
@@ -456,7 +554,7 @@ export default function TrackingHistoryDetailDrawer({
                             "currentAssign",
                             "nextAssign",
                             "image",
-                            "_isChild", 
+                            "_isChild",
                           ].includes(k)
                       )
                       .map((k) => {
@@ -475,15 +573,26 @@ export default function TrackingHistoryDetailDrawer({
 
             <Box sx={{ mb: 2 }}>
               {/* If this item is a child entry (inside the dropdown), hide action buttons */}
-              {!isRetrieved && !isChild && (
+              {!isChild && (
                 <Stack direction="row" spacing={1} alignItems="center">
                   {isOverdue ? (
                     <>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <DatePicker label={t("newReturnDateLabel")} value={extendDate} onChange={(d: Date | null) => setExtendDate(d)} slotProps={{ textField: { size: "small" } as any }} />
+                        <DatePicker
+                          label={t("newReturnDateLabel")}
+                          value={extendDate}
+                          onChange={(d: Date | null) => setExtendDate(d)}
+                          slotProps={{ textField: { size: "small" } as any }}
+                        />
                       </Box>
 
-                      <Button variant="contained" size="small" onClick={handleExtendOrder} disabled={actionLoading} startIcon={actionLoading ? <CircularProgress size={16} /> : null}>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={handleExtendOrder}
+                        disabled={actionLoading}
+                        startIcon={actionLoading ? <CircularProgress size={16} /> : null}
+                      >
                         {t("extendOrder")}
                       </Button>
 
@@ -492,14 +601,12 @@ export default function TrackingHistoryDetailDrawer({
                       </Button>
                     </>
                   ) : (
-                    <Button variant="contained" size="small" onClick={() => handleUpdateStatus("SomeNewStatus")} disabled={actionLoading}>
+                    <Button variant="contained" size="small" onClick={() => handleUpdateStatus("SomeNewStatus")} disabled={actionLoading || isCompleted}>
                       {t("updateStatus")}
                     </Button>
                   )}
                 </Stack>
               )}
-
-              {isRetrieved && <Typography variant="body2" color="text.secondary">{t("retrievedNotice")}</Typography>}
             </Box>
           </Box>
 

@@ -23,6 +23,7 @@ import SettingsPage from "@/pages/setting/SettingsPage";
 import ContactPage from "@/pages/contact/ContactPage";
 import PricePage from "@/pages/price/PricePage";
 import BusinessRulesPage from "@/pages/businessRule/BusinessRulesPage";
+import ContainerPage from "@/pages/container/ContainerPage";
 
 const ALL = [1, 2, 3, 4];
 const ROLE_4 = [4];
@@ -61,6 +62,9 @@ export const router = createBrowserRouter([
           { path: "shelfs", element: <ProtectedRoute allowedRoles={[1,4]}><ShelfPage /></ProtectedRoute> },
 
           { path: "buildings", element: <ProtectedRoute allowedRoles={ROLE_4}><BuildingPage /></ProtectedRoute> },
+
+          { path: "containers", element: <ProtectedRoute allowedRoles={ROLE_4}><ContainerPage /></ProtectedRoute> },
+
 
           { path: "container-types", element: <ProtectedRoute allowedRoles={ROLE_4}><ContainerTypePage /></ProtectedRoute> },
 
