@@ -1,6 +1,7 @@
 import axiosClient from "./axiosClient";
 
 export interface OrderRespItem {
+  data: OrderRespItem;
   orderCode: string;
   customerCode?: string | null;
   orderDate?: string | null;
