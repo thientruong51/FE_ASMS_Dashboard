@@ -23,10 +23,17 @@ export default function BoxModel({
   onClick,
   onPointerDown,
 }: Props) {
-  const path = useMemo(
-    () => (url && url.length > 0 ? url : `/models/THUNG_${type}.glb`),
-    [url, type]
-  );
+  const defaultUrls: Record<NonNullable<Props["type"]>, string> = {
+    A: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103944/THUNG_A_s6rirx.glb",
+    B: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103945/THUNG_B_r3eikp.glb",
+    C: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103946/THUNG_C_cbsgav.glb",
+    D: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103946/THUNG_D_ognjqr.glb",
+  };
+
+  const path = useMemo(() => {
+    if (url && url.length > 0) return url;
+    return defaultUrls[type ?? "A"];
+  }, [url, type]);
 
   const { scene } = useGLTF(path, true) as any;
 
@@ -37,7 +44,6 @@ export default function BoxModel({
       position={position}
       rotation={rotation}
       scale={scale}
-   
       onPointerDown={(e: any) => {
         e.stopPropagation();
         onPointerDown?.(e);
@@ -51,3 +57,16 @@ export default function BoxModel({
     </group>
   );
 }
+
+useGLTF.preload(
+  "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103944/THUNG_A_s6rirx.glb"
+);
+useGLTF.preload(
+  "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103945/THUNG_B_r3eikp.glb"
+);
+useGLTF.preload(
+  "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103946/THUNG_C_cbsgav.glb"
+);
+useGLTF.preload(
+  "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103946/THUNG_D_ognjqr.glb"
+);
