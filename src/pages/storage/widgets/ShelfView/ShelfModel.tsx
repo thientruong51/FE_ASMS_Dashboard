@@ -9,7 +9,8 @@ export default function ShelfModel({
   onModelCenter, 
   orbitRef,
 }: any) {
-  const modelUrl = "/models/KE 1700X1070X6200.glb";
+ const modelUrl = "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847452/KE_1700X1070X6200_s2s3ey.glb";
+
   const gltf = useGLTF(modelUrl) as any;
   const originalScene = gltf.scene as THREE.Object3D;
 
