@@ -15,6 +15,7 @@ import { Box as MBox } from "@mui/system";
 
 import { translateRoleName, canonicalRoleKey } from "@/utils/roleNames";
 import { translateBuildingName } from "@/utils/buildingNames";
+import { getAuthClaimsFromStorage } from "@/utils/auth";
 
 export default function StaffPage() {
   const { t } = useTranslation(["staffPage", "roleNames", "buildingNames"]);
@@ -85,27 +86,63 @@ export default function StaffPage() {
     });
   }, [roles, t]);
 
+  const claims = useMemo(() => getAuthClaimsFromStorage(), []);
+  const currentRoleId = claims ? Number(claims.EmployeeRoleId) : null;
+  const currentEmployeeCode = claims?.EmployeeCode ?? null;
 
-  const filteredEmployees = employees.filter((emp) => {
+  const roleKeyToId = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const r of roles ?? []) {
+      const raw = (r as any).name ?? (r as any).roleName ?? "";
+      const key = canonicalRoleKey(raw);
+      const id = (r as any).employeeRoleId ?? (r as any).id ?? null;
+      if (key && id != null) m[key] = Number(id);
+    }
+    return m;
+  }, [roles]);
+
+ 
+  const allowedRolesForViewer: Record<number, number[]> = {
+    1: [2, 3],
+    4: [1, 2, 3],
+  };
+
+
+  const filteredEmployees = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    const matchesSearch =
-      !q ||
-      (emp.name && emp.name.toLowerCase().includes(q)) ||
-      (emp.employeeCode && emp.employeeCode.toLowerCase().includes(q)) ||
-      (emp.phone && emp.phone.includes(q));
 
-    const empRoleName =
-      (emp as any).roleName ??
-      (emp.employeeRole as any)?.name ??
-      "";
+    return (employees ?? []).filter((emp) => {
+      const matchesSearch =
+        !q ||
+        (emp.name && emp.name.toLowerCase().includes(q)) ||
+        (emp.employeeCode && emp.employeeCode.toLowerCase().includes(q)) ||
+        (emp.phone && emp.phone.includes(q));
 
-    const empRoleKey = canonicalRoleKey(empRoleName);
+      const empRoleName =
+        (emp as any).roleName ?? (emp.employeeRole as any)?.name ?? "";
 
-    const matchesRole = filterRole === "" || empRoleKey === filterRole;
-    const matchesStatus = filterStatus === "" || emp.status === filterStatus;
+      const empRoleKey = canonicalRoleKey(empRoleName);
 
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+      const empRoleId =
+        (emp as any).employeeRole?.employeeRoleId ??
+        (emp as any).employeeRoleId ??
+        roleKeyToId[empRoleKey] ??
+        null;
+
+      const matchesRole = filterRole === "" || empRoleKey === filterRole;
+      const matchesStatus = filterStatus === "" || emp.status === filterStatus;
+
+      // visibility based on current user's role (new)
+      let visibleByRole = true;
+      if (currentRoleId != null && allowedRolesForViewer[currentRoleId]) {
+        const allowed = allowedRolesForViewer[currentRoleId];
+        // allow if employee's role id is in allowed OR if it's the current user's own record
+        visibleByRole = (empRoleId != null && allowed.includes(Number(empRoleId))) || (emp.employeeCode === currentEmployeeCode);
+      }
+      // combine all checks
+      return matchesSearch && matchesRole && matchesStatus && visibleByRole;
+    });
+  }, [employees, searchTerm, filterRole, filterStatus, roleKeyToId, currentRoleId, currentEmployeeCode]);
 
 
   const baseColumns: GridColDef[] = useMemo(
