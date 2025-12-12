@@ -21,6 +21,7 @@ import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import PaymentOutlinedIcon from "@mui/icons-material/PaymentOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+import QrCodeRoundedIcon from "@mui/icons-material/QrCodeRounded";
 
 import orderApi, { type OrderDetailItem } from "@/api/orderApi";
 import { getContainerTypes } from "@/api/containerTypeApi";
@@ -35,22 +36,8 @@ import {
   translateStyle,
 } from "@/utils/translationHelpers";
 
-
-const CONTAINER_TYPES_FALLBACK = [
-  { containerTypeId: 1, type: "A", length: 0.5, width: 0.5, height: 0.45, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103944/THUNG_A_s6rirx.glb", price: 35000 },
-  { containerTypeId: 2, type: "B", length: 0.75, width: 0.75, height: 0.45, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103945/THUNG_B_r3eikp.glb", price: 50000 },
-  { containerTypeId: 3, type: "C", length: 1, width: 0.5, height: 0.45, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103946/THUNG_C_cbsgav.glb", price: 60000 },
-  { containerTypeId: 4, type: "D", length: 0.5, width: 0.5, height: 0.8, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1763103946/THUNG_D_ognjqr.glb", price: 55000 },
-  { containerTypeId: 5, type: "A", length: 0.5, width: 0.5, height: 0.45, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847449/THUNG_A_uu6f3w.glb", price: 25000 },
-  { containerTypeId: 6, type: "B", length: 0.75, width: 0.75, height: 0.45, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847443/THUNG_B_qp8ysr.glb", price: 35000 },
-  { containerTypeId: 7, type: "C", length: 1, width: 0.5, height: 0.45, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847443/THUNG_C_wtagvu.glb", price: 40000 },
-  { containerTypeId: 8, type: "D", length: 0.5, width: 0.5, height: 0.8, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847446/THUNG_D_cs1w1m.glb", price: 38000 },
-];
-
-const SHELF_TYPES_FALLBACK = [
-  { shelfTypeId: 1, name: "Shelf", length: 1.55, width: 1.06, height: 2.45, price: 150000, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847444/KE_1550X1057X2045_jvuubl.glb" },
-  { shelfTypeId: 2, name: "Shelf_Logistics", length: 1.7, width: 1.07, height: 5.2, price: 0, imageUrl: "https://res.cloudinary.com/dkfykdjlm/image/upload/v1761847452/KE_1700X1070X6200_s2s3ey.glb" },
-];
+import ContainerLocationDialog from "../components/ContainerLocationDialog";
+import ContainerLocationQrDialog from "../components/ContainerLocationQrDialog";
 
 type Props = {
   orderCode: string | null;
@@ -65,6 +52,18 @@ function a11yProps(index: number) {
     "aria-controls": `order-tabpanel-${index}`,
   };
 }
+
+const CONTAINER_TYPES_FALLBACK = [
+  { containerTypeId: 1, type: "A", length: 0.5, width: 0.5, height: 0.45, imageUrl: "", price: 35000 },
+  { containerTypeId: 2, type: "B", length: 0.75, width: 0.75, height: 0.45, imageUrl: "", price: 50000 },
+  { containerTypeId: 3, type: "C", length: 1, width: 0.5, height: 0.45, imageUrl: "", price: 60000 },
+  { containerTypeId: 4, type: "D", length: 0.5, width: 0.5, height: 0.8, imageUrl: "", price: 55000 },
+];
+
+const SHELF_TYPES_FALLBACK = [
+  { shelfTypeId: 1, name: "Kệ tự quản", length: 1.55, width: 1.06, height: 2.45, price: 150000, imageUrl: "" },
+  { shelfTypeId: 2, name: "Shelf_Logistics", length: 1.7, width: 1.07, height: 5.2, price: 0, imageUrl: "" },
+];
 
 const imageRegex = /\.(jpeg|jpg|gif|png|webp|avif|svg)$/i;
 const dataImageRegex = /^data:image\/[a-zA-Z]+;base64,/;
@@ -140,6 +139,12 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
   const [containerMap, setContainerMap] = useState<Record<number, any>>({});
   const [shelfMap, setShelfMap] = useState<Record<number, any>>({});
 
+  const [locDialogOpen, setLocDialogOpen] = useState(false);
+  const [locOrderDetailId, setLocOrderDetailId] = useState<number | null>(null);
+
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [qrOrderDetail, setQrOrderDetail] = useState<any | null>(null);
+
   const order = orderFull ?? {};
 
   useEffect(() => {
@@ -147,7 +152,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
     (async () => {
       try {
         const containersResp = await getContainerTypes();
-        const containers = Array.isArray(containersResp) ? containersResp :  containersResp;
+        const containers = Array.isArray(containersResp) ? containersResp : containersResp;
         const finalContainers = Array.isArray(containers) && containers.length > 0 ? containers : CONTAINER_TYPES_FALLBACK;
         const cmap: Record<number, any> = {};
         finalContainers.forEach((c: any) => {
@@ -223,7 +228,9 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
   const fmtDate = (v: any) => {
     if (!v) return "-";
     try {
-      const d = new Date(v);
+      const s = String(v).trim();
+      const iso = /^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T00:00:00` : s;
+      const d = new Date(iso);
       return isNaN(d.getTime()) ? String(v) : d.toLocaleDateString();
     } catch {
       return String(v);
@@ -235,9 +242,8 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
     const id = typeof val === "number" ? val : /^\d+$/.test(String(val)) ? Number(val) : NaN;
     if (!Number.isNaN(id) && containerMap[id]) {
       const c = containerMap[id];
-    
       const type = c.type ?? c.name ?? `#${id}`;
-      return `${type} `;
+      return `${type}`;
     }
     return String(val);
   };
@@ -248,7 +254,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
     if (!Number.isNaN(id) && shelfMap[id]) {
       const s = shelfMap[id];
       const name = s.name ?? s.type ?? `#${id}`;
-      return `${name} `;
+      return `${name}`;
     }
     return String(val);
   };
@@ -257,10 +263,9 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
     () => order?.customerName ?? order?.customer ?? order?.customerCode ?? null,
     [order]
   );
-  const headerDepositDate = useMemo(() => order?.depositDate ?? order?.orderDate ?? null, [order]);
   const headerReturnDate = useMemo(() => order?.returnDate ?? null, [order]);
   const headerPaymentStatus = useMemo(() => order?.paymentStatus ?? null, [order]);
-  const headerTotal = useMemo(() => (order?.totalPrice != null ? order.totalPrice : null), [order]);
+  const headerTotal = useMemo(() => (order?.totalPrice != null ? order.totalPrice : order?.total ?? null), [order]);
 
   useEffect(() => {
     if (open) setTabIndex(0);
@@ -295,6 +300,29 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
       .replace(/^./, (s) => s.toUpperCase());
   };
 
+  const openLocateDialog = (orderDetailId: number | string | undefined | null) => {
+    if (orderDetailId == null) return;
+    const idNum = typeof orderDetailId === "number" ? orderDetailId : /^\d+$/.test(String(orderDetailId)) ? Number(orderDetailId) : null;
+    if (idNum == null) return;
+    setLocOrderDetailId(idNum);
+    setLocDialogOpen(true);
+  };
+
+  const closeLocateDialog = () => {
+    setLocDialogOpen(false);
+    setLocOrderDetailId(null);
+  };
+
+  const openQrDialog = (detail: any | null) => {
+    if (!detail) return;
+    setQrOrderDetail(detail);
+    setQrDialogOpen(true);
+  };
+  const closeQrDialog = () => {
+    setQrDialogOpen(false);
+    setQrOrderDetail(null);
+  };
+
   return (
     <Drawer
       anchor="right"
@@ -320,7 +348,6 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
           </Box>
 
           <Box display="flex" alignItems="center" gap={1}>
-            {/* Tabs control icons for quick access */}
             <Tooltip title={t("tabs.order")}>
               <IconButton size="small" color={tabIndex === 0 ? "primary" : "default"} onClick={() => setTabIndex(0)}>
                 <ReceiptLongRoundedIcon />
@@ -391,9 +418,9 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                 </>
               )}
               <Box sx={{ mt: 1 }}>
-                {has(headerDepositDate) && (
+                {has(order.orderDate) && (
                   <Typography variant="body2" color="text.secondary">
-                    <strong>{t("labels.depositDate")}:</strong> {fmtDate(headerDepositDate)}
+                    <strong>{t("labels.orderDate")}:</strong> {fmtDate(order.orderDate)}
                   </Typography>
                 )}
                 {has(headerReturnDate) && (
@@ -428,13 +455,6 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                       <Box sx={{ display: "flex", gap: 2 }}>
                         <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.orderDate")}</Box>
                         <Box sx={{ flex: 1 }}>{fmtDate(order.orderDate)}</Box>
-                      </Box>
-                    )}
-
-                    {has(order.depositDate) && (
-                      <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.depositDate")}</Box>
-                        <Box sx={{ flex: 1 }}>{fmtDate(order.depositDate)}</Box>
                       </Box>
                     )}
 
@@ -484,6 +504,9 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                               "customerCode",
                               "customerName",
                               "style",
+                              "email",
+                              "address",
+                              "phoneContact",
                             ].includes(k)
                         )
                         .map((k) => {
@@ -549,6 +572,9 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                       const containerLabel = getContainerLabel((d as any).containerType);
                       const shelfLabel = getShelfLabel((d as any).shelfTypeId);
 
+                      // show detail id prominently
+                      const detailTitle = productNames ?? `Item ${d.orderDetailId}`;
+
                       return (
                         <Card key={d.orderDetailId} variant="outlined" sx={{ borderRadius: 2 }}>
                           <CardContent sx={{ display: "flex", gap: 2, alignItems: "center", p: 1.25 }}>
@@ -565,25 +591,60 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
                                 <Box sx={{ minWidth: 0 }}>
                                   <Typography fontWeight={700} noWrap>
-                                    {productNames ?? `Item ${d.orderDetailId}`}
+                                    {detailTitle}
                                   </Typography>
+
+                                  {/* subtitle: orderDetailId + optional small meta */}
+                                  <Typography variant="caption" color="text.secondary" noWrap>
+                                    {`#${d.orderDetailId}`}
+                                    {d.containerCode ? ` • ${d.containerCode}` : ""}
+                                    {d.storageCode ? ` • ${d.storageCode}` : ""}
+                                  </Typography>
+
                                   {serviceNames && (
-                                    <Typography variant="caption" color="text.secondary" noWrap>
+                                    <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", mt: 0.5 }}>
                                       {t("item.services")}: {withTooltip(serviceNames, serviceTranslated)}
                                     </Typography>
                                   )}
                                 </Box>
 
-                                <Box sx={{ textAlign: "right", flexShrink: 0 }}>
-                                  <Typography fontWeight={700}>{fmtMoney(d.subTotal ?? d.price)}</Typography>
+                                <Box sx={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", gap: 0.5 }}>
+                                  <Typography fontWeight={700}>
+                                    {/* prefer subTotal, fallback to price */}
+                                    {fmtMoney(d.subTotal ?? d.price)}
+                                  </Typography>
                                   <Typography variant="caption" color="text.secondary">
                                     {d.quantity != null ? `${t("item.qty")}: ${d.quantity}` : ""}
                                   </Typography>
+
+                                  {/* Locate + QR buttons */}
+                                  <Stack direction="row" spacing={1} sx={{ mt: 1, justifyContent: "flex-end" }}>
+                                    <Button
+                                      variant="outlined"
+                                      size="small"
+                                      startIcon={<PlaceOutlinedIcon />}
+                                      onClick={() => openLocateDialog(d.orderDetailId)}
+                                    >
+                                      {t("actions.locate")}
+                                    </Button>
+
+                                    <Button
+                                      variant="outlined"
+                                      size="small"
+                                      startIcon={<QrCodeRoundedIcon />}
+                                      onClick={() => openQrDialog(d)}
+                                    >
+                                      QR
+                                    </Button>
+                                  </Stack>
                                 </Box>
                               </Box>
 
                               {/* chips: hiện mọi field có dữ liệu, và map container/shelf thành label nếu có */}
                               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1, alignItems: "center" }}>
+                                {/* show orderDetailId as chip */}
+                                <Chip size="small" label={`ID: ${d.orderDetailId}`} />
+
                                 {d.isPlaced != null && <Chip size="small" label={d.isPlaced ? t("item.placed") : t("item.unplaced")} color={d.isPlaced ? "success" : "default"} />}
 
                                 {has(d.containerCode) && <Chip size="small" label={`${t("item.container")}: ${d.containerCode}`} />}
@@ -601,7 +662,6 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                                 ) : (d as any).shelfTypeId !== null && (d as any).shelfTypeId !== undefined ? (
                                   <Chip size="small" label={`${t("item.shelfType")}: ${(d as any).shelfTypeId}`} color="warning" />
                                 ) : null}
-
 
                                 {has((d as any).length) && <Chip size="small" label={`L: ${(d as any).length}`} />}
                                 {has((d as any).width) && <Chip size="small" label={`W: ${(d as any).width}`} />}
@@ -629,6 +689,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
               <Card variant="outlined" sx={{ borderRadius: 2 }}>
                 <CardContent>
                   <Stack spacing={1}>
+                    {/* support multiple possible keys for email/address */}
                     {has(order.customerCode) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
                         <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.code")}</Box>
@@ -643,41 +704,28 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                       </Box>
                     )}
 
-                    {has(order.phoneContact) && (
+                    {has(order.phoneContact || order.phone) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
                         <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.phone")}</Box>
-                        <Box sx={{ flex: 1 }}>{order.phoneContact}</Box>
+                        <Box sx={{ flex: 1 }}>{order.phoneContact ?? order.phone}</Box>
                       </Box>
                     )}
 
-                    {has(order.customerEmail) && (
+                    {has(order.customerEmail || order.email) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
                         <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.email")}</Box>
-                        <Box sx={{ flex: 1 }}>{order.customerEmail}</Box>
+                        <Box sx={{ flex: 1 }}>{order.customerEmail ?? order.email}</Box>
                       </Box>
                     )}
 
-                    {has(order.customerAddress) && (
+                    {has(order.customerAddress || order.address) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
                         <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.address")}</Box>
-                        <Box sx={{ flex: 1 }}>{order.customerAddress}</Box>
+                        <Box sx={{ flex: 1 }}>{order.customerAddress ?? order.address}</Box>
                       </Box>
                     )}
 
-                    {/* generic other customer fields — use i18n labels.* fallback humanized */}
-                    {order &&
-                      Object.keys(order)
-                        .filter((k) => !["customerCode", "customerName", "phoneContact", "customerEmail", "customerAddress"].includes(k))
-                        .map((k) => {
-                          const v = order[k];
-                          if (!has(v)) return null;
-                          return (
-                            <Box key={k} sx={{ display: "flex", gap: 2 }}>
-                              <Box sx={{ width: 140, color: "text.secondary" }}>{labelFor(k)}</Box>
-                              <Box sx={{ flex: 1 }}>{renderValue(v)}</Box>
-                            </Box>
-                          );
-                        })}
+                 
                   </Stack>
                 </CardContent>
               </Card>
@@ -687,20 +735,21 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
 
         {/* Footer actions */}
         <Box sx={{ p: 2, borderTop: "1px solid #f0f0f0", display: "flex", gap: 1, justifyContent: "space-between", alignItems: "center" }}>
-          <Box>
-            <Button variant="outlined" size="small" startIcon={<PlaceOutlinedIcon />}>
-              {t("actions.locate")}
-            </Button>
-          </Box>
+          <Box />
 
           <Box sx={{ display: "flex", gap: 1 }}>
             <Button variant="outlined" onClick={onClose}>
               {t("actions.close")}
             </Button>
-
           </Box>
         </Box>
       </Box>
+
+      {/* ContainerLocationDialog - reusable component */}
+      <ContainerLocationDialog open={locDialogOpen} onClose={closeLocateDialog} orderDetailId={locOrderDetailId} />
+
+      {/* QR dialog */}
+      <ContainerLocationQrDialog open={qrDialogOpen} onClose={closeQrDialog} orderDetail={qrOrderDetail} orderCode={orderCode} />
     </Drawer>
   );
 }

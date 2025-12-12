@@ -1,13 +1,18 @@
+// src/api/containerLocationLogApi.ts
 import axiosClient from "./axiosClient";
 
 export type ContainerLocationLogItem = {
   containerLocationLogId: number;
-  containerCode: string;
-  orderCode: string | null;
-  performedBy: string | null;
-  updatedDate: string;
-  oldFloor: string | null;
-  currentFloor: string | null;
+  containerCode: string | null;
+  orderCode?: string | null;
+  performedBy?: string | null;
+  updatedDate?: string | null;
+  oldFloor?: string | null;
+  currentFloor?: string | null;
+  reason?: string | null;
+  algorithm?: string | null;
+  notes?: string | null;
+  orderDetailId?: number | null;
 };
 
 export type PaginatedResponse<T> = {

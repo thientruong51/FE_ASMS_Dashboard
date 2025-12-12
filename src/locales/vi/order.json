@@ -33,7 +33,17 @@
     "address": "Địa chỉ",
     "noItems": "Không có mục nào",
     "loading": "Đang tải...",
-    "loadingItems": "Đang tải mục..."
+    "loadingItems": "Đang tải mục...",
+    "note": "Ghi chú",
+    "notes": "Ghi chú",
+    "refund": "Hoàn tiền",
+    "refundAmount": "Số tiền hoàn",
+    "refundImageUrls": "Ảnh hoàn tiền",
+    "imageUrls": "Ảnh",
+    "images": "Ảnh",
+    "refundImages": "Ảnh chứng từ hoàn tiền",
+    "refundImageUrl": "Ảnh hoàn tiền",
+    "refundNote": "Ghi chú hoàn tiền"
   },
 
   "item": {
@@ -41,11 +51,11 @@
     "qty": "Số lượng",
     "placed": "Đã đặt",
     "unplaced": "Chưa đặt",
-    "container": "Container",
+    "container": "Thùng",
     "storage": "Kho",
     "floor": "Tầng",
-    "shelfType":"Loại kệ",
-    "containerType":"Loại thùng"
+    "shelfType": "Loại kệ",
+    "containerType": "Loại thùng"
   },
 
   "actions": {
@@ -64,10 +74,25 @@
   "table": {
     "orderCode": "Mã đơn",
     "customer": "Khách hàng",
+    "customerName": "Tên khách",
+    "phone": "Điện thoại",
+    "email": "Email",
+    "orderDate": "Ngày đặt",
+    "depositDate": "Ngày đặt cọc",
+    "returnDate": "Ngày trả",
     "status": "Trạng thái",
     "payment": "Thanh toán",
+    "paymentStatus": "Trạng thái thanh toán",
     "total": "Tổng",
+    "totalPrice": "Tổng tiền",
+    "unpaid": "Chưa thanh toán",
+    "unpaidAmount": "Số tiền chưa trả",
     "style": "Kiểu",
+    "note": "Ghi chú",
+    "address": "Địa chỉ",
+    "passkey": "Passkey",
+    "refund": "Hoàn tiền",
+    "images": "Hình ảnh",
     "actions": "Hành động"
   },
 
@@ -81,45 +106,100 @@
   "export": {
     "filenamePrefix": "Xuất đơn hàng"
   },
+
   "paymentStatus": {
-  "paid": "Đã thanh toán",
-  "unpaid": "Chưa thanh toán",
-  "pending": "Đang chờ",
-  "refunded": "Hoàn tiền"
-},
- "statusNames": {
-  "processing": "Đang xử lý",
-  "retrieved": "Đã nhận lại",
-  "pending": "Đang chờ",
-  "wait_pick_up": "Chờ lấy hàng",
-  "verify": "Xác minh",
-  "checkout": "Hoàn tất thanh toán",
-  "pick_up": "Lấy hàng",
-  "renting": "Đang cho thuê",
-  "stored": "Đã lưu kho",
-  "overdue": "Quá hạn",
-  "store_in_expired_storage": "Lưu kho hết hạn",
-  "order_created": "Đơn vừa tạo",
-  "processing_order": "Đang xử lý đơn hàng",
-  "order_retrieved": "Đơn đã nhận lại",
-  "noData": "-",
-  "delivered":"Đã vận chuyển xong",
-  "completed":"Hoàn thành"
-},
-"serviceNames": {
+    "paid": "Đã thanh toán",
+    "unpaid": "Chưa thanh toán",
+    "pending": "Đang chờ",
+    "refunded": "Hoàn tiền"
+  },
+
+  "statusNames": {
+    "processing": "Đang xử lý",
+    "retrieved": "Đã nhận lại",
+    "pending": "Đang chờ",
+    "wait_pick_up": "Chờ lấy hàng",
+    "verify": "Xác minh",
+    "checkout": "Hoàn tất thanh toán",
+    "pick_up": "Lấy hàng",
+    "renting": "Đang cho thuê",
+    "stored": "Đã lưu kho",
+    "overdue": "Quá hạn",
+    "store_in_expired_storage": "Lưu kho hết hạn",
+    "order_created": "Đơn vừa tạo",
+    "processing_order": "Đang xử lý đơn hàng",
+    "order_retrieved": "Đơn đã nhận lại",
+    "noData": "-",
+    "delivered": "Đã vận chuyển xong",
+    "completed": "Hoàn thành",
+    "cancelled": "Đã bị hủy"
+  },
+
+  "serviceNames": {
     "protecting": "Bảo vệ",
     "product_packaging": "Đóng gói sản phẩm",
     "delivery": "Giao hàng"
   },
-   "productTypeNames": {
+
+  "productTypeNames": {
     "fragile": "Hàng dễ vỡ",
     "electronics": "Hàng điện tử",
     "cold_storage": "Cần kho lạnh",
     "heavy": "Hàng nặng"
   },
+
   "styleNames": {
-"full": "Dịch vụ",
-"self": "Tự quản",
-"noData": "-"
-}
+    "full": "Dịch vụ",
+    "self": "Tự quản",
+    "noData": "-"
+  },
+
+  "containerLocationLogTitle": "Lịch sử vị trí thùng",
+  "orderDetailId": "Mã chi tiết đơn",
+  "qr": {
+    "title": "Mã QR",
+    "copy": "Sao chép payload",
+    "copyUrl": "Sao chép liên kết",
+    "download": "Tải PNG",
+    "hint": "QR này chứa chi tiết và nhật ký vị trí"
+  },
+  "noOrderDetailSelected": "Chưa chọn chi tiết đơn",
+  "noLocationLogs": "Không tìm thấy nhật ký vị trí.",
+  "oldFloor": "Vị trí cũ",
+  "currentFloor": "Vị trí hiện tại",
+  "records": "bản ghi",
+  "logsFetched": "Đã lấy nhật ký từ server",
+  "images": "Hình ảnh",
+  "orderId": "Chi tiết đơn",
+
+  "labelsGeneral": {
+    "orderInformation": "Thông tin đơn",
+    "customerInformation": "Thông tin khách hàng"
+  },
+  "unableRenderQr": "Không thể hiển thị QR",
+  "openInNew": "Mở tab mới",
+  "copy": "Sao chép",
+  "copyPayload": "Sao chép payload",
+  "copyLink": "Sao chép liên kết",
+  "downloadPng": "Tải PNG",
+  "showingPayload": "Hiển thị payload",
+  "showingLogs": "Hiển thị nhật ký",
+  "containerPlacement": "Đặt thùng",
+  "containerRemoval": "Gỡ thùng",
+  "reason": {
+    "Container Placement": "Đặt thùng",
+    "Container Removal": "Gỡ thùng",
+    "Container Move": "Di chuyển thùng",
+    "Manual Update": "Cập nhật thủ công"
+  },
+  "placedAt": "Đặt tại Layer {{layer}}, SerialNumber {{serial}}",
+  "logs": {
+    "title": "Nhật ký vị trí"
+  },
+    "containerCode": "Mã Thùng",
+  "floorCode": "Mã Tầng",
+  "containerType": "Loại thùng",
+  "containerQuantity": "Số lượng thùng",
+  "isPlaced": "Đã đặt",
+  "placedAtNoSerial": "Đặt tại Layer {{layer}}"
 }

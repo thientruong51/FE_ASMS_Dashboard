@@ -145,9 +145,7 @@ export default function LoadingTrucks() {
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
           <Typography fontWeight={600}>{t("orderStatus.title")}</Typography>
-          <Typography variant="body2" color="primary" sx={{ cursor: "pointer" }}>
-            {t("orderStatus.viewAll")}
-          </Typography>
+         
         </Box>
 
         <Box display="flex" alignItems="center" justifyContent="space-between">

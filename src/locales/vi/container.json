@@ -1,6 +1,6 @@
 {
   "page": {
-    "title": "Quản lý Container",
+    "title": "Quản lý Thùng",
     "subtitle": "Danh sách và thông tin chi tiết các thùng trong kho",
     "searchPlaceholder": "Tìm kiếm thùng"
   },
@@ -42,12 +42,12 @@
   },
 
   "dialog": {
-    "createTitle": "Tạo Container mới",
-    "editTitle": "Chỉnh sửa Container"
+    "createTitle": "Tạo Thùng mới",
+    "editTitle": "Chỉnh sửa Thùng"
   },
 
   "labels": {
-    "container": "Container",
+    "container": "Thùng",
     "information": "Thông tin thùng",
     "position": "Vị trí",
     "initialsFallback": "CO"

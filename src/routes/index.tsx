@@ -27,18 +27,27 @@ import BusinessRulesPage from "@/pages/businessRule/BusinessRulesPage";
 import ContainerPage from "@/pages/container/ContainerPage";
 import PublicRoute from "./PublicRoute";
 
+// <-- NEW: import container location page (route for QR links)
+import ContainerLocationPage from "@/pages/container-location/ContainerLocationPage";
+
 const ALL = [1, 2, 3, 4];
 const ROLE_4 = [4];
 
 export const router = createBrowserRouter([
- {
-  path: "/login",
-  element: (
-    <PublicRoute>
-      <LoginPage />
-    </PublicRoute>
-  ),
-},
+  {
+    path: "/login",
+    element: (
+      <PublicRoute>
+        <LoginPage />
+      </PublicRoute>
+    ),
+  },
+
+  // <-- NEW: public route so QR links work without auth (move or protect as you need)
+  {
+    path: "/container-location",
+    element: <ContainerLocationPage />,
+  },
 
   {
     element: <ProtectedRoute />,
@@ -70,7 +79,6 @@ export const router = createBrowserRouter([
           { path: "buildings", element: <ProtectedRoute allowedRoles={ROLE_4}><BuildingPage /></ProtectedRoute> },
 
           { path: "containers", element: <ProtectedRoute allowedRoles={ROLE_4}><ContainerPage /></ProtectedRoute> },
-
 
           { path: "container-types", element: <ProtectedRoute allowedRoles={ROLE_4}><ContainerTypePage /></ProtectedRoute> },
 

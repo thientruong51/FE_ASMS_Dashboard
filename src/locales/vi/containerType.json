@@ -61,10 +61,10 @@
     "delete": "Xóa"
   },
   "containerTypeNames": {
-    "a_storage": "A Dịch vụ",
-    "b_storage": "B Dịch vụ",
-    "c_storage": "C Dịch vụ",
-    "d_storage": "D Dịch vụ",
+    "a_storage": "A Tự quản",
+    "b_storage": "B Tự quản",
+    "c_storage": "C Tự quản",
+    "d_storage": "D Tự quản",
     "noData": "-"
   }
 }

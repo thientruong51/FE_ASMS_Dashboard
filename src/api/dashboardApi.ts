@@ -1,7 +1,6 @@
 import axiosClient from "./axiosClient";
 
 export const dashboardApi = {
-
   getOrderCount: (params?: {
     date?: string;
     status?: string;
@@ -11,7 +10,6 @@ export const dashboardApi = {
       params,
     }),
 
-
   getRevenue: (params?: {
     date?: string;
     type?: "day" | "week" | "month" | "year";
@@ -19,7 +17,6 @@ export const dashboardApi = {
     axiosClient.get("/api/Dashboard/Revenue", {
       params,
     }),
-
 
   getWarehouseUsagePercent: () =>
     axiosClient.get("/api/Dashboard/warehouse-usage-percent"),

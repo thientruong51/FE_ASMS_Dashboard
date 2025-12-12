@@ -27,7 +27,8 @@
   "order_retrieved": "Đơn đã nhận lại",
   "noData": "-",
   "delivered":"Đã vận chuyển xong",
-  "completed":"Hoàn thành"
+  "completed":"Hoàn thành",
+  "cancelled":"Đã bị hủy"
 },
   "orderStatus": {
     "title": "Phân bố trạng thái đơn hàng",
@@ -104,20 +105,34 @@
     },
     "comparisonText": "so với kỳ trước"
   },
-  "revenue": {
+    "revenue": {
     "title": "Doanh thu",
+
     "period": {
       "day": "Ngày",
       "week": "Tuần",
       "month": "Tháng",
       "year": "Năm"
     },
+
     "thisPeriod": "Kỳ này",
+    "previousPeriodLabel": "Kỳ trước",
     "changeVsPrev": "Thay đổi so với kỳ trước",
+    "comparisonText": "So sánh với kỳ trước",
+
+    "noPreviousData": "Không có dữ liệu kỳ trước",
     "noChartData": "Không có dữ liệu biểu đồ",
     "noData": "Không có dữ liệu",
-    "noPreviousData": "Không có dữ liệu kỳ trước",
-    "comparisonText": "so với kỳ trước"
+
+    "auxiliary": "Chi tiết",
+    "auxiliary.totalPrice": "Tổng doanh thu",
+    "auxiliary.totalRefund": "Tổng hoàn trả",
+
+    "tooltip": {
+      "netRevenue": "Doanh thu thực",
+      "totalPrice": "Tổng doanh thu",
+      "totalRefund": "Tổng hoàn trả"
+    }
   },
   "actionTypeNames": {
   "order_retrieved": "Đơn đã nhận lại",

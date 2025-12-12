@@ -241,7 +241,8 @@
   "reserved": "Đang giữ chỗ",
   "rented": "Đã được thuê",
   "delivered":"Đã vận chuyển xong",
-  "completed":"Hoàn thành"
+  "completed":"Hoàn thành",
+  "cancelled":"Đã bị hủy"
 },
 
 "paymentStatus": {
@@ -279,15 +280,15 @@
   "fields": {
     "orderDetailId": "Mã chi tiết đơn",
     "storageCode": "Mã kho",
-    "containerCode": "Mã container",
+    "containerCode": "Mã thùng",
     "floorCode": "Mã tầng",
     "floorNumber": "Số tầng",
     "price": "Giá",
     "quantity": "Số lượng",
     "subTotal": "Tạm tính",
     "image": "Hình ảnh",
-    "containerType": "Loại container",
-    "containerQuantity": "Số lượng container",
+    "containerType": "Loại thùng",
+    "containerQuantity": "Số lượng thùng",
     "storageTypeId": "Loại kho",
     "shelfTypeId": "Loại kệ",
     "shelfQuantity": "Số lượng kệ",

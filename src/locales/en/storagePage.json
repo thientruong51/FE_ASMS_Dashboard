@@ -242,7 +242,8 @@
 "reserved": "Reserved",
 "rented": "Rented",
 "delivered":"Delivered",
-"completed":"Completed"
+"completed":"Completed",
+"cancelled":"Cancelled"
 },
 "paymentStatus": {
 "paid": "Paid",
