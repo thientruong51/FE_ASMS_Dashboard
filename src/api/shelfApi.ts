@@ -21,18 +21,12 @@ export type ShelfDetailResponse = {
   data: ShelfItem;
 };
 
-/**
- * Lấy danh sách kệ (có params tùy chọn)
- */
 export async function getShelves(params?: Record<string, any>): Promise<ShelfListResponse> {
   const resp = await axiosClient.get<ShelfListResponse>("/api/Shelf", { params });
   return resp.data;
 }
 
-/**
- * Lấy chi tiết 1 kệ theo shelfCode.
- * Nếu endpoint GET /api/Shelf/{shelfCode} không tồn tại, sẽ fallback sang query /api/Shelf?shelfCode=...
- */
+
 export async function getShelf(shelfCode: string): Promise<ShelfDetailResponse | ShelfItem> {
   try {
     const resp = await axiosClient.get<ShelfDetailResponse>(`/api/Shelf/${encodeURIComponent(shelfCode)}`);

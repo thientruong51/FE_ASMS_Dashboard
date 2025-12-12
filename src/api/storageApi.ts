@@ -25,3 +25,8 @@ export async function getStorages(params?: Record<string, any>): Promise<Storage
   const resp = await axiosClient.get<StorageListResponse>("/api/Storage", { params });
   return resp.data;
 }
+
+export async function createStorage(payload: Partial<StorageRespItem>) {
+  const resp = await axiosClient.post("/api/Storage", payload);
+  return resp.data;
+}

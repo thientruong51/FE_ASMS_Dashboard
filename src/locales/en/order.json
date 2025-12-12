@@ -5,27 +5,29 @@
     "searchPlaceholder": "Search orderCode or customer...",
     "clickToView": "Click an order to view details",
     "noItems": "No items",
-    "itemsCount": "{{count}} item",
+    "itemsCount": "{{count}} items",
     "itemsCount_plural": "{{count}} items"
   },
 
   "tabs": {
     "order": "Order",
-    "customer": "Customer"
+    "customer": "Customer",
+    "orderQr":"QR Code"
+
   },
 
   "labels": {
     "order": "Order",
-    "orderId": "Order ID",
-    "orderDate": "Order Date",
-    "depositDate": "Deposit Date",
-    "returnDate": "Return Date",
+    "orderId": "Order code",
+    "orderDate": "Order date",
+    "depositDate": "Deposit date",
+    "returnDate": "Return date",
     "payment": "Payment",
     "unpaid": "Unpaid",
     "total": "Total",
     "items": "Items",
-    "orderInformation": "Order Information",
-    "customerInformation": "Customer Information",
+    "orderInformation": "Order information",
+    "customerInformation": "Customer information",
     "code": "Code",
     "name": "Name",
     "phone": "Phone",
@@ -33,7 +35,20 @@
     "address": "Address",
     "noItems": "No items",
     "loading": "Loading...",
-    "loadingItems": "Loading items..."
+    "loadingItems": "Loading items...",
+    "note": "Note",
+    "notes": "Notes",
+    "refund": "Refund",
+    "refundAmount": "Refund amount",
+    "refundImageUrls": "Refund images",
+    "imageUrls": "Images",
+    "images": "Images",
+    "refundImages": "Refund proof images",
+    "refundImageUrl": "Refund image",
+    "refundNote": "Refund note",
+    "status": "Status",
+    "paymentStatus": "Payment Status",
+    "unknown": "Unknown"
   },
 
   "item": {
@@ -44,85 +59,181 @@
     "container": "Container",
     "storage": "Storage",
     "floor": "Floor",
-    "shelfType":"Shelf Type",
-    "containerType":"Container Type"
+    "shelfType": "Shelf type",
+    "containerType": "Container type"
   },
 
   "actions": {
     "locate": "Locate",
     "close": "Close",
-    "markPaid": "Mark as Paid",
+    "markPaid": "Mark paid",
     "details": "Details",
     "export": "Export",
     "toggleDensity": "Toggle density",
     "exportCsv": "Export CSV",
     "refresh": "Refresh",
     "viewDetails": "View details",
-    "copyOrderCode": "Copy orderCode"
+    "copyOrderCode": "Copy order code",
+     "refund": "Refund",
+      "confirm": "Confirm",
+    "cancel": "Cancel"
   },
 
   "table": {
-    "orderCode": "OrderCode",
+    "orderCode": "Order code",
     "customer": "Customer",
+    "customerName": "Customer name",
+    "phone": "Phone",
+    "email": "Email",
+    "orderDate": "Order date",
+    "depositDate": "Deposit date",
+    "returnDate": "Return date",
     "status": "Status",
     "payment": "Payment",
+    "paymentStatus": "Payment status",
     "total": "Total",
+    "totalPrice": "Total price",
+    "unpaid": "Unpaid",
+    "unpaidAmount": "Unpaid amount",
     "style": "Style",
-    "actions": "Actions",
-    "noRolesFound": "No roles found"
+    "note": "Note",
+    "address": "Address",
+    "passkey": "Passkey",
+    "refund": "Refund",
+    "images": "Images",
+    "actions": "Actions"
   },
 
   "messages": {
     "loadFailed": "Load failed",
-    "fetchOrdersFailed": "Failed to load orders",
-    "fetchOrderFailed": "Failed to load order",
-    "noRolesFound": "No roles found",
-    "copySuccess": "Copied to clipboard"
+    "fetchOrdersFailed": "Failed to fetch orders",
+    "fetchOrderFailed": "Failed to fetch order",
+    "copySuccess": "Copied to clipboard",
+      "refundSuccess": "Refund successful",
+    "refundFailed": "Refund failed",
+    "invalidRefundAmount": "Invalid refund amount"
   },
 
   "export": {
-    "filenamePrefix": "orders_export"
+    "filenamePrefix": "orders-export"
   },
-  "styleNames": {
-  "full": "Full service",
-  "self": "Self service",
-  "noData": "-"
-},
-"paymentStatus": {
-"paid": "Paid",
-"unpaid": "Unpaid",
-"pending": "Pending",
-"refunded": "Refund"
-},
-"statusNames": {
-"processing": "Processing",
-"retrieved": "Received",
-"pending": "Pending",
-"wait_pick_up": "Waiting for pickup",
-"verify": "Verify",
-"checkout": "Completed",
-"pick_up": "Pick up",
-"renting": "Renting",
-"stored": "Stored",
-"overdue": "Overdue",
-"store_in_expired_storage": "Storage expired",
-"order_created": "Order just created",
-"processing_order": "Order processing",
-"order_retrieved": "Order received back",
-"noData": "-",
-"delivered":"Delivered",
-"completed":"Completed"
-},
-"serviceNames": {
-"protecting": "Protecting",
-"product_packaging": "Packaging",
-"delivery": "Delivery"
-},
-"productTypeNames": {
-"fragile": "Fragile",
-"electronics": "Electronics",
-"cold_storage": "Requires cold storage",
-"heavy": "Heavy goods"
-}
 
+  "paymentStatus": {
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "pending": "Pending",
+    "refunded": "Refunded"
+  },
+
+  "statusNames": {
+    "processing": "Processing",
+    "retrieved": "Retrieved",
+    "pending": "Pending",
+    "wait_pick_up": "Waiting pickup",
+    "verify": "Verifying",
+    "checkout": "Checkout completed",
+    "pick_up": "Picked up",
+    "renting": "Renting",
+    "stored": "Stored",
+    "overdue": "Overdue",
+    "store_in_expired_storage": "Stored (expired)",
+    "order_created": "Order created",
+    "processing_order": "Processing order",
+    "order_retrieved": "Order retrieved",
+    "noData": "-",
+    "delivered": "Delivered",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+
+  "serviceNames": {
+    "protecting": "Protecting",
+    "product_packaging": "Product packaging",
+    "delivery": "Delivery"
+  },
+
+  "productTypeNames": {
+    "fragile": "Fragile",
+    "electronics": "Electronics",
+    "cold_storage": "Cold storage",
+    "heavy": "Heavy"
+  },
+
+  "styleNames": {
+    "full": "Full service",
+    "self": "Self service",
+    "noData": "-"
+  },
+
+  "containerLocationLogTitle": "Container location history",
+  "orderDetailId": "Order detail ID",
+  "qr": {
+    "title": "QR code",
+    "copy": "Copy payload",
+    "copyUrl": "Copy link",
+    "download": "Download PNG",
+    "hint": "This QR contains detail and location logs"
+  },
+  "noOrderDetailSelected": "No order detail selected",
+  "noLocationLogs": "No location logs found.",
+  "oldFloor": "Old floor",
+  "currentFloor": "Current floor",
+  "records": "records",
+  "logsFetched": "Showing logs",
+  "images": "Images",
+  "orderId": "Order detail",
+
+  "labelsGeneral": {
+    "orderInformation": "Order information",
+    "customerInformation": "Customer information"
+  },
+  "unableRenderQr": "Unable to render QR",
+  "openInNew": "Open in new tab",
+  "copy": "Copy",
+  "copyPayload": "Copy payload",
+  "copyLink": "Copy link",
+  "downloadPng": "Download PNG",
+  "showingPayload": "Showing payload",
+  "showingLogs": "Showing logs",
+  "containerPlacement": "Container Placement",
+  "containerRemoval": "Container Removal",
+  "reason": {
+    "Container Placement": "Container Placement",
+    "Container Removal": "Container Removal",
+    "Container Move": "Container Move",
+    "Manual Update": "Manual Update"
+  },
+  "placedAt": "Placed at Layer {{layer}}, SerialNumber {{serial}}",
+  "placedAtNoSerial": "Placed at Layer {{layer}}",
+  "logs": {
+    "title": "Location logs"
+  },
+   "trackingHistory": "Tracking history",
+  "noTracking": "No tracking history",
+  "downloadJson": "Download JSON",
+  "actionTypeNames": {
+  "order_retrieved": "Order Retrieved",
+  "order_created": "Order Created",
+  "processing_order": "Processing Order",
+  "stored_in_warehouse": "Stored in Warehouse",
+  "picked_up": "Picked Up",
+  "checkout_completed": "Checkout Completed",
+  "verification": "Verification",
+  "ready_for_pickup": "Ready for Pickup",
+  "customer_retrieved_from_expired-storage":"Customer Retrieved from Expired Storage",
+  "renting_active":"Renting Active",
+  "noData": "-",
+  "order_overdue":"Order Overdue",
+  "delivered_to_warehouse/customer":"Delivered to Warehouse/Customer",
+  "order_completed":"Order Completed",
+  "auto_update_overdue_detected":"Auto Update Overdue Detected"
+},
+"oldStatus":"Old Status",
+    "newStatus":"New Status",
+  
+
+  "help": {
+    "refundAmount": "Enter refund amount"
+  }
+ 
 }

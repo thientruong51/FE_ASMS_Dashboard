@@ -27,7 +27,8 @@
   "order_retrieved": "Order Retrieved",
   "noData": "-",
   "delivered":"Delivered",
-  "completed":"Completed"
+  "completed":"Completed",
+  "cancelled":"Cancelled"
 },
   "orderStatus": {
     "title": "Order Status Distribution",
@@ -94,7 +95,8 @@
     "period": {
       "month": "Month",
       "week": "Week",
-      "day":"day"
+      "day":"day",
+      "year":"Year"
     },
     "groups": {
       "active": "Active Orders",
@@ -105,18 +107,32 @@
   },
    "revenue": {
     "title": "Revenue",
+
     "period": {
       "day": "Day",
       "week": "Week",
       "month": "Month",
       "year": "Year"
     },
+
     "thisPeriod": "This period",
-    "changeVsPrev": "Change vs previous",
-    "noChartData": "No chart data available",
-    "noData": "No data",
+    "previousPeriodLabel": "Previous period",
+    "changeVsPrev": "Change vs previous period",
+    "comparisonText": "Compared to previous period",
+
     "noPreviousData": "No previous data",
-    "comparisonText": "compared to last period"
+    "noChartData": "No chart data",
+    "noData": "No data",
+
+    "auxiliary": "Details",
+    "auxiliary.totalPrice": "Total revenue",
+    "auxiliary.totalRefund": "Total refunds",
+
+    "tooltip": {
+      "netRevenue": "Net revenue",
+      "totalPrice": "Total revenue",
+      "totalRefund": "Total refunds"
+    }
   },
  "actionTypeNames": {
   "order_retrieved": "Order Retrieved",

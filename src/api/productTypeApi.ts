@@ -1,4 +1,3 @@
-// src/api/productTypeApi.ts
 import axiosClient from "./axiosClient";
 
 export type ProductTypeItem = {

@@ -144,7 +144,8 @@
     "no": "No",
     "cancel": "Cancel",
     "save": "Save",
-    "close":"Close"
+    "close":"Close",
+    "confirm":"Confirm"
 
   },
    "serviceNames": {
@@ -178,7 +179,11 @@
     "type": "Type",
     "na": "N/A",
     "active": "Active",
-    "dimensions": "Dimensions"
+    "dimensions": "Dimensions",
+    "addStorage": "Add Storage",
+    "createStorageTitle": "Create New Storage",
+    "storageCode": "Storage Code",
+    "storageType": "Storage Type"
   },
    "truckLoad": {
     "selectStorage": "Select a storage",
@@ -242,7 +247,8 @@
 "reserved": "Reserved",
 "rented": "Rented",
 "delivered":"Delivered",
-"completed":"Completed"
+"completed":"Completed",
+"cancelled":"Cancelled"
 },
 "paymentStatus": {
 "paid": "Paid",
@@ -306,5 +312,32 @@
     "warehouse_expired": "Expired Warehouse",
     "warehouse_oversize": "Oversize Warehouse",
     "noData": "-"
-  }
+  },
+  "trackingDialog": {
+    "title": "Container Tracking History",
+    "noHistory": "No tracking history",
+
+    "reasonMap": {
+      "Container Removal": "Container Removal",
+      "Container Placement": "Container Placement",
+      "Container Move": "Container Move"
+    },
+
+    "card": {
+      "container": "Container",
+      "orderCode": "Order Code",
+      "orderDetailId": "Order Detail ID",
+      "performedBy": "Performed By",
+      "updatedDate": "Updated Date",
+      "oldFloor": "Old Floor",
+      "currentFloor": "Current Floor",
+      "algorithm": "Algorithm",
+      "notes": "Notes"
+    },
+
+    "close": "Close"
+  },
+  "width": "Width",
+"length": "Length",
+"height": "Height"
 }

@@ -85,7 +85,15 @@
   "delivered_to_warehouse/customer":"Delivered to Warehouse/Customer",
   "order_completed":"Order Completed",
   "auto_update_overdue_detected":"Auto Update Overdue Detected"
-}
-
+},
+"updateImage": "Update image",
+"updateImageDialogTitle": "Update tracking images",
+"updateImageDialogDesc": "Paste image URLs (one per line) or upload files. Files are uploaded to Cloudinary then sent to backend.",
+"pasteImageUrls": "Paste image URLs (one per line)",
+"orUploadFiles": "Or upload files",
+"noImageProvided": "Please provide at least one image.",
+"updateImageSuccess": "Images updated successfully.",
+"updateImageFailed": "Failed to update images.",
+"uploadingImages": "Uploading images..."
 
 }

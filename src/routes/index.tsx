@@ -27,18 +27,31 @@ import BusinessRulesPage from "@/pages/businessRule/BusinessRulesPage";
 import ContainerPage from "@/pages/container/ContainerPage";
 import PublicRoute from "./PublicRoute";
 
+import ContainerLocationPage from "@/pages/container-location/ContainerLocationPage";
+import OrderScanPage from "@/pages/order-scan/OrderScanPage";
+
 const ALL = [1, 2, 3, 4];
 const ROLE_4 = [4];
 
 export const router = createBrowserRouter([
- {
-  path: "/login",
-  element: (
-    <PublicRoute>
-      <LoginPage />
-    </PublicRoute>
-  ),
-},
+  {
+    path: "/login",
+    element: (
+      <PublicRoute>
+        <LoginPage />
+      </PublicRoute>
+    ),
+  },
+
+  {
+    path: "/container-location",
+    element: <ContainerLocationPage />,
+  },
+   {
+    path: "/orders/scan",
+    element: <OrderScanPage/>,
+  },
+{ path: "/orders/scan/:orderCode", element: <OrderScanPage/> },
 
   {
     element: <ProtectedRoute />,
@@ -70,7 +83,6 @@ export const router = createBrowserRouter([
           { path: "buildings", element: <ProtectedRoute allowedRoles={ROLE_4}><BuildingPage /></ProtectedRoute> },
 
           { path: "containers", element: <ProtectedRoute allowedRoles={ROLE_4}><ContainerPage /></ProtectedRoute> },
-
 
           { path: "container-types", element: <ProtectedRoute allowedRoles={ROLE_4}><ContainerTypePage /></ProtectedRoute> },
 

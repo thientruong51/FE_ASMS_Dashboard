@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Box, Typography, Card, CardContent, useMediaQuery, useTheme, Chip, Stack } from "@mui/material";
+import { Box, Typography, Card, CardContent, useMediaQuery, useTheme, Chip } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import useStaffData from "@/hooks/useStaffData";
 import StaffToolbar from "./components/StaffToolbar";
@@ -9,9 +9,9 @@ import StaffDialog from "./components/StaffDialog";
 import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import type { Employee } from "../../types/staff";
+import type { Employee } from "@/types/staff";
 import { useTranslation } from "react-i18next";
-import { Box as MBox } from "@mui/system";
+import { Box as MBox, Stack } from "@mui/system";
 
 import { translateRoleName, canonicalRoleKey } from "@/utils/roleNames";
 import { translateBuildingName } from "@/utils/buildingNames";
@@ -36,7 +36,8 @@ export default function StaffPage() {
     setDialogOpen(true);
   };
   const handleOpenEdit = (employee: Employee) => {
-    setEditingEmployee(employee);
+    // create a shallow copy so reference changes and child effects run
+    setEditingEmployee({ ...employee });
     setDialogOpen(true);
   };
   const handleCancel = () => setDialogOpen(false);
@@ -48,7 +49,8 @@ export default function StaffPage() {
       } else {
         await create(data);
       }
-      refresh();
+      // ensure we reload fresh data
+      await refresh();
       setDialogOpen(false);
     } catch (err) {
       console.error("Save error", err);
@@ -59,7 +61,7 @@ export default function StaffPage() {
     if (!window.confirm(t("confirmDeleteBody_plural"))) return;
     try {
       await remove(id);
-      refresh();
+      await refresh();
     } catch (err) {
       console.error("Delete failed", err);
     }
@@ -101,12 +103,10 @@ export default function StaffPage() {
     return m;
   }, [roles]);
 
- 
   const allowedRolesForViewer: Record<number, number[]> = {
     1: [2, 3],
     4: [1, 2, 3],
   };
-
 
   const filteredEmployees = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -143,7 +143,6 @@ export default function StaffPage() {
       return matchesSearch && matchesRole && matchesStatus && visibleByRole;
     });
   }, [employees, searchTerm, filterRole, filterStatus, roleKeyToId, currentRoleId, currentEmployeeCode]);
-
 
   const baseColumns: GridColDef[] = useMemo(
     () => [
@@ -251,8 +250,6 @@ export default function StaffPage() {
 
       <Card sx={{ mb: 3, borderRadius: 2 }}>
         <CardContent>
-          {/* StaffToolbar: pass role/building options (value = canonical key, label = translated) */}
-          {/* cast to any to avoid type mismatch if StaffToolbar expects EmployeeRole[] */}
           <StaffToolbar
             searchTerm={searchTerm}
             onSearch={setSearchTerm}

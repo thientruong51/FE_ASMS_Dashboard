@@ -1,16 +1,16 @@
 import axiosClient from "./axiosClient";
 
-
 export interface TrackingHistoryItem {
   trackingHistoryId: number;
   orderDetailCode?: string | null;
   oldStatus?: string | null;
   newStatus?: string | null;
   actionType?: string | null;
-  createAt?: string | null; 
+  createAt?: string | null;
   currentAssign?: string | null;
   nextAssign?: string | null;
-  image?: string | null;
+  image?: string | null;      
+  images?: string[] | null;   
   orderCode?: string | null;
 }
 
@@ -22,7 +22,6 @@ export interface TrackingHistoryListResponse {
   totalPages?: number;
 }
 
-
 export interface TrackingHistoryPayload {
   orderDetailCode?: string | null;
   orderCode?: string | null;
@@ -33,8 +32,14 @@ export interface TrackingHistoryPayload {
   currentAssign?: string | null;
   nextAssign?: string | null;
   image?: string | null;
+  images?: string[] | null;
 }
 
+
+export interface UpdateTrackingImagePayload {
+  orderCode: string;
+  image: string[]; 
+}
 
 export async function getTrackingHistories(params?: Record<string, any>): Promise<TrackingHistoryListResponse> {
   const resp = await axiosClient.get<TrackingHistoryListResponse>("/api/TrackingHistory", { params });
@@ -63,4 +68,14 @@ export async function updateTrackingHistory(id: number, payload: TrackingHistory
 
 export async function deleteTrackingHistory(id: number): Promise<void> {
   await axiosClient.delete(`/api/TrackingHistory/${id}`);
+}
+
+
+export async function updateTrackingImage(orderCode: string, images: string[]): Promise<TrackingHistoryItem> {
+  const payload: UpdateTrackingImagePayload = {
+    orderCode,
+    image: images,
+  };
+  const resp = await axiosClient.put<TrackingHistoryItem>("/api/OrderStatus/tracking/update-image", payload);
+  return resp.data;
 }

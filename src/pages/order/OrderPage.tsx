@@ -21,16 +21,11 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import orderApi from "@/api/orderApi";
+import orderApi, { type OrderRespItem } from "@/api/orderApi";
 import OrderDetailDrawer from "./components/OrderDetailDrawer";
 import { useTranslation } from "react-i18next";
 
-import {
-  translateStatus,
-  translatePaymentStatus,
-
-  translateStyle,
-} from "@/utils/translationHelpers";
+import { translateStatus, translatePaymentStatus, translateStyle } from "@/utils/translationHelpers";
 
 function ToolbarExtras({
   onExport,
@@ -60,7 +55,7 @@ export default function OrderPage() {
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<OrderRespItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [search, setSearch] = useState("");
@@ -68,7 +63,7 @@ export default function OrderPage() {
 
   const [selectedOrderCode, setSelectedOrderCode] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [orderFull, setOrderFull] = useState<any | undefined>(undefined);
+  const [orderFull, setOrderFull] = useState<OrderRespItem | undefined>(undefined);
   const [orderLoading, setOrderLoading] = useState(false);
 
   const [density, setDensity] = useState<"compact" | "standard" | "comfortable">("standard");
@@ -77,7 +72,8 @@ export default function OrderPage() {
     setLoading(true);
     try {
       const resp = await orderApi.getOrders({ page: 1, pageSize: 1000, q: search, paymentStatus: filterPayment });
-      setOrders(resp.data ?? []);
+      const list = resp?.data ?? [];
+      setOrders(list);
     } catch (err) {
       console.error("getOrders failed", err);
       setOrders([]);
@@ -92,7 +88,7 @@ export default function OrderPage() {
 
   const looksLikeFullOrder = (o: any) => {
     if (!o) return false;
-    return !!(o.customerName || o.customerEmail || o.customerAddress);
+    return !!(o.customerName || o.email || o.address || o.phoneContact);
   };
 
   const openDrawerFor = async (rowOrOrder: any) => {
@@ -104,7 +100,7 @@ export default function OrderPage() {
     setSelectedOrderCode(code);
 
     if (looksLikeFullOrder(orderObj)) {
-      setOrderFull(orderObj);
+      setOrderFull(orderObj as OrderRespItem);
       setDrawerOpen(true);
       return;
     }
@@ -112,16 +108,15 @@ export default function OrderPage() {
     setOrderLoading(true);
     setOrderFull(undefined);
     try {
-      const resp = await orderApi.getOrder(code);
-      const data = resp && (resp.data ?? resp) ? (resp.data ?? resp) : null;
+      const data = await orderApi.getOrder(code);
       if (data) {
-        setOrderFull(data);
+        setOrderFull(data as OrderRespItem);
       } else {
-        setOrderFull(orderObj);
+        setOrderFull(orderObj as OrderRespItem);
       }
     } catch (err) {
       console.warn("Failed to fetch full order, falling back to summary:", err);
-      setOrderFull(orderObj);
+      setOrderFull(orderObj as OrderRespItem);
     } finally {
       setOrderLoading(false);
       setDrawerOpen(true);
@@ -135,6 +130,33 @@ export default function OrderPage() {
   };
 
   const fmtMoney = (v: any) => (v == null ? "-" : Number(v).toLocaleString());
+
+  const fmtDate = (d: any): string => {
+    if (d === null || typeof d === "undefined" || d === "") return "-";
+
+    if (d instanceof Date) {
+      return Number.isNaN(d.getTime()) ? "-" : d.toLocaleDateString();
+    }
+
+    const s = String(d).trim();
+
+    const pureDateMatch = /^\d{4}-\d{2}-\d{2}$/.test(s);
+    const tryIso = pureDateMatch ? `${s}T00:00:00` : s;
+
+    const dt = new Date(tryIso);
+    if (!Number.isNaN(dt.getTime())) {
+      return dt.toLocaleDateString();
+    }
+
+    const asNum = Number(s);
+    if (!Number.isNaN(asNum)) {
+      const dt2 = new Date(asNum);
+      if (!Number.isNaN(dt2.getTime())) return dt2.toLocaleDateString();
+    }
+
+    return s;
+  };
+
 
   const withTooltip = (original?: string | null, translated?: string | null) => {
     const orig = original ?? "";
@@ -175,10 +197,41 @@ export default function OrderPage() {
       },
       { field: "customerCode", headerName: t("table.customer"), minWidth: 120, flex: 0.9 },
 
+      
+      {
+        field: "phoneContact",
+        headerName: t("table.phone") ?? "Phone",
+        minWidth: 130,
+        flex: 0.8,
+      },
+     {
+        field: "address",
+        headerName: t("table.address") ?? "Address",
+        minWidth: 220,
+        flex: 1.2,
+        renderCell: (params: any) => withTooltip(params.value, params.value),
+      },
+
+      {
+        field: "orderDate",
+        headerName: t("table.orderDate") ?? "Order date",
+        minWidth: 120,
+        flex: 0.8,
+        renderCell: (params: any) => fmtDate(params.value),
+      },
+     
+      {
+        field: "returnDate",
+        headerName: t("table.returnDate") ?? "Return",
+        minWidth: 120,
+        flex: 0.8,
+        renderCell: (params: any) => fmtDate(params.value),
+      },
+
       {
         field: "status",
         headerName: t("table.status"),
-        minWidth: 120,
+        minWidth: 140,
         flex: 0.8,
         renderCell: (params: any) => {
           const raw = String(params.value ?? "");
@@ -189,24 +242,25 @@ export default function OrderPage() {
       {
         field: "paymentStatus",
         headerName: t("table.payment"),
-        minWidth: 120,
+        minWidth: 130,
         flex: 0.9,
         renderCell: (params: any) => {
           const raw = String(params.value ?? "");
           const translated = translatePaymentStatus(t, raw);
           const isPaid = raw.toLowerCase() === "paid";
-          return <Chip label={withTooltip(raw, translated)} size="small" color={isPaid ? "success" : "default"} />;
+          return <Chip label={withTooltip(raw, translated)} size="small" color={isPaid ? "success" : "warning"} />;
         },
       },
+
       {
         field: "totalPrice",
         headerName: t("table.total"),
-        minWidth: 110,
+        minWidth: 120,
         flex: 0.8,
         renderCell: (params: any) => fmtMoney(params.value),
         type: "number",
       },
-
+      
       {
         field: "style",
         headerName: t("table.style"),
@@ -218,6 +272,15 @@ export default function OrderPage() {
           return withTooltip(String(raw), translated);
         },
       },
+
+      
+      
+
+      
+
+   
+     
+
       {
         field: "actions",
         headerName: t("table.actions"),
@@ -243,12 +306,17 @@ export default function OrderPage() {
     ];
   }, [orderLoading, selectedOrderCode, t]);
 
-  function filteredWithMemo(all: any[], s: string, _paymentFilter: string) {
+  function filteredWithMemo(all: OrderRespItem[], s: string, _paymentFilter: string) {
     const q = (s ?? "").trim().toLowerCase();
     return all
       .filter((o) => {
         if (!q) return true;
-        return String(o.orderCode ?? "").toLowerCase().includes(q) || String(o.customerCode ?? "").toLowerCase().includes(q);
+        return (
+          String(o.orderCode ?? "").toLowerCase().includes(q) ||
+          String(o.customerCode ?? "").toLowerCase().includes(q) ||
+          String(o.customerName ?? "").toLowerCase().includes(q) ||
+          String(o.phoneContact ?? "").toLowerCase().includes(q)
+        );
       })
       .map((r) => ({ id: r.orderCode, __orderFull: r, ...r }));
   }
@@ -261,14 +329,19 @@ export default function OrderPage() {
     const keys = [
       "orderCode",
       "customerCode",
+      "customerName",
+      "phoneContact",
       "orderDate",
       "depositDate",
       "returnDate",
       "status",
       "paymentStatus",
       "totalPrice",
-      "unpaidAmount",
       "style",
+      "address",
+      "passkey",
+      "refund",
+      "imageUrls",
     ];
     const header = keys.join(",");
     const csv = [header]
@@ -276,8 +349,9 @@ export default function OrderPage() {
         rows.map((r) =>
           keys
             .map((k) => {
-              const v = r[k];
+              const v = (r as any)[k];
               if (v == null) return "";
+              if (Array.isArray(v)) return `"${v.join(";")}"`;
               return `"${String(v).replace(/"/g, '""')}"`;
             })
             .join(",")
@@ -288,7 +362,7 @@ export default function OrderPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${t("export.filenamePrefix")}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `${t("export.filenamePrefix") ?? "orders"}_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -304,7 +378,6 @@ export default function OrderPage() {
 
       <Card sx={{ mb: 2, maxWidth: "100%", overflow: "visible" }}>
         <CardContent>
-          {/* Controls */}
           <Box
             sx={{
               display: "flex",
@@ -358,7 +431,10 @@ export default function OrderPage() {
                       <Box>
                         <Typography fontWeight={700}>{o.orderCode}</Typography>
                         <Typography color="text.secondary">
-                          {o.customerCode ?? "-"} {o.style ? <>• {withTooltip(String(o.style ?? ""), styleTranslated)}</> : null}
+                          {o.customerCode ?? "-"} • {o.customerName ?? "-"} {o.style ? <>• {withTooltip(String(o.style ?? ""), styleTranslated)}</> : null}
+                        </Typography>
+                        <Typography color="text.secondary" variant="body2">
+                          {fmtDate(o.orderDate)} • {fmtMoney(o.totalPrice)} • unpaid: {fmtMoney(o.unpaidAmount)}
                         </Typography>
                       </Box>
                       <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
@@ -384,7 +460,7 @@ export default function OrderPage() {
                   getRowId={(r: any) => r.orderCode}
                   sx={{
                     border: "none",
-                    minWidth: 700,
+                    minWidth: 1200,
                     "& .MuiDataGrid-virtualScroller": {
                       overflow: "auto",
                     },

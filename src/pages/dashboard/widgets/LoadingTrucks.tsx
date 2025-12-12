@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, Typography, Box, Stack, CircularProgress } from "@mui/material";
+import { Card, CardContent, Typography, Box, Stack, CircularProgress, Select, MenuItem } from "@mui/material";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { useTranslation } from "react-i18next";
 import dashboardApi from "@/api/dashboardApi";
-
 
 const statusesList = [
   "Pending",
@@ -21,24 +20,26 @@ const statusesList = [
 ];
 
 const COLORS = [
-  "#0d47a1", // Pending
-  "#1976d2", // Wait pick up
-  "#64b5f6", // Verify
-  "#ef5350", // Checkout
-  "#9c27b0", // Pick up
-  "#ff9800", // Delivered
-  "#f44336", // Processing
-  "#00bfa5", // Stored
-  "#00d146", // Renting
-  "#795548", // Overdue
-  "#9c0202", // Retrieved
-  "#6a1b9a", // Completed
+  "#0d47a1",
+  "#1976d2",
+  "#64b5f6",
+  "#ef5350",
+  "#9c27b0",
+  "#ff9800",
+  "#f44336",
+  "#00bfa5",
+  "#00d146",
+  "#795548",
+  "#9c0202",
+  "#6a1b9a",
 ];
 
 export default function LoadingTrucks() {
   const { t } = useTranslation("dashboard");
-  const [date] = useState(() => new Date().toISOString().slice(0, 10));
-  const [isWeekly] = useState(false);
+
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [type, setType] = useState<"day" | "week" | "month" | "year">("month");
+
   const [data, setData] = useState<{ name: string; value: number }[] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -81,15 +82,9 @@ export default function LoadingTrucks() {
       try {
         const promises = statusesList.map((s) =>
           dashboardApi
-            .getOrderCount({ date, status: s, isWeekly })
-            .then((res) => {
-              const apiData = res.data;
-              return typeof apiData?.data === "number" ? apiData.data : 0;
-            })
-            .catch((e) => {
-              console.error("getOrderCount error", s, e);
-              return 0;
-            })
+            .getOrderCount({ date, status: s, type })
+            .then((res) => res?.data?.data?.totalOrders ?? 0)
+            .catch(() => 0)
         );
 
         const results = await Promise.all(promises);
@@ -99,6 +94,7 @@ export default function LoadingTrucks() {
           name,
           value: results[i],
         }));
+
         setData(pieData);
       } catch (err) {
         console.error("LoadingTrucks load failed", err);
@@ -110,7 +106,7 @@ export default function LoadingTrucks() {
     return () => {
       mounted = false;
     };
-  }, [date, isWeekly]);
+  }, [date, type]);
 
   const total = data ? data.reduce((a, b) => a + b.value, 0) : 0;
 
@@ -132,7 +128,7 @@ export default function LoadingTrucks() {
     overdue: 9,
     retrieved: 10,
     completed: 11,
-    store_in_expired_storage: 9, 
+    store_in_expired_storage: 9,
   };
 
   const statusColorFor = (name: string, idx: number) => {
@@ -143,13 +139,40 @@ export default function LoadingTrucks() {
   return (
     <Card sx={{ borderRadius: 2, boxShadow: "0 2px 6px rgba(0,0,0,0.04)", bgcolor: "#fff" }}>
       <CardContent>
+
+        {/* HEADER */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
           <Typography fontWeight={600}>{t("orderStatus.title")}</Typography>
-          <Typography variant="body2" color="primary" sx={{ cursor: "pointer" }}>
-            {t("orderStatus.viewAll")}
-          </Typography>
+
+          {/* NEW — period selector + date */}
+          <Box display="flex" alignItems="center" gap={1}>
+            <Select
+              size="small"
+              value={type}
+              onChange={(e) => setType(e.target.value as any)}
+              sx={{ fontSize: 13, height: 32 }}
+            >
+              <MenuItem value="day">{t("recentOrders.period.day")}</MenuItem>
+              <MenuItem value="week">{t("recentOrders.period.week")}</MenuItem>
+              <MenuItem value="month">{t("recentOrders.period.month")}</MenuItem>
+              <MenuItem value="year">{t("recentOrders.period.year")}</MenuItem>
+            </Select>
+
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              style={{
+                height: 32,
+                borderRadius: 6,
+                border: "1px solid #ddd",
+                padding: "0 8px",
+              }}
+            />
+          </Box>
         </Box>
 
+        {/* CONTENT */}
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box sx={{ width: "45%", height: 180 }}>
             {loading ? (
@@ -183,7 +206,7 @@ export default function LoadingTrucks() {
           </Box>
 
           <Stack spacing={0.6}>
-            {(data ?? []).slice(0, 12).map((d, i) => (
+            {(data ?? []).map((d, i) => (
               <Box key={d.name} display="flex" alignItems="center" gap={1}>
                 <Box
                   sx={{
@@ -193,9 +216,11 @@ export default function LoadingTrucks() {
                     borderRadius: 2,
                   }}
                 />
+
                 <Typography fontSize={13} sx={{ minWidth: 160 }}>
                   {translatedStatusLabel(d.name)}
                 </Typography>
+
                 <Typography fontSize={13} fontWeight={600}>
                   {d.value}
                 </Typography>

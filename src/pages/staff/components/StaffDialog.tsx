@@ -21,11 +21,20 @@ export default function StaffDialog({
   onCancel
 }: Props) {
   const { t } = useTranslation("staffPage");
+  const key = employee ? `emp-${employee.id}` : "emp-new";
+
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
       <DialogTitle>{employee ? t("update") : t("create")}</DialogTitle>
       <DialogContent>
-        <StaffForm employee={employee} roles={roles} buildings={buildings} onSave={onSave} onCancel={onCancel} />
+        <StaffForm
+          key={key}
+          employee={employee}
+          roles={roles}
+          buildings={buildings}
+          onSave={onSave}
+          onCancel={onCancel}
+        />
       </DialogContent>
     </Dialog>
   );

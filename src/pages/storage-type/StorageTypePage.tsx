@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -18,13 +18,13 @@ import {
   DialogActions,
   CircularProgress
 } from "@mui/material";
+
 import AddIcon from "@mui/icons-material/Add";
 import DoorSlidingIcon from "@mui/icons-material/DoorSliding";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import WarehouseIcon from "@mui/icons-material/Warehouse";
 import DeleteIcon from "@mui/icons-material/Delete";
-import StorageTypeList from "./components/StorageTypeList";
-import StorageTypeFormDialog from "./components/StorageTypeFormDialog";
+
 import type { StorageType } from "./components/types";
 import * as api from "../../api/storageTypeApi";
 import { useGLTF } from "@react-three/drei";
@@ -32,12 +32,16 @@ import { useTranslation } from "react-i18next";
 
 const UPLOADED_HEADER = "/mnt/data/5c1c4b28-14bf-4a18-b70c-5acac3461e5e.png";
 
+// ✅ Lazy load components
+const StorageTypeList = lazy(() => import("./components/StorageTypeList"));
+const StorageTypeFormDialog = lazy(() => import("./components/StorageTypeFormDialog"));
+
 type CategoryKey = "noac" | "ac" | "warehouse";
 
 function groupKeyFromName(name?: string): CategoryKey {
   const n = (name ?? "").toLowerCase();
   if (!n) return "noac";
-  if (n.includes("ware") || n.includes("warehouse")) return "warehouse";
+  if (n.includes("warehouse") || n.includes("ware")) return "warehouse";
   if (n.includes("ac")) return "ac";
   return "noac";
 }
@@ -49,14 +53,26 @@ export default function StorageTypePage() {
   const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [editing, setEditing] = useState<StorageType | null>(null);
-  const [snack, setSnack] = useState<{ open: boolean; message?: string; severity?: "success" | "error" }>({ open: false, message: "", severity: "success" });
-
-  const [category, setCategory] = useState<CategoryKey>("noac");
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id?: number; name?: string }>({ open: false, id: undefined, name: undefined });
+  const [snack, setSnack] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error"
+  });
+
+  const [category, setCategory] = useState<CategoryKey>("noac");
+
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    id: undefined as number | undefined,
+    name: undefined as string | undefined
+  });
   const [deleting, setDeleting] = useState(false);
 
+  // ------------------------------------
+  // FETCH DATA
+  // ------------------------------------
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
@@ -64,11 +80,15 @@ export default function StorageTypePage() {
       const data = Array.isArray(resp.data) ? resp.data : [];
       setList(data);
 
-      const urls = Array.from(new Set(data.map((b: any) => b.imageUrl).filter(Boolean) as string[]));
+      // Fix TS: ensure string filter
+      const urls = data
+        .map((x) => x.imageUrl)
+        .filter((u): u is string => typeof u === "string" && u.length > 0);
+
       urls.forEach((u) => {
         if (/\.(glb|gltf|obj)$/i.test(u)) {
           try {
-            useGLTF.preload?.(u);
+            useGLTF.preload(u);
           } catch {}
         }
       });
@@ -84,6 +104,9 @@ export default function StorageTypePage() {
     fetchAll();
   }, [fetchAll]);
 
+  // ------------------------------------
+  // GROUP LIST
+  // ------------------------------------
   const groups = useMemo(() => {
     const byKey: Record<CategoryKey, StorageType[]> = { noac: [], ac: [], warehouse: [] };
     for (const s of list) {
@@ -96,10 +119,16 @@ export default function StorageTypePage() {
     return byKey;
   }, [list]);
 
+  const displayed = groups[category];
+
+  // ------------------------------------
+  // CRUD HANDLERS
+  // ------------------------------------
   function openCreate() {
     setEditing(null);
     setOpenDialog(true);
   }
+
   function openEdit(s: StorageType) {
     setEditing(s);
     setOpenDialog(true);
@@ -109,19 +138,33 @@ export default function StorageTypePage() {
     try {
       if (editing) {
         const updated = await api.updateStorageType(editing.storageTypeId, payload);
-        setList((prev) => prev.map((p) => (p.storageTypeId === updated.storageTypeId ? updated : p)));
-        setSnack({ open: true, message: t("saveSuccessUpdate"), severity: "success" });
+        setList((prev) =>
+          prev.map((p) => (p.storageTypeId === updated.storageTypeId ? updated : p))
+        );
+        setSnack({
+          open: true,
+          message: t("saveSuccessUpdate"),
+          severity: "success"
+        });
       } else {
         const created = await api.createStorageType(payload);
         setList((prev) => [created, ...prev]);
-        setSnack({ open: true, message: t("saveSuccessCreate"), severity: "success" });
+        setSnack({
+          open: true,
+          message: t("saveSuccessCreate"),
+          severity: "success"
+        });
       }
+
       setOpenDialog(false);
       await fetchAll();
     } catch (err: any) {
       console.error(err);
-      const msg = err?.message || err?.response?.data?.message || t("saveFailed");
-      setSnack({ open: true, message: msg, severity: "error" });
+      setSnack({
+        open: true,
+        message: err?.message || t("saveFailed"),
+        severity: "error"
+      });
     }
   }
 
@@ -131,10 +174,8 @@ export default function StorageTypePage() {
 
   async function handleConfirmDelete() {
     const id = deleteDialog.id;
-    if (id == null) {
-      setDeleteDialog({ open: false });
-      return;
-    }
+    if (!id) return handleCancelDelete();
+
     setDeleting(true);
     try {
       await api.deleteStorageType(id);
@@ -143,8 +184,11 @@ export default function StorageTypePage() {
       await fetchAll();
     } catch (err: any) {
       console.error(err);
-      const msg = err?.message || err?.response?.data?.message || t("deleteFailed");
-      setSnack({ open: true, message: msg, severity: "error" });
+      setSnack({
+        open: true,
+        message: err?.message || t("deleteFailed"),
+        severity: "error"
+      });
     } finally {
       setDeleting(false);
     }
@@ -154,32 +198,77 @@ export default function StorageTypePage() {
     setDeleteDialog({ open: false, id: undefined, name: undefined });
   }
 
-  const displayed = groups[category];
-
+  // ------------------------------------
+  // RENDER
+  // ------------------------------------
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
       <Stack spacing={4} alignItems="center">
-        <Box sx={{ width: "100%", borderRadius: 2, overflow: "hidden", boxShadow: "0 8px 30px rgba(18, 52, 86, 0.06)", position: "relative", minHeight: 140 }}>
-          <Box sx={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.06))`, zIndex: 1 }} />
-          <Box sx={{ position: "absolute", right: 0, top: 0, bottom: 0, width: { xs: 120, md: 240 }, backgroundImage: `url(${UPLOADED_HEADER})`, backgroundSize: "cover", backgroundPosition: "center", opacity: 0.14, zIndex: 0 }} />
+
+        {/* -------------------------------- HEADER -------------------------------- */}
+        <Box
+          sx={{
+            width: "100%",
+            borderRadius: 2,
+            overflow: "hidden",
+            boxShadow: "0 8px 30px rgba(18, 52, 86, 0.06)",
+            position: "relative",
+            minHeight: 140
+          }}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: `linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.06))`,
+              zIndex: 1
+            }}
+          />
+
+          <Box
+            sx={{
+              position: "absolute",
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: { xs: 120, md: 240 },
+              backgroundImage: `url(${UPLOADED_HEADER})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: 0.14,
+              zIndex: 0
+            }}
+          />
+
           <Box sx={{ position: "relative", zIndex: 2, p: { xs: 3, md: 4 } }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Box display="flex" alignItems="center" gap={2}>
                 <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
                   <WarehouseIcon />
                 </Avatar>
+
                 <Box>
-                  <Typography variant="h5" fontWeight={700}>{t("title")}</Typography>
+                  <Typography variant="h5" fontWeight={700}>
+                    {t("title")}
+                  </Typography>
                   <Typography color="text.secondary">{t("subtitle")}</Typography>
                 </Box>
               </Box>
 
-              <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>{t("create")}</Button>
+              <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+                {t("create")}
+              </Button>
             </Box>
           </Box>
         </Box>
 
-        <ToggleButtonGroup value={category} exclusive onChange={(_, v) => v && setCategory(v)} sx={{ borderRadius: 10, bgcolor: "#fff", p: 1 }}>
+        {/* -------------------------------- CATEGORY TABS -------------------------------- */}
+        <ToggleButtonGroup
+          value={category}
+          exclusive
+          onChange={(_, v) => v && setCategory(v)}
+          sx={{ borderRadius: 10, bgcolor: "#fff", p: 1 }}
+        >
           <ToggleButton value="noac" sx={{ px: 3 }}>
             <DoorSlidingIcon sx={{ mr: 1 }} />
             {t("roomNoAc")}
@@ -201,16 +290,63 @@ export default function StorageTypePage() {
           <Chip label={t("categoryLabel", { category })} />
         </Box>
 
-        <Box width="100%">
-          <StorageTypeList list={displayed} loading={loading} onEdit={openEdit} onDelete={(id: number) => onDeleteRequested(id)} selectable selectedId={selectedId ?? undefined} onSelect={(id) => setSelectedId(id)} />
+        {/* -------------------------------- LAZY LIST -------------------------------- */}
+        <Box width="100%" minHeight={200}>
+          <Suspense
+            fallback={
+              <Box sx={{ py: 5, display: "flex", justifyContent: "center" }}>
+                <CircularProgress />
+              </Box>
+            }
+          >
+            <StorageTypeList
+              list={displayed}
+              loading={loading}
+              onEdit={openEdit}
+              onDelete={(id) => onDeleteRequested(id)}
+              selectable
+              selectedId={selectedId ?? undefined}
+              onSelect={(id) => setSelectedId(id)}
+            />
+          </Suspense>
         </Box>
       </Stack>
 
-      <StorageTypeFormDialog open={openDialog} initial={editing ?? undefined} onClose={() => setOpenDialog(false)} onSubmit={handleSave} />
+      {/* -------------------------------- FORM DIALOG (lazy) -------------------------------- */}
+      <Suspense fallback={null}>
+        <StorageTypeFormDialog
+          open={openDialog}
+          initial={editing ?? undefined}
+          onClose={() => setOpenDialog(false)}
+          onSubmit={handleSave}
+        />
+      </Suspense>
 
-      <Dialog open={deleteDialog.open} onClose={handleCancelDelete} PaperProps={{ sx: { borderRadius: 3, p: 1, minWidth: 360, boxShadow: "0 12px 40px rgba(0,0,0,0.12)" } }}>
+      {/* -------------------------------- DELETE DIALOG -------------------------------- */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={handleCancelDelete}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 1,
+            minWidth: 360,
+            boxShadow: "0 12px 40px rgba(0,0,0,0.12)"
+          }
+        }}
+      >
         <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box sx={{ width: 42, height: 42, borderRadius: "50%", background: "rgba(244,67,54,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Box
+            sx={{
+              width: 42,
+              height: 42,
+              borderRadius: "50%",
+              background: "rgba(244,67,54,0.12)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
             <DeleteIcon sx={{ color: "error.main" }} />
           </Box>
           {t("deleteConfirmTitle")}
@@ -218,20 +354,43 @@ export default function StorageTypePage() {
 
         <DialogContent>
           <DialogContentText sx={{ color: "text.secondary", fontSize: 15 }}>
-            {deleteDialog.name ? t("deleteConfirmSingle", { name: deleteDialog.name }) : t("deleteConfirmPlural")}
+            {deleteDialog.name
+              ? t("deleteConfirmSingle", { name: deleteDialog.name })
+              : t("deleteConfirmPlural")}
           </DialogContentText>
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleCancelDelete} disabled={deleting} sx={{ textTransform: "none" }}>{t("cancel")}</Button>
-          <Button onClick={handleConfirmDelete} variant="contained" color="error" disabled={deleting} sx={{ textTransform: "none" }} startIcon={deleting ? <CircularProgress size={18} /> : undefined}>
+          <Button onClick={handleCancelDelete} disabled={deleting} sx={{ textTransform: "none" }}>
+            {t("cancel")}
+          </Button>
+
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={deleting}
+            sx={{ textTransform: "none" }}
+            startIcon={deleting ? <CircularProgress size={18} /> : undefined}
+          >
             {deleting ? t("deleting") : t("delete")}
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack((s) => ({ ...s, open: false }))} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
-        <Alert severity={snack.severity} onClose={() => setSnack((s) => ({ ...s, open: false }))}>{snack.message}</Alert>
+      {/* -------------------------------- SNACKBAR -------------------------------- */}
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={3000}
+        onClose={() => setSnack((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          severity={snack.severity}
+          onClose={() => setSnack((s) => ({ ...s, open: false }))}
+        >
+          {snack.message}
+        </Alert>
       </Snackbar>
     </Container>
   );

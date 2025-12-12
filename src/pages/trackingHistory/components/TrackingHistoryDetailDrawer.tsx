@@ -1,3 +1,4 @@
+// src/components/TrackingHistoryDetailDrawer.tsx
 import { useEffect, useMemo, useState } from "react";
 import {
   Drawer,
@@ -25,13 +26,13 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import ImageIcon from "@mui/icons-material/Image";
+import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import * as trackingApi from "@/api/trackingHistoryApi";
 import * as orderStatusApi from "@/api/orderStatusApi";
 import { useTranslation } from "react-i18next";
-
 import {
   translateStatus,
   translateActionType,
@@ -39,7 +40,6 @@ import {
   translateServiceName,
   translateProductType,
 } from "@/utils/translationHelpers";
-
 import { differenceInCalendarDays, parseISO } from "date-fns";
 
 type Props = {
@@ -74,10 +74,10 @@ function ConfirmDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel} disabled={loading}>
-          {t("cancelBtn")}
+          {t("cancelBtn") ?? "Cancel"}
         </Button>
         <Button onClick={onConfirm} variant="contained" disabled={loading}>
-          {loading ? <CircularProgress size={16} /> : t("confirmBtn")}
+          {loading ? <CircularProgress size={16} /> : t("confirmBtn") ?? "Confirm"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -105,9 +105,20 @@ export default function TrackingHistoryDetailDrawer({
   const [extendDate, setExtendDate] = useState<Date | null>(null);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmTitle, setConfirmTitle] = useState<string>("");
-  const [confirmMessage, setConfirmMessage] = useState<string>("");
+  const [confirmTitle, setConfirmTitle] = useState("");
+  const [confirmMessage, setConfirmMessage] = useState("");
   const [confirmAction, setConfirmAction] = useState<null | (() => Promise<void>)>(null);
+
+  // image upload dialog states
+  const [imgDialogOpen, setImgDialogOpen] = useState(false);
+  const [imgUrlsText, setImgUrlsText] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[] | null>(null);
+  const [imgUploading, setImgUploading] = useState(false);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
+
+  // simple image viewer
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
   useEffect(() => {
     if (item) {
@@ -154,15 +165,7 @@ export default function TrackingHistoryDetailDrawer({
     if (!orig) return <span>{trans}</span>;
     return (
       <Tooltip title={orig}>
-        <span
-          style={{
-            display: "inline-block",
-            maxWidth: "100%",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
+        <span style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {trans}
         </span>
       </Tooltip>
@@ -185,7 +188,6 @@ export default function TrackingHistoryDetailDrawer({
   const statusNorm = String(statusRaw).toLowerCase().trim();
   const isCompleted = statusNorm === "completed";
   const overdueAliases = ["overdue", "late", "expired"];
-
   const isOverdue = overdueAliases.some((a) => statusNorm === a || statusNorm.includes(a));
 
   const toDateISO = (d: Date | null) => {
@@ -413,6 +415,126 @@ export default function TrackingHistoryDetailDrawer({
     });
   };
 
+  // Cloudinary (Vite)
+  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME ?? "";
+  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET ?? "";
+  const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`;
+
+  const openImageDialog = () => {
+    setImgUrlsText("");
+    setSelectedFiles(null);
+    setPreviewImages([]);
+    setImgDialogOpen(true);
+  };
+
+  const handleFilesSelected = (filesList: FileList | null) => {
+    if (!filesList) {
+      setSelectedFiles(null);
+      setPreviewImages([]);
+      return;
+    }
+    const files = Array.from(filesList);
+    setSelectedFiles(files);
+    const previews = files.map((f) => URL.createObjectURL(f));
+    setPreviewImages(previews);
+  };
+
+  const uploadFileToCloudinary = async (file: File): Promise<string> => {
+    if (!CLOUD_NAME || !UPLOAD_PRESET) throw new Error("Cloudinary config missing");
+    const form = new FormData();
+    form.append("file", file);
+    form.append("upload_preset", UPLOAD_PRESET);
+    const resp = await fetch(CLOUDINARY_URL, { method: "POST", body: form });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Cloudinary upload failed: ${resp.status} ${text}`);
+    }
+    const json = await resp.json();
+    return json.secure_url ?? json.url;
+  };
+
+  const uploadFilesToCloudinary = async (files: File[]) => Promise.all(files.map((f) => uploadFileToCloudinary(f)));
+
+  // append + dedupe flow
+  const handleUploadImages = async () => {
+    if (!data?.orderCode) {
+      openSnackbar(t("orderCodeMissing"), "error");
+      return;
+    }
+    const orderCode = data.orderCode!;
+    let newImages: string[] = [];
+
+    const urlLines = imgUrlsText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    if (urlLines.length) newImages.push(...urlLines);
+
+    try {
+      setImgUploading(true);
+
+      if (selectedFiles && selectedFiles.length) {
+        const uploaded = await uploadFilesToCloudinary(selectedFiles);
+        newImages.push(...uploaded);
+      }
+
+      if (newImages.length === 0) {
+        openSnackbar(t("noImageProvided") ?? "Please provide at least one image", "error");
+        return;
+      }
+
+      const existingRaw = (data as any)?.images ?? (data as any)?.image ?? null;
+      const existing = Array.isArray(existingRaw) ? existingRaw.filter(Boolean) : typeof existingRaw === "string" && existingRaw ? [existingRaw] : [];
+
+      const merged = existing.concat(newImages);
+      const seen = new Set<string>();
+      const deduped: string[] = [];
+      for (const u of merged) {
+        if (!u) continue;
+        if (!seen.has(u)) {
+          seen.add(u);
+          deduped.push(u);
+        }
+      }
+
+      const respItem = await trackingApi.updateTrackingImage(orderCode, deduped);
+
+      setData((d) => {
+        if (!d) return d;
+        const respImages = respItem && (respItem.images ?? respItem.image ?? null);
+        if (Array.isArray(respImages)) {
+          return { ...d, images: respImages, image: respImages[0] ?? d.image ?? null } as typeof d;
+        }
+        if (typeof respImages === "string" && respImages) {
+          return { ...d, images: [respImages], image: respImages } as typeof d;
+        }
+        return { ...d, images: deduped, image: deduped[0] ?? d.image ?? null } as typeof d;
+      });
+
+      openSnackbar(t("updateImageSuccess") ?? "Images updated", "success");
+      setImgDialogOpen(false);
+      previewImages.forEach((u) => URL.revokeObjectURL(u));
+    } catch (err) {
+      console.error("update image failed", err);
+      openSnackbar(t("saveFailed") ?? "Save failed", "error");
+    } finally {
+      setImgUploading(false);
+    }
+  };
+
+  const getImagesForDisplay = (): string[] => {
+    if (!data) return [];
+    const arr = (data as any).images ?? (data as any).image ?? null;
+    if (!arr) return [];
+    if (Array.isArray(arr)) return arr.filter(Boolean);
+    if (typeof arr === "string" && arr) return [arr];
+    return [];
+  };
+
+  const imagesForDisplay = getImagesForDisplay();
+
+  const handleOpenViewer = (index: number) => {
+    setViewerIndex(index);
+    setViewerOpen(true);
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: "100%", sm: 640, md: 700 } } }}>
@@ -520,24 +642,56 @@ export default function TrackingHistoryDetailDrawer({
                     </Box>
                   )}
 
-                  {has(data?.image) ? (
-                    <Box sx={{ display: "flex", gap: 2 }}>
-                      <Box sx={{ width: 160, color: "text.secondary" }}>{t("image")}</Box>
-                      <Box sx={{ flex: 1 }}>
-                        <img src={String(data?.image)} alt={t("imageAlt")} style={{ maxWidth: "100%", borderRadius: 8 }} />
-                      </Box>
-                    </Box>
-                  ) : (
-                    <Box sx={{ display: "flex", gap: 2 }}>
-                      <Box sx={{ width: 160, color: "text.secondary" }}>{t("image")}</Box>
-                      <Box sx={{ flex: 1 }}>
+                  {/* images gallery */}
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <Box sx={{ width: 160, color: "text.secondary", alignSelf: "flex-start" }}>{t("images") ?? "Images"}</Box>
+                    <Box sx={{ flex: 1 }}>
+                      {imagesForDisplay.length > 0 ? (
+                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                          {imagesForDisplay.map((src, idx) => (
+                            <Box
+                              key={idx}
+                              sx={{
+                                width: 96,
+                                height: 96,
+                                borderRadius: 1,
+                                overflow: "hidden",
+                                border: "1px solid #eee",
+                                position: "relative",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => handleOpenViewer(idx)}
+                            >
+                              <img src={src} alt={`img-${idx}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  position: "absolute",
+                                  right: 4,
+                                  top: 4,
+                                  bgcolor: "rgba(0,0,0,0.4)",
+                                  color: "white",
+                                  "&:hover": { bgcolor: "rgba(0,0,0,0.55)" },
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenViewer(idx);
+                                }}
+                                aria-label="open"
+                              >
+                                <OpenInFullIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          ))}
+                        </Box>
+                      ) : (
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                           <ImageIcon fontSize="small" />
                           <Typography color="text.secondary">{t("noImage")}</Typography>
                         </Box>
-                      </Box>
+                      )}
                     </Box>
-                  )}
+                  </Box>
 
                   {data &&
                     Object.keys(data)
@@ -554,6 +708,7 @@ export default function TrackingHistoryDetailDrawer({
                             "currentAssign",
                             "nextAssign",
                             "image",
+                            "images",
                             "_isChild",
                           ].includes(k)
                       )
@@ -572,7 +727,6 @@ export default function TrackingHistoryDetailDrawer({
             </Card>
 
             <Box sx={{ mb: 2 }}>
-              {/* If this item is a child entry (inside the dropdown), hide action buttons */}
               {!isChild && (
                 <Stack direction="row" spacing={1} alignItems="center">
                   {isOverdue ? (
@@ -586,14 +740,8 @@ export default function TrackingHistoryDetailDrawer({
                         />
                       </Box>
 
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={handleExtendOrder}
-                        disabled={actionLoading}
-                        startIcon={actionLoading ? <CircularProgress size={16} /> : null}
-                      >
-                        {t("extendOrder")}
+                      <Button variant="contained" size="small" onClick={handleExtendOrder} disabled={actionLoading}>
+                        {actionLoading ? <CircularProgress size={16} /> : t("extendOrder")}
                       </Button>
 
                       <Button variant="outlined" size="small" onClick={handleMoveToExpiredStorage} disabled={actionLoading}>
@@ -605,6 +753,11 @@ export default function TrackingHistoryDetailDrawer({
                       {t("updateStatus")}
                     </Button>
                   )}
+
+                  <Button variant="outlined" size="small" onClick={openImageDialog} disabled={actionLoading || imgUploading}>
+                    <ImageIcon sx={{ mr: 1 }} />
+                    {t("updateImage") ?? "Update Image"}
+                  </Button>
                 </Stack>
               )}
             </Box>
@@ -619,6 +772,83 @@ export default function TrackingHistoryDetailDrawer({
             </Box>
           </Box>
         </Box>
+
+        {/* Image upload dialog */}
+        <Dialog
+          open={imgDialogOpen}
+          onClose={() => {
+            setImgDialogOpen(false);
+            previewImages.forEach((u) => URL.revokeObjectURL(u));
+          }}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>{t("updateImageDialogTitle") ?? "Update Tracking Image"}</DialogTitle>
+          <DialogContent>
+            <DialogContentText sx={{ mb: 1 }}>
+              {t("updateImageDialogDesc") ?? "Paste image URLs (one per line) or upload files. Files are uploaded to Cloudinary then sent to backend."}
+            </DialogContentText>
+
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2">{t("pasteImageUrls") ?? "Paste image URLs (one per line)"}</Typography>
+              <Box component="textarea" rows={4} value={imgUrlsText} onChange={(e) => setImgUrlsText(e.target.value)} sx={{ width: "100%", p: 1, borderRadius: 1, border: "1px solid #ddd" }} />
+            </Box>
+
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="subtitle2">{t("orUploadFiles") ?? "Or upload files"}</Typography>
+              <input type="file" accept="image/*" multiple onChange={(e) => handleFilesSelected(e.target.files)} />
+            </Box>
+
+            {previewImages.length > 0 && (
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
+                {previewImages.map((u, i) => (
+                  <Box key={i} sx={{ width: 80, height: 80, borderRadius: 1, overflow: "hidden", border: "1px solid #eee" }}>
+                    <img src={u} alt={`preview-${i}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </DialogContent>
+
+          <DialogActions>
+            <Button
+              onClick={() => {
+                setImgDialogOpen(false);
+                previewImages.forEach((u) => URL.revokeObjectURL(u));
+              }}
+              disabled={imgUploading}
+            >
+              {t("cancelBtn") ?? "Cancel"}
+            </Button>
+            <Button onClick={handleUploadImages} variant="contained" disabled={imgUploading}>
+              {imgUploading ? <CircularProgress size={16} /> : t("confirmBtn") ?? "Confirm"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Image viewer */}
+        <Dialog open={viewerOpen} onClose={() => setViewerOpen(false)} maxWidth="lg" fullWidth>
+          <DialogContent sx={{ display: "flex", justifyContent: "center", alignItems: "center", p: 2 }}>
+            {imagesForDisplay[viewerIndex] ? (
+              <Box sx={{ width: "100%", textAlign: "center" }}>
+                <img src={imagesForDisplay[viewerIndex]} alt={`full-${viewerIndex}`} style={{ maxWidth: "100%", maxHeight: "80vh", objectFit: "contain" }} />
+                <Box sx={{ mt: 1, display: "flex", justifyContent: "center", gap: 1 }}>
+                  <Button size="small" disabled={viewerIndex <= 0} onClick={() => setViewerIndex((i) => Math.max(0, i - 1))}>
+                    Prev
+                  </Button>
+                  <Button size="small" disabled={viewerIndex >= imagesForDisplay.length - 1} onClick={() => setViewerIndex((i) => Math.min(imagesForDisplay.length - 1, i + 1))}>
+                    Next
+                  </Button>
+                  <Button size="small" onClick={() => setViewerOpen(false)}>
+                    Close
+                  </Button>
+                </Box>
+              </Box>
+            ) : (
+              <Typography>{t("noImage")}</Typography>
+            )}
+          </DialogContent>
+        </Dialog>
 
         <ConfirmDialog open={confirmOpen} title={confirmTitle} message={confirmMessage} loading={actionLoading} onCancel={handleConfirmCancel} onConfirm={handleConfirmOk} />
 

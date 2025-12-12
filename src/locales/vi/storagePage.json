@@ -149,7 +149,8 @@
     "no": "Không",
     "cancel": "Hủy",
     "save": "Lưu",
-    "close":"Đóng"
+    "close":"Đóng",
+    "confirm":"Đồng ý"
   },
   "storageList": {
     "title": "Kho lưu trữ",
@@ -175,9 +176,14 @@
     "storageCardAria": "Mở kho {{code}}",
     "unknownStatus": "Không rõ",
     "type": "Loại",
-    "na": "N/A",
     "active": "Hoạt động",
-    "dimensions": "Kích thước"
+    "dimensions": "Kích thước",
+    "na": "Không có dữ liệu",
+    "addStorage": "Tạo kho mới",
+    "createStorageTitle": "Tạo kho mới",
+    "storageCode": "Mã kho",
+    "storageType": "Loại kho"
+  
   },
    "truckLoad": {
     "selectStorage": "Chọn một kho",
@@ -241,7 +247,8 @@
   "reserved": "Đang giữ chỗ",
   "rented": "Đã được thuê",
   "delivered":"Đã vận chuyển xong",
-  "completed":"Hoàn thành"
+  "completed":"Hoàn thành",
+  "cancelled":"Đã bị hủy"
 },
 
 "paymentStatus": {
@@ -279,15 +286,15 @@
   "fields": {
     "orderDetailId": "Mã chi tiết đơn",
     "storageCode": "Mã kho",
-    "containerCode": "Mã container",
+    "containerCode": "Mã thùng",
     "floorCode": "Mã tầng",
     "floorNumber": "Số tầng",
     "price": "Giá",
     "quantity": "Số lượng",
     "subTotal": "Tạm tính",
     "image": "Hình ảnh",
-    "containerType": "Loại container",
-    "containerQuantity": "Số lượng container",
+    "containerType": "Loại thùng",
+    "containerQuantity": "Số lượng thùng",
     "storageTypeId": "Loại kho",
     "shelfTypeId": "Loại kệ",
     "shelfQuantity": "Số lượng kệ",
@@ -318,5 +325,32 @@
     "warehouse_oversize": "Kho quá cỡ",
     "noData": "-"
   },
-  "takeOut": "Lấy hàng ra"
+  "takeOut": "Lấy hàng ra",
+    "trackingDialog": {
+    "title": "Lịch sử di chuyển thùng",
+    "noHistory": "Không có lịch sử tracking",
+
+    "reasonMap": {
+      "Container Removal": "Lấy thùng ra",
+      "Container Placement": "Đặt thùng tại",
+      "Container Move": "Di chuyển thùng"
+    },
+
+    "card": {
+      "container": "Thùng",
+      "orderCode": "Mã đơn hàng",
+      "orderDetailId": "Mã chi tiết đơn hàng",
+      "performedBy": "Thực hiện bởi",
+      "updatedDate": "Ngày cập nhật",
+      "oldFloor": "Tầng cũ",
+      "currentFloor": "Tầng mới",
+      "algorithm": "Thuật toán",
+      "notes": "Ghi chú"
+    },
+
+    "close": "Đóng"
+  },
+  "width": "Rộng",
+"length": "Dài",
+"height": "Cao"
 }
