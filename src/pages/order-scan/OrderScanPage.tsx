@@ -386,23 +386,40 @@ export default function OrderScanPage() {
   };
 
   const renderTrackingList = (list: TrackingHistoryItem[]) => {
-    if (!list || list.length === 0) {
-      return <Typography color="text.secondary">{t("order:noTracking") ?? "No tracking history"}</Typography>;
-    }
-    const sorted = [...list].sort((a, b) => {
-      const da = a.createAt ? new Date(a.createAt).getTime() : 0;
-      const db = b.createAt ? new Date(b.createAt).getTime() : 0;
-      return db - da;
-    });
-    return (
-      <Stack spacing={1}>
-        {sorted.map((it) => (
+  if (!list || list.length === 0) {
+    return <Typography color="text.secondary">{t("order:noTracking") ?? "No tracking history"}</Typography>;
+  }
+
+  const sorted = [...list].sort((a, b) => {
+    const da = a.createAt ? new Date(a.createAt).getTime() : 0;
+    const db = b.createAt ? new Date(b.createAt).getTime() : 0;
+    return db - da;
+  });
+
+  return (
+    <Stack spacing={1}>
+      {sorted.map((it) => {
+        /** Collect images (image + images[]) */
+        const imgList: string[] = [];
+
+        if (it.image && isImageUrl(it.image)) imgList.push(it.image);
+
+        if (Array.isArray(it.images)) {
+          it.images.forEach((img) => {
+            if (isImageUrl(img)) imgList.push(img);
+          });
+        }
+
+        return (
           <Card key={it.trackingHistoryId ?? Math.random()} variant="outlined">
             <CardContent sx={{ display: "flex", gap: 2, alignItems: "flex-start", p: 1 }}>
               <Box sx={{ flex: 1 }}>
                 <Typography fontWeight={700}>
-                  {translateActionType(t, it.actionType) ?? translateStatus(t, it.newStatus) ?? (it.actionType ?? it.newStatus ?? "-")}
+                  {translateActionType(t, it.actionType) ??
+                    translateStatus(t, it.newStatus) ??
+                    (it.actionType ?? it.newStatus ?? "-")}
                 </Typography>
+
                 <Typography variant="caption" color="text.secondary">
                   {it.currentAssign ? `${it.currentAssign}` : ""} {it.createAt ? ` • ${fmtDate(it.createAt)}` : ""}
                 </Typography>
@@ -416,8 +433,16 @@ export default function OrderScanPage() {
                     <strong>{t("order:oldStatus") ?? t("order:oldFloor") ?? "Old:"}</strong>{" "}
                     {translateStatus(t, it.oldStatus) ?? (it.oldStatus ?? "-")}
                   </Typography>
-                  
                 </Box>
+
+                {/* ⭐️ ADD IMAGE DISPLAY HERE */}
+                {imgList.length > 0 && (
+                  <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
+                    {imgList.map((src, idx) => (
+                      <Thumbnail key={idx} src={src} size={80} />
+                    ))}
+                  </Box>
+                )}
               </Box>
 
               <Box sx={{ width: 120, textAlign: "right" }}>
@@ -425,17 +450,23 @@ export default function OrderScanPage() {
                   #{it.trackingHistoryId}
                 </Typography>
                 <Box sx={{ mt: 1 }}>
-                  <Button size="small" variant="outlined" onClick={() => navigator.clipboard?.writeText(JSON.stringify(it, null, 2))}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => navigator.clipboard?.writeText(JSON.stringify(it, null, 2))}
+                  >
                     {t("order:qr.copy") ?? t("common:copy") ?? "Copy"}
                   </Button>
                 </Box>
               </Box>
             </CardContent>
           </Card>
-        ))}
-      </Stack>
-    );
-  };
+        );
+      })}
+    </Stack>
+  );
+};
+
 
   const downloadFullJson = () => {
     const payload = payloadObj ?? { order, details, tracking, logs };

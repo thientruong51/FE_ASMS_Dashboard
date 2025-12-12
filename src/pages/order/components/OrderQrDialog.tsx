@@ -20,14 +20,13 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useTranslation } from "react-i18next";
 
 import orderApi from "@/api/orderApi";
-import { getTrackingByOrder } from "@/api/trackingHistoryApi";
-
+import { getTrackingHistories } from "@/api/trackingHistoryApi";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   orderCode?: string | null;
-  size?: number; 
+  size?: number;
 };
 
 function utf8ToBase64(str: string) {
@@ -37,9 +36,7 @@ function utf8ToBase64(str: string) {
     }
     const Buf = (globalThis as any).Buffer;
     if (Buf) return Buf.from(str, "utf8").toString("base64");
-  } catch {
-    // fallback
-  }
+  } catch {}
   try {
     return (globalThis as any).btoa(str);
   } catch {
@@ -92,18 +89,17 @@ async function sha256Base16(input: string): Promise<string> {
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
     }
-  } catch {
-    // continue to fallback
-  }
+  } catch {}
 
   try {
     const Buf = (globalThis as any).Buffer;
     if (Buf && (globalThis as any).crypto && (globalThis as any).crypto.createHash) {
-      return (globalThis as any).crypto.createHash("sha256").update(Buf.from(input, "utf8")).digest("hex");
+      return (globalThis as any).crypto
+        .createHash("sha256")
+        .update(Buf.from(input, "utf8"))
+        .digest("hex");
     }
-  } catch {
-    // ignore
-  }
+  } catch {}
 
   let h = 2166136261 >>> 0;
   for (let i = 0; i < input.length; i++) {
@@ -121,15 +117,15 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
   const [tracking, setTracking] = useState<any[] | null>(null);
 
   const [payloadB64, setPayloadB64] = useState<string>("");
-  const [qrDataUrl, setQrDataUrl] = useState<string>(""); 
-  const [isExternalQr, setIsExternalQr] = useState(false); 
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
+  const [isExternalQr, setIsExternalQr] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [isFallbackShortQr, setIsFallbackShortQr] = useState(false);
   const [fallbackToken, setFallbackToken] = useState<string>("");
 
-  const FALLBACK_THRESHOLD = 2000; 
+  const FALLBACK_THRESHOLD = 2000;
 
   useEffect(() => {
     let mounted = true;
@@ -149,20 +145,12 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
     (async () => {
       setLoading(true);
       setError(null);
-      setOrder(null);
-      setOrderDetails(null);
-      setTracking(null);
-      setPayloadB64("");
-      setQrDataUrl("");
-      setIsExternalQr(false);
-      setIsFallbackShortQr(false);
-      setFallbackToken("");
 
       try {
         const [oResp, odResp, thResp] = await Promise.allSettled([
           orderApi.getOrder(orderCode),
           orderApi.getOrderDetails(orderCode),
-          getTrackingByOrder(orderCode),
+          getTrackingHistories({ orderCode }),
         ]);
 
         if (!mounted) return;
@@ -177,51 +165,60 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
         } else if (ord && Array.isArray((ord as any).orderDetails)) {
           detailsArr = (ord as any).orderDetails;
         }
-        setOrderDetails(Array.isArray(detailsArr) ? detailsArr : []);
+        setOrderDetails(detailsArr);
 
         let trackingFlow: any[] = [];
         if (thResp.status === "fulfilled") {
           const raw = (thResp as PromiseFulfilledResult<any>).value;
           if (!raw) trackingFlow = [];
-          else if (Array.isArray(raw)) trackingFlow = raw;
           else if (Array.isArray(raw.data)) trackingFlow = raw.data;
-          else if (raw.data && Array.isArray(raw.data.trackingFlow)) trackingFlow = raw.data.trackingFlow;
-          else if (Array.isArray(raw.trackingFlow)) trackingFlow = raw.trackingFlow;
-          else trackingFlow = raw?.data ?? raw ?? [];
+          else trackingFlow = raw?.data ?? [];
         }
-        setTracking(Array.isArray(trackingFlow) ? trackingFlow : []);
+        setTracking(trackingFlow);
 
         const sanitizedOrder = sanitizeOrderForQr(ord ?? { orderCode });
+
         const sanitizedDetails = (detailsArr ?? []).map((d: any) => {
-          const copy = { ...d };
-          delete copy.image;
-          delete copy.images;
-          delete copy.imageUrl;
-          delete copy.photo;
-          delete copy.photoUrl;
+          const c = { ...d };
+          delete c.image;
+          delete c.images;
+          delete c.imageUrl;
+          delete c.photo;
+          delete c.photoUrl;
           return {
-            orderDetailId: copy.orderDetailId,
-            containerCode: copy.containerCode,
-            storageCode: copy.storageCode,
-            productTypeNames: copy.productTypeNames,
-            serviceNames: copy.serviceNames,
-            price: copy.price,
-            quantity: copy.quantity,
-            subTotal: copy.subTotal,
-            containerType: copy.containerType,
-            shelfTypeId: copy.shelfTypeId,
-            isPlaced: copy.isPlaced,
+            orderDetailId: c.orderDetailId,
+            containerCode: c.containerCode,
+            storageCode: c.storageCode,
+            productTypeNames: c.productTypeNames,
+            serviceNames: c.serviceNames,
+            price: c.price,
+            quantity: c.quantity,
+            subTotal: c.subTotal,
+            containerType: c.containerType,
+            shelfTypeId: c.shelfTypeId,
+            isPlaced: c.isPlaced,
           };
         });
 
+        // ⭐ Giữ lại fix merge ảnh tracking ⭐
         const sanitizedTracking = (trackingFlow ?? []).map((it: any) => {
           const copy = { ...it };
-          if (copy.image && Array.isArray(copy.image) && copy.image.length > 0) copy.image = [];
+          const imgs: string[] = [];
+
+          if (Array.isArray(it.image)) imgs.push(...it.image);
+          else if (typeof it.image === "string" && it.image.trim()) imgs.push(it.image.trim());
+
+          if (Array.isArray(it.images)) {
+            imgs.push(...it.images.filter((x: string) => typeof x === "string" && x.trim()));
+          }
+
+          copy.images = imgs;
+          delete copy.image;
           return copy;
         });
 
         const payloadObj = {
-          order: sanitizedOrder ?? { orderCode },
+          order: sanitizedOrder,
           orderDetails: sanitizedDetails,
           tracking: sanitizedTracking,
           generatedAt: new Date().toISOString(),
@@ -231,32 +228,21 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
         const b64 = utf8ToBase64(json);
         setPayloadB64(b64);
 
-        if (b64 && b64.length > FALLBACK_THRESHOLD) {
-          try {
-            const hash = await sha256Base16(b64);
-            const token = orderCode ? `SHORT_ORDER:${encodeURIComponent(orderCode)}:${hash}` : `SHORT_ORDER:${hash}`;
-            if (!mounted) return;
-            setFallbackToken(token);
-            setIsFallbackShortQr(true);
-          } catch (e) {
-            console.warn("Failed to create fallback token", e);
-            if (!mounted) return;
-            setFallbackToken("");
-            setIsFallbackShortQr(false);
-          }
+        if (b64.length > FALLBACK_THRESHOLD) {
+          const hash = await sha256Base16(b64);
+          const token =
+            orderCode ? `SHORT_ORDER:${encodeURIComponent(orderCode)}:${hash}` : `SHORT_ORDER:${hash}`;
+          setFallbackToken(token);
+          setIsFallbackShortQr(true);
         } else {
           setFallbackToken("");
           setIsFallbackShortQr(false);
         }
       } catch (err: any) {
-        console.error("OrderQrDialog fetch error", err);
-        setError(err?.message ?? String(err ?? "Failed to fetch"));
+        setError(err?.message ?? String(err));
         setOrder(null);
         setOrderDetails(null);
         setTracking(null);
-        setPayloadB64("");
-        setFallbackToken("");
-        setIsFallbackShortQr(false);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -270,72 +256,49 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
   const qrValue = useMemo(() => {
     if (isFallbackShortQr && fallbackToken) return fallbackToken;
     if (payloadB64) return payloadB64;
-    const base = typeof window !== "undefined" ? window.location.origin : "https://your.app";
-    if (orderCode) {
-      return `${base}/orders/scan/${encodeURIComponent(orderCode)}`;
-    }
-    return "";
-  }, [payloadB64, orderCode, isFallbackShortQr, fallbackToken]);
+    const base = typeof window !== "undefined" ? window.location.origin : "";
+    return `${base}/orders/scan/${orderCode}`;
+  }, [payloadB64, isFallbackShortQr, fallbackToken]);
 
   useEffect(() => {
     let mounted = true;
     setQrDataUrl("");
-    setIsExternalQr(false);
 
-    if (!qrValue) {
-      return;
-    }
+    if (!qrValue) return;
 
     const gen = async () => {
       setGenerating(true);
       try {
-        try {
-          const QR = await import("qrcode");
-          const opts: any = { margin: 1, width: size };
-
-          try {
-            const dataUrl: string = await (QR as any).toDataURL(qrValue, opts);
-            if (!mounted) return;
-            if (dataUrl && typeof dataUrl === "string" && dataUrl.startsWith("data:")) {
-              setQrDataUrl(dataUrl);
-              setIsExternalQr(false);
-              return;
-            } else {
-              console.warn("qrcode produced a non-data URL or empty result, falling back", dataUrl);
-            }
-          } catch (ePromise) {
-            await new Promise<void>((resolve) => {
-              (QR as any).toDataURL(qrValue, opts, (err: any, url?: string) => {
-                if (!mounted) return resolve();
-                if (err) {
-                  console.warn("qrcode.toDataURL callback error:", err);
-                  return resolve();
-                }
-                if (url && typeof url === "string" && url.startsWith("data:")) {
-                  setQrDataUrl(url);
-                  setIsExternalQr(false);
-                } else {
-                  console.warn("qrcode callback returned non-data URL", url);
-                }
-                return resolve();
-              });
-            });
-            if (qrDataUrl) return;
-          }
-        } catch (errLib) {
-          console.warn("qrcode lib import/generation failed:", errLib);
-        }
+        const QR = await import("qrcode");
+        const opts = { margin: 1, width: size };
 
         try {
-          const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(qrValue)}`;
+          const dataUrl = await QR.toDataURL(qrValue, opts);
           if (!mounted) return;
+          if (dataUrl.startsWith("data:")) {
+            setQrDataUrl(dataUrl);
+            setIsExternalQr(false);
+            return;
+          }
+        } catch {}
+
+        await new Promise<void>((resolve) => {
+          QR.toDataURL(qrValue, opts, (err: any, url?: string) => {
+            if (!mounted) return resolve();
+            if (!err && url && url.startsWith("data:")) {
+              setQrDataUrl(url);
+              setIsExternalQr(false);
+            }
+            resolve();
+          });
+        });
+
+        if (!qrDataUrl) {
+          const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(
+            qrValue
+          )}`;
           setQrDataUrl(apiUrl);
           setIsExternalQr(true);
-        } catch (errFallback) {
-          console.error("Fallback QR generation failed", errFallback);
-          if (!mounted) return;
-          setQrDataUrl("");
-          setIsExternalQr(false);
         }
       } finally {
         if (mounted) setGenerating(false);
@@ -369,19 +332,14 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
         orderDetails: orderDetails ?? [],
         tracking: tracking ?? [],
       };
-      const content = JSON.stringify(payloadObj, null, 2);
-      const blob = new Blob([content], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(payloadObj, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${orderCode ?? "order"}-full.json`;
-      document.body.appendChild(a);
+      a.download = `${orderCode}-full.json`;
       a.click();
-      a.remove();
       URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Download JSON failed", err);
-    }
+    } catch {}
   };
 
   const downloadPng = () => {
@@ -392,7 +350,7 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
     }
     const a = document.createElement("a");
     a.href = qrDataUrl;
-    a.download = `qr_order_${orderCode ?? "unknown"}.png`;
+    a.download = `qr_order_${orderCode}.png`;
     a.click();
   };
 
@@ -403,10 +361,8 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
 
   const copyLinkWithPayload = async () => {
     if (!payloadB64) return;
-    const base = typeof window !== "undefined" ? window.location.origin : "https://your.app";
-    const url = orderCode
-      ? `${base}/orders/scan/${encodeURIComponent(orderCode)}?payload=${encodeURIComponent(payloadB64)}`
-      : `${base}/orders/scan?payload=${encodeURIComponent(payloadB64)}`;
+    const base = typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${base}/orders/scan/${orderCode}?payload=${encodeURIComponent(payloadB64)}`;
     await copyToClipboard(url);
   };
 
@@ -419,34 +375,33 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ payload: payloadB64, orderCode }),
       });
-      if (!resp.ok) throw new Error("Upload failed: " + resp.statusText);
+      if (!resp.ok) throw new Error(resp.statusText);
       alert("Payload uploaded. Scanner can fetch payload by hash.");
-    } catch (err: any) {
-      console.error("upload error", err);
-      alert("Upload failed: " + (err?.message ?? String(err)));
-    }
+    } catch {}
   };
-
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Box>
-          <Typography fontWeight={700}>{t("order:qr.title") ?? `Order QR: ${orderCode ?? ""}`}</Typography>
+          <Typography fontWeight={700}>
+            {t("order:qr.title") ?? `Order QR: ${orderCode}`}
+          </Typography>
           <Typography variant="body2" color="text.secondary">
-            {orderCode ?? ""}
+            {orderCode}
           </Typography>
         </Box>
+
         <Stack direction="row" spacing={1} alignItems="center">
           <Tooltip title="Open preview in new tab">
             <IconButton
               size="small"
               color="primary"
               onClick={() => {
-                const base = typeof window !== "undefined" ? window.location.origin : "https://your.app";
-                const url = orderCode
-                  ? `${base}/orders/scan/${encodeURIComponent(orderCode)}?payload=${encodeURIComponent(payloadB64)}`
-                  : `${base}/orders/scan?payload=${encodeURIComponent(payloadB64)}`;
+                const base = typeof window !== "undefined" ? window.location.origin : "";
+                const url = `${base}/orders/scan/${orderCode}?payload=${encodeURIComponent(
+                  payloadB64
+                )}`;
                 window.open(url, "_blank");
               }}
             >
@@ -471,29 +426,21 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
           <Stack spacing={2}>
             <Box display="flex" justifyContent="center" alignItems="center" sx={{ p: 1 }}>
               {generating ? (
-                <Box sx={{ width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <CircularProgress />
-                </Box>
+                <CircularProgress />
               ) : qrDataUrl ? (
                 <img
                   src={qrDataUrl}
-                  alt={`QR ${orderCode ?? ""}`}
+                  alt={`QR ${orderCode}`}
                   style={{ width: size, height: size, background: "#fff", objectFit: "contain" }}
                 />
               ) : (
-                <Box sx={{ width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Unable to render QR
-                  </Typography>
-                </Box>
+                <Typography variant="caption" color="text.secondary">
+                  Unable to render QR
+                </Typography>
               )}
             </Box>
 
-           
-
             <Divider />
-
-            
           </Stack>
         )}
       </DialogContent>
@@ -510,17 +457,17 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
 
           <Tooltip title="Copy link with payload">
             <span>
-              <Button startIcon={<ContentCopyOutlinedIcon />} onClick={copyLinkWithPayload} disabled={!payloadB64}>
+              <Button
+                startIcon={<ContentCopyOutlinedIcon />}
+                onClick={copyLinkWithPayload}
+                disabled={!payloadB64}
+              >
                 {t("order:qr.copyUrl") ?? "Copy link"}
               </Button>
             </span>
           </Tooltip>
 
-          <Button
-            startIcon={<FileDownloadOutlinedIcon />}
-            onClick={downloadJson}
-            disabled={loading || (!order && !orderDetails && !tracking)}
-          >
+          <Button startIcon={<FileDownloadOutlinedIcon />} onClick={downloadJson}>
             {t("order:qr.downloadJson") ?? "Download JSON"}
           </Button>
 
@@ -528,7 +475,6 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
             {t("order:qr.download") ?? "Download PNG"}
           </Button>
 
-          {/* Upload payload to server to enable lookup by hash (only when fallback is used) */}
           <Tooltip title="Upload payload to server so scanners can fetch by hash">
             <span>
               <Button
@@ -541,7 +487,7 @@ export default function OrderQrDialog({ open, onClose, orderCode, size = 300 }: 
             </span>
           </Tooltip>
 
-          <Box sx={{ flex: "1 1 auto" }} />
+          <Box sx={{ flex: 1 }} />
 
           <Button onClick={onClose}>{t("actions.close") ?? "Close"}</Button>
         </Stack>
