@@ -11,7 +11,9 @@
 
   "tabs": {
     "order": "Order",
-    "customer": "Customer"
+    "customer": "Customer",
+    "orderQr":"QR Code"
+
   },
 
   "labels": {
@@ -71,7 +73,10 @@
     "exportCsv": "Export CSV",
     "refresh": "Refresh",
     "viewDetails": "View details",
-    "copyOrderCode": "Copy order code"
+    "copyOrderCode": "Copy order code",
+     "refund": "Refund",
+      "confirm": "Confirm",
+    "cancel": "Cancel"
   },
 
   "table": {
@@ -103,7 +108,10 @@
     "loadFailed": "Load failed",
     "fetchOrdersFailed": "Failed to fetch orders",
     "fetchOrderFailed": "Failed to fetch order",
-    "copySuccess": "Copied to clipboard"
+    "copySuccess": "Copied to clipboard",
+      "refundSuccess": "Refund successful",
+    "refundFailed": "Refund failed",
+    "invalidRefundAmount": "Invalid refund amount"
   },
 
   "export": {
@@ -221,5 +229,11 @@
   "auto_update_overdue_detected":"Auto Update Overdue Detected"
 },
 "oldStatus":"Old Status",
-    "newStatus":"New Status"
+    "newStatus":"New Status",
+  
+
+  "help": {
+    "refundAmount": "Enter refund amount"
+  }
+ 
 }

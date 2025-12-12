@@ -11,7 +11,9 @@
 
   "tabs": {
     "order": "Đơn hàng",
-    "customer": "Khách hàng"
+    "customer": "Khách hàng",
+    "orderQr":"Mã QR"
+
   },
 
   "labels": {
@@ -71,7 +73,10 @@
     "exportCsv": "Xuất CSV",
     "refresh": "Làm mới",
     "viewDetails": "Xem chi tiết",
-    "copyOrderCode": "Sao chép mã đơn"
+    "copyOrderCode": "Sao chép mã đơn",
+    "refund": "Hoàn tiền",
+     "confirm": "Xác nhận",
+    "cancel": "Hủy"
   },
 
   "table": {
@@ -103,7 +108,10 @@
     "loadFailed": "Tải thất bại",
     "fetchOrdersFailed": "Lấy danh sách đơn thất bại",
     "fetchOrderFailed": "Tải đơn thất bại",
-    "copySuccess": "Đã sao chép vào clipboard"
+    "copySuccess": "Đã sao chép vào clipboard",
+     "refundSuccess": "Hoàn tiền thành công",
+    "refundFailed": "Hoàn tiền thất bại",
+    "invalidRefundAmount": "Số tiền hoàn không hợp lệ"
   },
 
   "export": {
@@ -227,5 +235,11 @@
   "order_completed":"Đơn hàng đã hoàn tất",
   "auto_update_overdue_detected":"Đơn hàng quá hạn tự động cập nhật"
 },
-"UnPaid":"Chưa thanh toán"
+"UnPaid":"Chưa thanh toán",
+
+
+  "help": {
+    "refundAmount": "Nhập số tiền cần hoàn cho khách"
+  }
+ 
 }

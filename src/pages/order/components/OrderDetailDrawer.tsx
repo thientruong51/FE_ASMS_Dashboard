@@ -14,6 +14,12 @@ import {
   CardContent,
   Tabs,
   Tab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  CircularProgress,
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
@@ -22,7 +28,7 @@ import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRound
 import PaymentOutlinedIcon from "@mui/icons-material/PaymentOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import QrCodeRoundedIcon from "@mui/icons-material/QrCodeRounded";
-
+import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import orderApi, { type OrderDetailItem } from "@/api/orderApi";
 import { getContainerTypes } from "@/api/containerTypeApi";
 import shelfTypeApi from "@/api/shelfTypeApi";
@@ -38,7 +44,7 @@ import {
 
 import ContainerLocationDialog from "../components/ContainerLocationDialog";
 import ContainerLocationQrDialog from "../components/ContainerLocationQrDialog";
-import OrderQrDialog from "../components/OrderQrDialog"; 
+import OrderQrDialog from "../components/OrderQrDialog";
 
 type Props = {
   orderCode: string | null;
@@ -148,6 +154,11 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
 
   // order-level QR dialog state
   const [orderQrOpen, setOrderQrOpen] = useState(false);
+
+  // --- Refund dialog state ---
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [refundAmount, setRefundAmount] = useState<number | "">("");
+  const [refundLoading, setRefundLoading] = useState(false);
 
   const order = orderFull ?? {};
 
@@ -333,6 +344,41 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
   };
   const closeOrderQr = () => setOrderQrOpen(false);
 
+  const openRefundDialog = () => {
+    const defaultAmount = headerTotal != null ? Number(headerTotal) : "";
+    setRefundAmount(!Number.isNaN(defaultAmount) ? defaultAmount : "");
+    setRefundDialogOpen(true);
+  };
+
+  const closeRefundDialog = () => {
+    setRefundDialogOpen(false);
+    setRefundAmount("");
+    setRefundLoading(false);
+  };
+
+  const confirmRefund = async () => {
+    if (!orderCode) return;
+    // ensure numeric
+    const amt = typeof refundAmount === "number" ? refundAmount : Number(refundAmount);
+    if (isNaN(amt) || amt <= 0) {
+      setMeta({ success: false, message: t("messages.invalidRefundAmount") || "Invalid refund amount" });
+      return;
+    }
+
+    setRefundLoading(true);
+    try {
+      const payload = { orderCode, refund: amt };
+      const resp = await (orderApi as any).updateRefund(payload);
+      setMeta({ success: true, message: (resp as any)?.message ?? t("messages.refundSuccess") });
+      closeRefundDialog();
+    } catch (err) {
+      console.error("refund failed", err);
+      setMeta({ success: false, message: (err as any)?.message ?? t("messages.refundFailed") });
+    } finally {
+      setRefundLoading(false);
+    }
+  };
+
   return (
     <Drawer
       anchor="right"
@@ -373,6 +419,13 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
             <Tooltip title={t("tabs.orderQr") ?? "Order QR"}>
               <IconButton size="small" color="default" onClick={openOrderQr}>
                 <QrCodeRoundedIcon />
+              </IconButton>
+            </Tooltip>
+
+            {/* Refund button */}
+            <Tooltip title={t("actions.refund") ?? "Refund"}>
+              <IconButton size="small" color="default" onClick={openRefundDialog}>
+                <CurrencyExchangeIcon />
               </IconButton>
             </Tooltip>
 
@@ -725,7 +778,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                         <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.phone")}</Box>
                         <Box sx={{ flex: 1 }}>{order.phoneContact ?? order.phone}</Box>
                       </Box>
-                    )} 
+                    )}
 
                     {has(order.customerEmail || order.email) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
@@ -767,6 +820,42 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
 
       {/* Order-level QR dialog */}
       <OrderQrDialog open={orderQrOpen} onClose={closeOrderQr} orderCode={orderCode} />
+
+      {/* Refund dialog */}
+      <Dialog open={refundDialogOpen} onClose={closeRefundDialog}>
+        <DialogTitle>{t("actions.refund") ?? "Refund"}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 1, minWidth: 360 }}>
+            <TextField
+              label={t("labels.orderId") ?? "Order"}
+              value={orderCode ?? ""}
+              fullWidth
+              margin="normal"
+              InputProps={{ readOnly: true }}
+            />
+            <TextField
+              label={t("labels.refundAmount") ?? "Refund amount"}
+              value={refundAmount}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^\d.-]/g, "");
+                setRefundAmount(raw === "" ? "" : Number(raw));
+              }}
+              type="number"
+              fullWidth
+              margin="normal"
+              helperText={t("help.refundAmount") ?? "Enter amount to refund"}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={closeRefundDialog} disabled={refundLoading}>
+            {t("actions.cancel") ?? "Cancel"}
+          </Button>
+          <Button variant="contained" onClick={confirmRefund} disabled={refundLoading}>
+            {refundLoading ? <CircularProgress size={18} /> : t("actions.confirm") ?? "Confirm"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Drawer>
   );
 }

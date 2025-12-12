@@ -85,7 +85,17 @@
   "delivered_to_warehouse/customer":"Đã giao đến Kho/Khách hàng",
   "order_completed":"Đơn hàng đã hoàn tất",
   "auto_update_overdue_detected":"Đơn hàng quá hạn tự động cập nhật"
-}
+},
+"updateImage": "Cập nhật hình",
+"updateImageDialogTitle": "Cập nhật hình cho đơn",
+"updateImageDialogDesc": "Dán URL ảnh (mỗi dòng 1 URL) hoặc tải lên file. File sẽ được tải lên Cloudinary rồi gửi về backend.",
+"pasteImageUrls": "Dán URL ảnh (mỗi dòng 1 URL)",
+"orUploadFiles": "Hoặc tải lên file",
+"noImageProvided": "Vui lòng cung cấp ít nhất một hình ảnh.",
+"updateImageSuccess": "Cập nhật hình thành công.",
+"updateImageFailed": "Cập nhật hình thất bại.",
+"uploadingImages": "Đang tải ảnh...",
+"noFileChosen": "Chưa chọn file"
 
 
   

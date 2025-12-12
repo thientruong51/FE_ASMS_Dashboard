@@ -65,12 +65,9 @@ export interface OrderDetailItem {
 export interface OrderDetailListResponse {
   success: boolean;
   message?: string;
-  data: OrderDetailItem[] | any[]; // raw come from API; we'll normalize
+  data: OrderDetailItem[] | any[]; 
 }
 
-/**
- * Helpers
- */
 function toNumberOrNull(v: any): number | null {
   if (v === null || typeof v === "undefined") return null;
   if (typeof v === "number") return Number.isFinite(v) ? v : null;
@@ -81,14 +78,11 @@ function toNumberOrNull(v: any): number | null {
   return null;
 }
 
-/**
- * API calls
- */
+
 
 export async function getOrders(params?: Record<string, any>): Promise<OrderListResponse> {
   const resp = await axiosClient.get<OrderListResponse>("/api/Order", { params });
-  // Some backends wrap the result in { data: [...] }, some return directly.
-  // We assume axiosClient returns axios response and resp.data is the payload matching OrderListResponse.
+
   return resp.data;
 }
 
@@ -177,11 +171,13 @@ export async function getOrderDetails(orderCode: string, params?: Record<string,
   };
 }
 
-/**
- * Convenience functions that fetch orders and then their details.
- * WARNING: these functions will perform N additional requests (one per order).
- * Use sparingly or add server-side endpoints to avoid N+1 problems.
- */
+
+export async function updateRefund(payload: { orderCode: string; refund: number }) {
+  const url = "/api/OrderStatus/update-refund";
+  const resp = await axiosClient.put(url, payload);
+  return resp.data;
+}
+
 
 export async function getOrdersWithDetails(
   params?: Record<string, any>,
@@ -264,4 +260,5 @@ export default {
   getOrderDetails,
   getOrdersWithDetails,
   getUnplacedDetailsAcrossOrders,
+  updateRefund, 
 };

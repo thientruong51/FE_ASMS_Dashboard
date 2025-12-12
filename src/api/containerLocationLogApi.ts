@@ -24,7 +24,6 @@ export type PaginatedResponse<T> = {
 };
 
 export const containerLocationLogApi = {
-  // GET pagination
   getLogs: (params?: Record<string, any>) =>
     axiosClient.get<PaginatedResponse<ContainerLocationLogItem>>(
       "/api/ContainerLocationLog",
@@ -43,7 +42,6 @@ export const containerLocationLogApi = {
   deleteLog: (id: number | string) =>
     axiosClient.delete(`/api/ContainerLocationLog/${id}`),
 
-  // GET by containerCode (cũng có pagination)
   getByContainerCode: (
     containerCode: string,
     pageNumber = 1,

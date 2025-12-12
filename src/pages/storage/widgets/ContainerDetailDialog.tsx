@@ -19,10 +19,15 @@ import {
   CircularProgress,
   Tooltip,
 } from "@mui/material";
+
 import CloseIcon from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+
+import QrCode2Icon from "@mui/icons-material/QrCode2";
+import ContainerLocationQrDialog from "@/pages/order/components/ContainerLocationQrDialog";
+import orderDetailApi from "@/api/orderDetailApi";
 
 import { useTranslation } from "react-i18next";
 
@@ -32,7 +37,6 @@ import containerLocationLogApi from "@/api/containerLocationLogApi";
 import { removeContainer } from "@/api/containerApi";
 
 import { translateStatus } from "@/utils/statusHelper";
-import { translatePaymentStatus } from "@/utils/paymentStatusHelper";
 import { translateFieldLabel, formatBoolean } from "@/utils/fieldLabels";
 
 type Props = {
@@ -42,18 +46,14 @@ type Props = {
   onSaveLocal?: (updated: ContainerItem) => void;
   onNotify?: (message: string, severity?: "success" | "info" | "warning" | "error") => void;
   orderCode?: string;
-  onRemoved?: (containerCode: string) => void; // <-- NEW: gọi parent để reload dữ liệu
+  onRemoved?: (containerCode: string) => void;
 };
 
 const FALLBACK_IMAGE =
   "https://res.cloudinary.com/dkfykdjlm/image/upload/v1762190192/LOGO-remove_1_1_wj05gw.png";
 
 const normalizeKey = (k: string) =>
-  k
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "_");
+  k.toString().trim().toLowerCase().replace(/\s+/g, "_");
 
 export default function ContainerDetailDialog({
   open,
@@ -82,13 +82,18 @@ export default function ContainerDetailDialog({
 
   const [isRemoving, setIsRemoving] = React.useState<boolean>(false);
 
-  const initialSerial = React.useMemo(() => {
-    return c && typeof c.serialNumber === "number" ? c.serialNumber : "";
-  }, [c]);
+  const [qrOpen, setQrOpen] = React.useState(false);
+  const [qrOrderDetail, setQrOrderDetail] = React.useState<any>(null);
 
-  const initialLayer = React.useMemo(() => {
-    return c && typeof c.layer === "number" ? c.layer : "";
-  }, [c]);
+  const initialSerial = React.useMemo(
+    () => (c && typeof c.serialNumber === "number" ? c.serialNumber : ""),
+    [c]
+  );
+
+  const initialLayer = React.useMemo(
+    () => (c && typeof c.layer === "number" ? c.layer : ""),
+    [c]
+  );
 
   React.useEffect(() => {
     if (c) {
@@ -109,9 +114,15 @@ export default function ContainerDetailDialog({
     return serialNumber !== initialSerial || layer !== initialLayer;
   }, [serialNumber, layer, initialSerial, initialLayer, c]);
 
-  const imageSrc = c && c.imageUrl && typeof c.imageUrl === "string" ? c.imageUrl : FALLBACK_IMAGE;
+  const imageSrc =
+    c && c.imageUrl && typeof c.imageUrl === "string"
+      ? c.imageUrl
+      : FALLBACK_IMAGE;
 
-  const statusLabel = translateStatus(t, c?._orderStatus ?? c?.status ?? c?.state ?? null);
+  const statusLabel = translateStatus(
+    t,
+    c?._orderStatus ?? c?.status ?? c?.state ?? null
+  );
 
   const formatValue = (v: any) => {
     if (v === null || v === undefined || v === "") return "-";
@@ -122,7 +133,7 @@ export default function ContainerDetailDialog({
 
   const mainFields = {
     containerCode: c?.containerCode ?? "-",
-    status: statusLabel ?? (c?.status ?? "-"),
+    status: statusLabel ?? c?.status ?? "-",
     type: c?.type ?? "-",
     serialNumber: c?.serialNumber ?? "-",
     floorCode: c?.floorCode ?? "-",
@@ -189,22 +200,16 @@ export default function ContainerDetailDialog({
   }, [c, AUX_BLACKLIST_KEYS]);
 
   const handleCopy = async (text?: string | null) => {
-    const toCopy = text ?? "";
     try {
-      if (!navigator.clipboard?.writeText) {
-        onNotify?.(t("clipboardUnavailable"), "warning");
-        return;
-      }
-      await navigator.clipboard.writeText(String(toCopy));
+      await navigator.clipboard.writeText(String(text ?? ""));
       onNotify?.(t("copiedToClipboard"), "success");
-    } catch (err) {
+    } catch {
       onNotify?.(t("copyFailed"), "error");
     }
   };
 
   const handleSaveLocal = () => {
     if (!c) return;
-
     if (!hasChanges) {
       onNotify?.(t("noChangesToSave"), "info");
       return;
@@ -217,9 +222,7 @@ export default function ContainerDetailDialog({
     } as any;
 
     onSaveLocal?.(updated);
-
     onNotify?.(t("savedLocallyInfo"), "info");
-
     onClose();
   };
 
@@ -234,15 +237,22 @@ export default function ContainerDetailDialog({
       setLogLoading(true);
       setLogError(null);
       try {
-        const resp = await containerLocationLogApi.getByContainerCode(code, page, logPageSize);
-        const data: any = resp && (resp as any).data ? (resp as any).data : resp;
+        const resp = await containerLocationLogApi.getByContainerCode(
+          code,
+          page,
+          logPageSize
+        );
+        const data = (resp as any).data ?? resp;
         setLogs(Array.isArray(data.items) ? data.items : []);
         setLogPage(data.currentPage ?? page);
-        setLogTotalRecords(typeof data.totalRecords === "number" ? data.totalRecords : data.items ? data.items.length : 0);
+        setLogTotalRecords(
+          typeof data.totalRecords === "number"
+            ? data.totalRecords
+            : data.items?.length ?? 0
+        );
       } catch (err: any) {
         setLogError(err?.message ?? t("copyFailed"));
         setLogs([]);
-        setLogTotalRecords(0);
       } finally {
         setLogLoading(false);
       }
@@ -255,82 +265,23 @@ export default function ContainerDetailDialog({
     fetchLogs(1);
   }, [open, c?.containerCode]);
 
-  const handlePrevPage = async () => {
-    if (logPage <= 1) return;
-    const next = logPage - 1;
-    setLogPage(next);
-    await fetchLogs(next);
-  };
-  const handleNextPage = async () => {
-    const maxPage = Math.max(1, Math.ceil(logTotalRecords / logPageSize));
-    if (logPage >= maxPage) return;
-    const next = logPage + 1;
-    setLogPage(next);
-    await fetchLogs(next);
-  };
+  const handlePrevPage = () => logPage > 1 && fetchLogs(logPage - 1);
+  const handleNextPage = () =>
+    logPage < Math.ceil(logTotalRecords / logPageSize) &&
+    fetchLogs(logPage + 1);
 
-  const formatDate = (d?: string | null) => {
-    if (!d) return "-";
+  const getEmployeeCodeFromAccessToken = React.useCallback(() => {
     try {
-      const date = new Date(d);
-      return date.toLocaleString();
-    } catch {
-      return d;
-    }
-  };
-
-  const displayAuxValue = (k: string, v: any) => {
-    const nk = normalizeKey(k);
-
-    if (nk === "is_active" || nk === "isactive") {
-      return formatBoolean(t, v);
-    }
-
-    if (nk === "product_type_id" || nk === "producttypeid" || nk === "product_type_ids" || nk === "producttypeids") {
-      if (Array.isArray(v)) return v.join(", ");
-      return v ?? "-";
-    }
-
-    if (nk === "order_detail_id" || nk === "orderdetailid" || nk === "orderdetail") {
-      return v ?? "-";
-    }
-
-    if (nk === "status" || nk === "_order_status" || nk === "order_status" || nk === "_orderstatus" || nk === "orderstatus") {
-      return translateStatus(t, String(v)) ?? (v ?? "-");
-    }
-
-    if (nk.includes("payment") || nk === "_order_payment_status" || nk === "paymentstatus") {
-      return translatePaymentStatus(t, String(v)) ?? (v ?? "-");
-    }
-
-    if (Array.isArray(v)) return v.join(", ");
-
-    if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) {
-      try {
-        const d = new Date(v);
-        if (!isNaN(d.getTime())) return d.toLocaleString();
-      } catch {
-      }
-    }
-
-    return formatValue(v);
-  };
-
-  // helper: lấy EmployeeCode từ accessToken (localStorage)
-  const getEmployeeCodeFromAccessToken = React.useCallback((): string | null => {
-    try {
-      const token = localStorage.getItem("accessToken") || "";
+      const token = localStorage.getItem("accessToken") ?? "";
       if (!token) return null;
-      const parts = token.split(".");
-      if (parts.length < 2) return null;
-      const payloadJson = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
-      const payload = JSON.parse(payloadJson);
+      const [_, payload] = token.split(".");
+      const data = JSON.parse(atob(payload));
       return (
-        payload?.EmployeeCode ??
-        payload?.employeeCode ??
-        payload?.employee_id ??
-        payload?.employeeId ??
-        payload?.sub ??
+        data.EmployeeCode ??
+        data.employeeCode ??
+        data.employee_id ??
+        data.employeeId ??
+        data.sub ??
         null
       );
     } catch {
@@ -340,16 +291,15 @@ export default function ContainerDetailDialog({
 
   const handleRemoveContainer = React.useCallback(async () => {
     if (!c?.containerCode) {
-      onNotify?.(t("noContainerSelected") ?? "No container selected", "warning");
+      onNotify?.(t("noContainerSelected"), "warning");
       return;
     }
 
-    const emp = getEmployeeCodeFromAccessToken();
-    const performedBy = emp ?? "UNKNOWN";
-
-    // orderCode priority: prop orderCode -> container.orderCode -> container.orderDetailId -> undefined
+    const performedBy = getEmployeeCodeFromAccessToken() ?? "UNKNOWN";
     const orderCodeToSend =
-      orderCode ?? (c?.orderCode ?? (c?.orderDetailId ? String(c.orderDetailId) : undefined));
+      orderCode ??
+      c?.orderCode ??
+      (c?.orderDetailId ? String(c.orderDetailId) : undefined);
 
     setIsRemoving(true);
     try {
@@ -357,324 +307,360 @@ export default function ContainerDetailDialog({
         containerCode: c.containerCode,
         performedBy,
         orderCode: orderCodeToSend,
-      } as any);
+      });
 
-      // Thông báo thành công
-      onNotify?.(t("removeContainerSuccess") ?? "Container removed", "success");
-
-      // Gọi callback parent để reload dữ liệu bên ngoài
-      try {
-        onRemoved?.(c.containerCode);
-      } catch (e) {
-        // ignore if parent handler throws
-        console.warn("onRemoved handler error", e);
-      }
-
-      // Đóng dialog
+      onNotify?.(t("removeContainerSuccess"), "success");
+      onRemoved?.(c.containerCode);
       onClose();
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? err?.message ?? t("removeContainerFailed") ?? "Remove failed";
-      onNotify?.(String(msg), "error");
+      onNotify?.(
+        err?.response?.data?.message ??
+        err?.message ??
+        t("removeContainerFailed"),
+        "error"
+      );
     } finally {
       setIsRemoving(false);
     }
-  }, [c, getEmployeeCodeFromAccessToken, orderCode, onClose, onNotify, onRemoved, t]);
+  }, [
+    c,
+    orderCode,
+    onRemoved,
+    onClose,
+    onNotify,
+    getEmployeeCodeFromAccessToken,
+    t,
+  ]);
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth={isSmUp}
-      PaperProps={{
-        sx: {
-          m: { xs: 2, sm: 2 },
-          width: { xs: 360, sm: "600px" },
-          maxWidth: "100%",
-          boxSizing: "border-box",
-        },
-      }}
-    >
-      <DialogTitle
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 1,
-          px: { xs: 2, sm: 3 },
-          py: { xs: 1.25, sm: 1.5 },
+    <>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="sm"
+        fullWidth={isSmUp}
+        PaperProps={{
+          sx: {
+            m: { xs: 2, sm: 2 },
+            width: { xs: 360, sm: "600px" },
+            maxWidth: "100%",
+          },
         }}
       >
-        <Typography variant="h6">{t("containerDetails")}</Typography>
-        <IconButton onClick={onClose} size="small" aria-label={t("containerDetails")}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: { xs: 2, sm: 3 },
+          }}
+        >
+          <Typography variant="h6">{t("containerDetails")}</Typography>
+          <IconButton onClick={onClose}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
 
-      <Divider />
+        <Divider />
 
-      <DialogContent dividers sx={{ p: { xs: 1.5, sm: 3 } }}>
-        {!c ? (
-          <Box sx={{ py: 5, textAlign: "center", color: "text.secondary" }}>{t("noContainerSelected")}</Box>
-        ) : (
-          <Stack spacing={2}>
-            {/* Image + main info */}
-            <Stack direction={isSmUp ? "row" : "column"} spacing={2} alignItems="flex-start">
-              <Box
-                sx={{
-                  width: { xs: "100%", sm: 140 },
-                  maxWidth: { xs: 320, sm: 140 },
-                  height: { xs: 160, sm: 140 },
-                  borderRadius: 2,
-                  overflow: "hidden",
-                  bgcolor: "grey.100",
-                  border: "1px solid",
-                  borderColor: "divider",
-                  flexShrink: 0,
-                  mx: { xs: "auto", sm: 0 },
-                }}
+        <DialogContent dividers sx={{ p: { xs: 1.5, sm: 3 } }}>
+          {!c ? (
+            <Box textAlign="center" py={5} color="text.secondary">
+              {t("noContainerSelected")}
+            </Box>
+          ) : (
+            <Stack spacing={2}>
+              {/* ========== IMAGE + INFO ========== */}
+              <Stack
+                direction={isSmUp ? "row" : "column"}
+                spacing={2}
+                alignItems="flex-start"
               >
-                <img
-                  src={imageSrc}
-                  alt={String(c?.containerCode ?? "")}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                />
-              </Box>
-
-              {/* Info */}
-              <Stack flex={1} spacing={0.75} sx={{ minWidth: 0 }}>
-                <Typography
-                  fontWeight={700}
-                  fontSize={isSmUp ? 18 : 16}
+                <Box
                   sx={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: isSmUp ? 1 : 2,
-                    WebkitBoxOrient: "vertical",
+                    width: { xs: "100%", sm: 140 },
+                    height: { xs: 160, sm: 140 },
+                    borderRadius: 2,
                     overflow: "hidden",
-                    textOverflow: "ellipsis",
+                    bgcolor: "grey.100",
+                    border: "1px solid",
+                    borderColor: "divider",
                   }}
                 >
-                  {mainFields.containerCode}
-                </Typography>
-
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  <Chip label={`${t("status")}: ${mainFields.status}`} size="small" />
-                  <Chip label={`${t("type")}: ${mainFields.type}`} size="small" />
-                  <Chip label={`${t("snLabel")}: ${mainFields.serialNumber}`} size="small" />
-                </Stack>
-
-                <Typography fontSize={13} color="text.secondary" sx={{ mt: 0.5 }}>
-                  {t("floor")}: {mainFields.floorCode}
-                </Typography>
-
-                <Typography fontSize={13} color="text.secondary">
-                  {t("weight")}: {mainFields.weight}
-                </Typography>
-
-                <Stack
-                  direction={isSmUp ? "row" : "column"}
-                  spacing={1}
-                  alignItems={isSmUp ? "center" : "stretch"}
-                  sx={{ mt: 1 }}
-                >
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<ContentCopyIcon />}
-                    onClick={() => handleCopy(c?.containerCode)}
-                    sx={{
-                      whiteSpace: "nowrap",
-                      width: isSmUp ? "auto" : "100%",
-                      flexShrink: 0,
+                  <img
+                    src={imageSrc}
+                    alt={c?.containerCode ?? ""}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
                     }}
-                  >
-                    {t("copyCode")}
-                  </Button>
-
-                  <TextField
-                    size="small"
-                    label={t("serialNumber")}
-                    type="number"
-                    value={serialNumber}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSerialNumber(val === "" ? "" : Number(val));
-                    }}
-                    sx={{ width: isSmUp ? 140 : "100%" }}
-                    inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
                   />
+                </Box>
+
+                <Stack flex={1} spacing={1}>
+                  <Typography fontWeight={700} fontSize={18}>
+                    {mainFields.containerCode}
+                  </Typography>
+
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Chip label={`${t("status")}: ${mainFields.status}`} size="small" />
+                    <Chip label={`${t("type")}: ${mainFields.type}`} size="small" />
+                    <Chip label={`${t("snLabel")}: ${mainFields.serialNumber}`} size="small" />
+                  </Stack>
+
+                  <Typography fontSize={13} color="text.secondary">
+                    {t("floor")}: {mainFields.floorCode}
+                  </Typography>
+
+                  <Typography fontSize={13} color="text.secondary">
+                    {t("weight")}: {mainFields.weight}
+                  </Typography>
+
+                  {/* ==== BUTTONS: COPY + QR + EDIT ==== */}
+                  <Stack
+                    direction={isSmUp ? "row" : "column"}
+                    spacing={1}
+                    sx={{ mt: 1 }}
+                  >
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<ContentCopyIcon />}
+                      onClick={() => handleCopy(c?.containerCode)}
+                    >
+                      {t("copyCode")}
+                    </Button>
+
+                    {/* ==== QR BUTTON ==== */}
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<QrCode2Icon />}
+                      onClick={async () => {
+                        if (!c?.orderDetailId) {
+                          onNotify?.("Không có OrderDetailId", "warning");
+                          return;
+                        }
+                        try {
+                          const resp = await orderDetailApi.getOrderDetail(
+                            Number(c.orderDetailId)
+                          );
+                          setQrOrderDetail(resp?.data ?? resp);
+                          setQrOpen(true);
+                        } catch {
+                          onNotify?.("Không tải được OrderDetail", "error");
+                        }
+                      }}
+                    >
+                      QR
+                    </Button>
+
+                    <TextField
+                      size="small"
+                      label={t("serialNumber")}
+                      type="number"
+                      value={serialNumber}
+                      onChange={(e) =>
+                        setSerialNumber(
+                          e.target.value === "" ? "" : Number(e.target.value)
+                        )
+                      }
+                      sx={{ width: isSmUp ? 140 : "100%" }}
+                    />
+                  </Stack>
                 </Stack>
               </Stack>
-            </Stack>
 
-            <Divider />
+              <Divider />
 
-            {/* Aux fields */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              {auxEntries.length === 0 ? (
-                <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>
-                  {t("noAdditionalData")}
-                </Typography>
-              ) : (
-                auxEntries.map(([k, v]) => (
-                  <Box
-                    key={k}
-                    sx={{
-                      width: { xs: "48%", sm: "48%" },
-                      p: 1,
-                      borderRadius: 1,
-                      bgcolor: "background.paper",
-                      border: "1px solid",
-                      borderColor: "divider",
-                      boxSizing: "border-box",
-                    }}
-                  >
-                    <Typography fontSize={11} color="text.secondary">
-                      {translateFieldLabel(t, k)}
-                    </Typography>
-                    <Typography fontSize={13} fontWeight={600}>
-                      {displayAuxValue(k, v)}
-                    </Typography>
-                  </Box>
-                ))
-              )}
-            </Box>
-
-            <Divider />
-
-            {/* Location logs and pagination */}
-            <Box>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-                <Typography variant="subtitle1">{t("locationHistory")}</Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography variant="caption" color="text.secondary">
-                    {logTotalRecords > 0 ? t("recordsCount", { count: logTotalRecords }) : ""}
+              {/* ========== AUX FIELDS ========== */}
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                {auxEntries.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    {t("noAdditionalData")}
                   </Typography>
+                ) : (
+                  auxEntries.map(([k, v]) => (
+                    <Box
+                      key={k}
+                      sx={{
+                        width: "48%",
+                        p: 1,
+                        borderRadius: 1,
+                        border: "1px solid",
+                        borderColor: "divider",
+                      }}
+                    >
+                      <Typography fontSize={11} color="text.secondary">
+                        {translateFieldLabel(t, k)}
+                      </Typography>
+                      <Typography fontSize={13} fontWeight={600}>
+                        {formatValue(v)}
+                      </Typography>
+                    </Box>
+                  ))
+                )}
+              </Box>
+
+              <Divider />
+
+              {/* ========== LOCATION LOGS ========== */}
+              <Box>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography variant="subtitle1">
+                    {t("locationHistory")}
+                  </Typography>
+
                   <Tooltip title={t("refresh")}>
                     <IconButton
                       size="small"
-                      onClick={() => {
-                        setLogPage(1);
-                        fetchLogs(1);
-                      }}
+                      onClick={() => fetchLogs(1)}
                     >
                       ↻
                     </IconButton>
                   </Tooltip>
                 </Stack>
-              </Stack>
 
-              {logLoading ? (
-                <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-                  <CircularProgress size={20} />
-                </Box>
-              ) : logError ? (
-                <Typography color="error">{logError}</Typography>
-              ) : logs.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  {t("noLocationHistory")}
-                </Typography>
-              ) : (
-                <>
-                  <List dense sx={{ maxHeight: 220, overflow: "auto", bgcolor: "background.paper" }}>
-                    {logs.map((l) => (
-                      <ListItem
-                        key={l.containerLocationLogId}
-                        secondaryAction={
-                          <Stack direction="row" spacing={1} alignItems="center">
+                {logLoading ? (
+                  <Box textAlign="center" py={2}>
+                    <CircularProgress size={20} />
+                  </Box>
+                ) : logError ? (
+                  <Typography color="error">{logError}</Typography>
+                ) : logs.length === 0 ? (
+                  <Typography color="text.secondary">
+                    {t("noLocationHistory")}
+                  </Typography>
+                ) : (
+                  <>
+                    <List dense sx={{ maxHeight: 220, overflow: "auto" }}>
+                      {logs.map((l) => (
+                        <ListItem
+                          key={l.containerLocationLogId}
+                          secondaryAction={
                             <Tooltip title={t("copyCode")}>
-                              <IconButton size="small" onClick={() => handleCopy(l.currentFloor)}>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleCopy(l.currentFloor)}
+                              >
                                 <ContentCopyIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
-                          </Stack>
-                        }
-                      >
-                        <ListItemText
-                          primary={
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <Typography fontWeight={700} fontSize={13}>
-                                {l.currentFloor ?? "-"}
-                              </Typography>
-
-                              <Typography fontSize={12} color="text.secondary" sx={{ ml: 0.5 }}>
-                                {l.performedBy ? t("performedBy", { name: l.performedBy }) : null}
-                              </Typography>
-                            </Stack>
                           }
-                          secondary={
-                            <Stack spacing={0.25}>
-                              <Typography fontSize={12} color="text.secondary">
-                                {l.orderCode ? `${t("orderPrefix", { orderCode: l.orderCode })} • ` : ""}
-                                {t("updated", { date: formatDate(l.updatedDate) })}
-                              </Typography>
-                              {l.oldFloor ? (
-                                <Typography fontSize={12} color="text.secondary">
-                                  {t("fromFloor", { oldFloor: l.oldFloor })}
+                        >
+                          <ListItemText
+                            primary={
+                              <Stack direction="row" spacing={1}>
+                                <Typography fontWeight={700} fontSize={13}>
+                                  {l.currentFloor}
                                 </Typography>
-                              ) : null}
-                            </Stack>
-                          }
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
+                                <Typography fontSize={12} color="text.secondary">
+                                  {l.performedBy ? t("performedBy", { name: l.performedBy }) : ""}
+                                </Typography>
+                              </Stack>
+                            }
+                            secondary={
+                              <>
+                                <Typography fontSize={12} color="text.secondary">
+                                  {l.orderCode && `${t("orderPrefix", { orderCode: l.orderCode })} • `}
+                                  {
+                                    t("updated", {
+                                      date: l.updatedDate
+                                        ? new Date(l.updatedDate).toLocaleString()
+                                        : "-"
+                                    })
+                                  }
+                                </Typography>
 
-                  <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center" sx={{ mt: 1 }}>
-                    <Button
-                      size="small"
-                      startIcon={<ArrowBackIosNewIcon fontSize="small" />}
-                      onClick={handlePrevPage}
-                      disabled={logPage <= 1}
+                                {l.oldFloor ? (
+                                  <Typography fontSize={12} color="text.secondary">
+                                    {t("fromFloor", { oldFloor: l.oldFloor })}
+                                  </Typography>
+                                ) : null}
+                              </>
+                            }
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+
+                    <Stack
+                      direction="row"
+                      justifyContent="flex-end"
+                      alignItems="center"
+                      spacing={1}
+                      sx={{ mt: 1 }}
                     >
-                      {t("prev")}
-                    </Button>
-                    <Typography variant="body2" sx={{ minWidth: 88, textAlign: "center" }}>
-                      {t("pageOf", { page: logPage, total: Math.max(1, Math.ceil(logTotalRecords / logPageSize)) })}
-                    </Typography>
-                    <Button
-                      size="small"
-                      endIcon={<ArrowForwardIosIcon fontSize="small" />}
-                      onClick={handleNextPage}
-                      disabled={logPage >= Math.max(1, Math.ceil(logTotalRecords / logPageSize))}
-                    >
-                      {t("next")}
-                    </Button>
-                  </Stack>
-                </>
-              )}
-            </Box>
+                      <Button
+                        size="small"
+                        startIcon={<ArrowBackIosNewIcon fontSize="small" />}
+                        disabled={logPage <= 1}
+                        onClick={() => handlePrevPage()}
+                      >
+                        {t("prev")}
+                      </Button>
 
-            <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 1 }}>
-              <Button
-                size="small"
-                color="error"
-                variant="outlined"
-                onClick={handleRemoveContainer}
-                disabled={!c?.containerCode || isRemoving}
-                sx={{ mr: 1 }}
-              >
-                {isRemoving ? <CircularProgress size={18} /> : t("takeOut") ?? "Lấy hàng ra"}
-              </Button>
+                      <Typography>
+                        {t("pageOf", {
+                          page: logPage,
+                          total: Math.ceil(logTotalRecords / logPageSize),
+                        })}
+                      </Typography>
 
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleSaveLocal}
-                disabled={!hasChanges}
-                fullWidth={!isSmUp}
-              >
-                {t("saveLocally")}
-              </Button>
+                      <Button
+                        size="small"
+                        endIcon={<ArrowForwardIosIcon fontSize="small" />}
+                        disabled={logPage >= Math.ceil(logTotalRecords / logPageSize)}
+                        onClick={() => handleNextPage()}
+                      >
+                        {t("next")}
+                      </Button>
+                    </Stack>
+                  </>
+                )}
+              </Box>
+
+              {/* ========== FOOTER BUTTONS ========== */}
+              <Stack direction="row" spacing={1} justifyContent="flex-end">
+                <Button
+                  size="small"
+                  color="error"
+                  variant="outlined"
+                  disabled={isRemoving}
+                  onClick={handleRemoveContainer}
+                >
+                  {isRemoving ? (
+                    <CircularProgress size={18} />
+                  ) : (
+                    t("takeOut")
+                  )}
+                </Button>
+
+                <Button
+                  variant="contained"
+                  disabled={!hasChanges}
+                  onClick={handleSaveLocal}
+                >
+                  {t("saveLocally")}
+                </Button>
+              </Stack>
             </Stack>
-          </Stack>
-        )}
-      </DialogContent>
-    </Dialog>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ==== QR DIALOG ==== */}
+      <ContainerLocationQrDialog
+        open={qrOpen}
+        orderDetail={qrOrderDetail}
+        orderCode={c?.orderCode ?? null}
+        onClose={() => setQrOpen(false)}
+      />
+    </>
   );
 }
