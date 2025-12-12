@@ -95,7 +95,8 @@
     "period": {
       "month": "Tháng",
       "week": "Tuần",
-    "day":"Ngày"
+    "day":"Ngày",
+    "year":"Năm"
 
     },
     "groups": {

@@ -7,7 +7,6 @@ import {
   InputAdornment,
   IconButton,
   useTheme,
-  useMediaQuery,
   Snackbar,
   Alert,
   Tooltip,
@@ -25,20 +24,23 @@ import Drawer from "@mui/material/Drawer";
 import { getOrders, getOrderDetails } from "@/api/orderApi";
 import { getProductTypes } from "@/api/productTypeApi";
 import { getServices } from "@/api/serviceApi";
+
 import OrderDetailDrawer from "./OrderDetailDrawer";
+import OrderDetailFullDialog from "../OrderDetailFullDialog";
+import ContainerDetailDialog from "./ContainerDetailDialog";
 
 import { useTranslation } from "react-i18next";
 import { translateStatus, canonicalStatusKey } from "@/utils/statusHelper";
 
 import orderDetailApi from "@/api/orderDetailApi";
 import { getContainer as apiGetContainer } from "@/api/containerApi";
-import OrderDetailFullDialog from "../OrderDetailFullDialog";
-import ContainerDetailDialog from "./ContainerDetailDialog";
+
+import containerLocationLogApi from "@/api/containerLocationLogApi";
+import TrackingLogDialog from "./TrackingLogDialog";
 
 export default function OrderPanel() {
   const { t } = useTranslation(["storagePage", "statusNames"]);
   const theme = useTheme();
-  const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
 
   const [search, setSearch] = useState("");
   const [details, setDetails] = useState<any[]>([]);
@@ -52,6 +54,11 @@ export default function OrderPanel() {
   const [snackSeverity, setSnackSeverity] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
+
+  const [trackingDialogOpen, setTrackingDialogOpen] = useState(false);
+  const [trackingDialogData, setTrackingDialogData] = useState<any[] | null>(
+    null
+  );
 
   const loadAllDetailsForFullOrders = useCallback(
     async () => {
@@ -92,7 +99,10 @@ export default function OrderPanel() {
 
         const ordersRaw = ordersResp.data ?? [];
         const orders = Array.isArray(ordersRaw)
-          ? ordersRaw.filter((o: any) => String(o.status ?? "").toLowerCase() === "processing")
+          ? ordersRaw.filter(
+            (o: any) =>
+              String(o.status ?? "").toLowerCase() === "processing"
+          )
           : [];
 
         const detailsList = await Promise.all(
@@ -103,10 +113,15 @@ export default function OrderPanel() {
 
               const mapped = items.map((item: any) => {
                 let productTypeIds: number[] =
-                  Array.isArray(item.productTypeIds) && item.productTypeIds.length ? item.productTypeIds : [];
+                  Array.isArray(item.productTypeIds) &&
+                    item.productTypeIds.length
+                    ? item.productTypeIds
+                    : [];
 
                 let serviceIds: number[] =
-                  Array.isArray(item.serviceIds) && item.serviceIds.length ? item.serviceIds : [];
+                  Array.isArray(item.serviceIds) && item.serviceIds.length
+                    ? item.serviceIds
+                    : [];
 
                 const namesPT: string[] = Array.isArray(item.productTypeNames)
                   ? item.productTypeNames.map((n: any) => String(n).trim())
@@ -123,7 +138,9 @@ export default function OrderPanel() {
                   : [];
 
                 if (!serviceIds.length && namesS.length) {
-                  serviceIds = namesS.map((nm) => serviceNameToId[nm]).filter((v) => v != null) as number[];
+                  serviceIds = namesS
+                    .map((nm) => serviceNameToId[nm])
+                    .filter((v) => v != null) as number[];
                 }
 
                 const orderStatusRaw = o.status ?? null;
@@ -147,7 +164,9 @@ export default function OrderPanel() {
                 };
               });
 
-              return mapped.filter((it: any) => !it.storageCode && it.isPlaced !== true);
+              return mapped.filter(
+                (it: any) => !it.storageCode && it.isPlaced !== true
+              );
             } catch (err) {
               console.error("Error fetching details for", o.orderCode, err);
               return [];
@@ -179,45 +198,39 @@ export default function OrderPanel() {
   const filtered = details.filter((d) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    const matches =
+    return (
       String(d.containerCode ?? "").toLowerCase().includes(q) ||
       String(d._orderCode ?? "").toLowerCase().includes(q) ||
       String(d.storageCode ?? "").toLowerCase().includes(q) ||
-      (Array.isArray(d.productTypeIds) && d.productTypeIds.join(",").toLowerCase().includes(q)) ||
-      (Array.isArray(d.serviceIds) && d.serviceIds.join(",").toLowerCase().includes(q));
-    return matches;
+      (Array.isArray(d.productTypeIds) &&
+        d.productTypeIds.join(",").toLowerCase().includes(q)) ||
+      (Array.isArray(d.serviceIds) &&
+        d.serviceIds.join(",").toLowerCase().includes(q))
+    );
   });
-
-  const handleOnPlaced = (result: { success: boolean; data: any }) => {
-    if (result?.success) {
-      setSnackMsg(t("orderPanel.placedSuccess"));
-      setSnackSeverity("success");
-    } else {
-      const msg = (result?.data && (result.data.error || JSON.stringify(result.data))) || t("orderPanel.placeFailedGeneric");
-      setSnackMsg(`${t("orderPanel.placeFailedPrefix")} ${msg}`);
-      setSnackSeverity("error");
-    }
-    setSnackOpen(true);
-
-    setOpen(false);
-
-    loadAllDetailsForFullOrders();
-  };
-
-  // ---------------- Search logic ----------------
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [containerDialogOpen, setContainerDialogOpen] = useState(false);
-  const [containerDialogData, setContainerDialogData] = useState<any | null>(null);
-  const [orderDetailDialogOpen, setOrderDetailDialogOpen] = useState(false);
-  const [orderDetailDialogData, setOrderDetailDialogData] = useState<any | null>(null);
 
   const extractOrderDetailFromResp = (resp: any) => {
     if (!resp && resp !== 0) return null;
     if (resp?.data && typeof resp.data === "object") return resp.data;
-    if (resp?.data?.data && typeof resp.data.data === "object") return resp.data.data;
-    if (typeof resp === "object" && ("orderDetailId" in resp || "orderCode" in resp)) return resp;
+    if (resp?.data?.data && typeof resp.data.data === "object")
+      return resp.data.data;
+    if (
+      typeof resp === "object" &&
+      ("orderDetailId" in resp || "orderCode" in resp)
+    )
+      return resp;
     return null;
   };
+
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [containerDialogOpen, setContainerDialogOpen] = useState(false);
+  const [containerDialogData, setContainerDialogData] = useState<
+    any | null
+  >(null);
+  const [orderDetailDialogOpen, setOrderDetailDialogOpen] = useState(false);
+  const [orderDetailDialogData, setOrderDetailDialogData] = useState<
+    any | null
+  >(null);
 
   const handleSearch = async () => {
     const qRaw = (search ?? "").trim();
@@ -228,9 +241,32 @@ export default function OrderPanel() {
     try {
       const isPureNumeric = /^\d+$/.test(qRaw);
 
-      const orderDetailPromise = (async () => {
+
+      if (isPureNumeric) {
         try {
-          return await orderDetailApi.getOrderDetail(isPureNumeric ? Number(qRaw) : (qRaw as any));
+          const logResp = await containerLocationLogApi.getLogs({
+            orderDetailId: Number(qRaw),
+            pageNumber: 1,
+            pageSize: 20,
+          });
+
+          const logs = logResp?.data?.items ?? [];
+          if (logs.length > 0) {
+            setTrackingDialogData(logs);
+            setTrackingDialogOpen(true);
+            return;
+          }
+        } catch (err) {
+          console.warn("tracking log fetch error", err);
+        }
+      }
+
+
+
+      const orderDetailPromise = (async () => {
+        if (!isPureNumeric) return null; 
+        try {
+          return await orderDetailApi.getOrderDetail(Number(qRaw));
         } catch {
           return null;
         }
@@ -244,7 +280,10 @@ export default function OrderPanel() {
         }
       })();
 
-      const [odResp, containerResp] = await Promise.all([orderDetailPromise, containerPromise]);
+      const [odResp, containerResp] = await Promise.all([
+        orderDetailPromise,
+        containerPromise,
+      ]);
 
       if (isPureNumeric) {
         const od = extractOrderDetailFromResp(odResp);
@@ -255,20 +294,20 @@ export default function OrderPanel() {
         }
 
         if (containerResp) {
-          const container = (containerResp as any)?.data ?? (containerResp as any);
+          const container = containerResp as any;
           setContainerDialogData(container);
           setContainerDialogOpen(true);
           return;
         }
 
-        setSnackMsg(t("orderPanel.searchNotFound") ?? "Không tìm thấy OrderDetail hoặc Container phù hợp");
+        setSnackMsg(t("orderPanel.searchNotFound"));
         setSnackSeverity("error");
         setSnackOpen(true);
         return;
       }
 
       if (containerResp) {
-        const container = (containerResp as any)?.data ?? (containerResp as any);
+        const container = containerResp as any;
         setContainerDialogData(container);
         setContainerDialogOpen(true);
         return;
@@ -281,12 +320,12 @@ export default function OrderPanel() {
         return;
       }
 
-      setSnackMsg(t("orderPanel.searchNotFound") ?? "Không tìm thấy OrderDetail hoặc Container phù hợp");
+      setSnackMsg(t("orderPanel.searchNotFound"));
       setSnackSeverity("error");
       setSnackOpen(true);
-    } catch (err: any) {
-      console.error("search failed", err);
-      setSnackMsg(t("orderPanel.searchError") ?? "Có lỗi xảy ra khi tìm kiếm");
+    } catch (err) {
+      console.error(err);
+      setSnackMsg(t("orderPanel.searchError"));
       setSnackSeverity("error");
       setSnackOpen(true);
     } finally {
@@ -294,9 +333,26 @@ export default function OrderPanel() {
     }
   };
 
+  const handleOnPlaced = (result: { success: boolean; data: any }) => {
+    if (result?.success) {
+      setSnackMsg(t("orderPanel.placedSuccess"));
+      setSnackSeverity("success");
+    } else {
+      const msg =
+        (result?.data &&
+          (result.data.error || JSON.stringify(result.data))) ||
+        t("orderPanel.placeFailedGeneric");
+      setSnackMsg(`${t("orderPanel.placeFailedPrefix")} ${msg}`);
+      setSnackSeverity("error");
+    }
+    setSnackOpen(true);
+    setOpen(false);
+    loadAllDetailsForFullOrders();
+  };
 
   return (
     <>
+      {/* CARD WRAPPER */}
       <Card
         sx={{
           borderRadius: 3,
@@ -323,15 +379,13 @@ export default function OrderPanel() {
             alignItems="center"
             justifyContent="space-between"
             mb={1.2}
-            flexDirection={isSmUp ? "row" : "column"}
-            gap={1}
           >
             <Typography fontWeight={600} fontSize={15}>
               {t("orderPanel.title")}
             </Typography>
           </Box>
 
-          {/* SEARCH */}
+          {/* SEARCH FIELD */}
           <TextField
             placeholder={t("orderPanel.searchPlaceholder")}
             size="small"
@@ -349,26 +403,30 @@ export default function OrderPanel() {
               ),
               endAdornment: (
                 <InputAdornment position="end">
-                  <Tooltip title={t("orderPanel.searchTooltip") ?? "Search OrderDetail ID / Container Code"}>
+                  <Tooltip
+                    title={
+                      t("orderPanel.searchTooltip") ??
+                      "Search OrderDetail ID / Container Code"
+                    }
+                  >
                     <span>
                       <IconButton
                         size="small"
                         onClick={handleSearch}
                         disabled={searchLoading}
-                        aria-label="search"
                       >
-                        {searchLoading ? <CircularProgress size={18} /> : <SearchRoundedIcon fontSize="small" />}
+                        {searchLoading ? (
+                          <CircularProgress size={18} />
+                        ) : (
+                          <SearchRoundedIcon fontSize="small" />
+                        )}
                       </IconButton>
                     </span>
                   </Tooltip>
                 </InputAdornment>
               ),
             }}
-            sx={{
-              mb: 1.5,
-              "& .MuiOutlinedInput-root": { borderRadius: 2 },
-            }}
-            inputProps={{ "aria-label": t("orderPanel.searchAria") }}
+            sx={{ mb: 1.5 }}
           />
 
           {/* SUBHEADER */}
@@ -377,8 +435,6 @@ export default function OrderPanel() {
             alignItems="center"
             justifyContent="space-between"
             mb={1.5}
-            flexDirection={isSmUp ? "row" : "column"}
-            gap={1}
           >
             <Typography fontSize={13} fontWeight={600} color="text.secondary">
               {t("orderPanel.showing", { count: filtered.length })}
@@ -387,17 +443,19 @@ export default function OrderPanel() {
 
             <Box display="flex" alignItems="center" gap={0.5}>
               <Tooltip title={t("orderPanel.listView")}>
-                <IconButton size="small" aria-label={t("orderPanel.listView")}>
+                <IconButton size="small">
                   <ViewListOutlinedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
+
               <Tooltip title={t("orderPanel.mapView")}>
-                <IconButton size="small" aria-label={t("orderPanel.mapView")}>
+                <IconButton size="small">
                   <MapOutlinedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
+
               <Tooltip title={t("orderPanel.gridView")}>
-                <IconButton size="small" aria-label={t("orderPanel.gridView")}>
+                <IconButton size="small">
                   <ViewModuleOutlinedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
@@ -415,75 +473,78 @@ export default function OrderPanel() {
               maxHeight: { xs: "65vh", sm: "none" },
             }}
           >
-            {filtered.map((d, i) => {
-              const bg = i % 2 === 0 ? "#e3f2fd" : "#ede7f6";
-              return (
-                <Box
-                  key={`${d.orderDetailId ?? i}-${i}`}
+            {filtered.map((d, i) => (
+              <Box
+                key={`${d.orderDetailId}-${i}`}
+                sx={{
+                  width: {
+                    xs: "100%",
+                    sm: "calc(50% - 4px)",
+                  },
+                }}
+                onClick={() => handleOpenDetail(d)}
+              >
+                <Card
                   sx={{
-                    width: {
-                      xs: "100%",
-                      sm: "calc(50% - 4px)",
+                    borderRadius: 2,
+                    border: "1px solid #e0e0e0",
+                    backgroundColor:
+                      i % 2 === 0 ? "#e3f2fd" : "#ede7f6",
+                    p: 1.3,
+                    cursor: "pointer",
+                    transition: "0.2s",
+                    "&:hover": {
+                      borderColor: theme.palette.primary.light,
+                      bgcolor: "#f9fbff",
                     },
                   }}
-                  onClick={() => handleOpenDetail(d)}
                 >
-                  <Card
-                    sx={{
-                      borderRadius: 2,
-                      border: "1px solid #e0e0e0",
-                      backgroundColor: bg,
-                      p: 1.3,
-                      cursor: "pointer",
-                      transition: "0.2s",
-                      "&:hover": {
-                        borderColor: theme.palette.primary.light,
-                        bgcolor: "#f9fbff",
-                      },
-                      height: "auto",
-                    }}
-                    role="button"
-                    aria-label={t("orderPanel.openDetail")}
+                  <Box display="flex" justifyContent="flex-end" mb={0.3}>
+                    <DragIndicatorOutlinedIcon
+                      sx={{
+                        fontSize: 16,
+                        color: "text.secondary",
+                        opacity: 0.6,
+                      }}
+                    />
+                  </Box>
+
+                  <Typography
+                    fontWeight={600}
+                    fontSize={13}
+                    mb={0.4}
+                    sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                   >
-                    <Box display="flex" justifyContent="flex-end" mb={0.3}>
-                      <DragIndicatorOutlinedIcon
-                        sx={{
-                          fontSize: 16,
-                          color: "text.secondary",
-                          opacity: 0.6,
-                        }}
-                      />
-                    </Box>
+                    <LockOutlinedIcon
+                      sx={{ fontSize: 15, color: "text.secondary" }}
+                    />
+                    {d.containerCode
+                      ? `${t("orderPanel.containerLabel", {
+                        code: d.containerCode,
+                      })}`
+                      : t("orderPanel.detailLabel", {
+                        id: d.orderDetailId ?? i,
+                      })}
+                  </Typography>
 
-                    <Typography
-                      fontWeight={600}
-                      fontSize={13}
-                      mb={0.4}
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                    >
-                      <LockOutlinedIcon sx={{ fontSize: 15, color: "text.secondary" }} />
-                      {d.containerCode ? `${t("orderPanel.containerLabel", { code: d.containerCode })}` : t("orderPanel.detailLabel", { id: d.orderDetailId ?? i })}
+                  <Box>
+                    <Typography fontSize={12} color="text.secondary">
+                      {t("orderPanel.orderPrefix")}:{" "}
+                      <strong>{d._orderCode}</strong>
                     </Typography>
-
-                    <Box display="flex" gap={1} alignItems="center" mb={0.5}>
-                      <Box>
-                        <Typography fontSize={12} color="text.secondary">
-                          {t("orderPanel.orderPrefix")}: <strong>{d._orderCode}</strong>
-                        </Typography>
-                        <Typography fontSize={12} color="text.secondary">
-                          {t("orderPanel.statusLabel")}: {d._orderStatusLabel ?? d._orderStatus ?? "-"}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Card>
-                </Box>
-              );
-            })}
+                    <Typography fontSize={12} color="text.secondary">
+                      {t("orderPanel.statusLabel")}:{" "}
+                      {d._orderStatusLabel ?? d._orderStatus ?? "-"}
+                    </Typography>
+                  </Box>
+                </Card>
+              </Box>
+            ))}
           </Box>
         </CardContent>
       </Card>
 
-      {/* Drawer */}
+      {/* Drawer: Order Detail */}
       <Drawer
         anchor="right"
         open={open}
@@ -491,33 +552,22 @@ export default function OrderPanel() {
         transitionDuration={300}
         PaperProps={{
           sx: {
-            width: {
-              xs: "100%",
-              sm: "70%",
-              md: "520px",
-            },
+            width: { xs: "100%", sm: "70%", md: "520px" },
             height: "100vh",
-            borderRadius: {
-              xs: 0,
-              sm: "12px 0 0 12px",
-            },
+            borderRadius: { xs: 0, sm: "12px 0 0 12px" },
             boxShadow: "-6px 0 20px rgba(0,0,0,0.08)",
             overflowY: "auto",
-            backgroundColor: theme.palette.background.paper,
-            "&::-webkit-scrollbar": {
-              width: "6px",
-            },
-            "&::-webkit-scrollbar-thumb": {
-              backgroundColor: "rgba(0,0,0,0.2)",
-              borderRadius: 3,
-            },
           },
         }}
       >
-        <OrderDetailDrawer data={selectedDetail} onClose={() => setOpen(false)} onPlaced={handleOnPlaced} />
+        <OrderDetailDrawer
+          data={selectedDetail}
+          onClose={() => setOpen(false)}
+          onPlaced={handleOnPlaced}
+        />
       </Drawer>
 
-      {/* OrderDetail modal (opened when search finds an order detail) */}
+      {/* OrderDetail modal */}
       <OrderDetailFullDialog
         open={orderDetailDialogOpen}
         data={orderDetailDialogData}
@@ -527,7 +577,7 @@ export default function OrderPanel() {
         }}
       />
 
-      {/* Container detail dialog (opened when search finds a container) */}
+      {/* Container detail dialog */}
       <ContainerDetailDialog
         open={containerDialogOpen}
         container={containerDialogData}
@@ -535,20 +585,26 @@ export default function OrderPanel() {
           setContainerDialogOpen(false);
           setContainerDialogData(null);
         }}
-        onSaveLocal={() => {
-          // optional: reload list if user edited locally
-          loadAllDetailsForFullOrders();
-        }}
+        onSaveLocal={() => loadAllDetailsForFullOrders()}
         onNotify={(msg, sev) => {
           setSnackMsg(msg);
           setSnackSeverity(sev ?? "info");
           setSnackOpen(true);
         }}
-        onRemoved={(_containerCode) => {
-          // when container removed, refresh list and close dialog
+        onRemoved={() => {
           loadAllDetailsForFullOrders();
           setContainerDialogOpen(false);
           setContainerDialogData(null);
+        }}
+      />
+
+      {/* Tracking Dialog */}
+      <TrackingLogDialog
+        open={trackingDialogOpen}
+        data={trackingDialogData}
+        onClose={() => {
+          setTrackingDialogOpen(false);
+          setTrackingDialogData(null);
         }}
       />
 
@@ -559,7 +615,11 @@ export default function OrderPanel() {
         onClose={() => setSnackOpen(false)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={() => setSnackOpen(false)} severity={snackSeverity} sx={{ width: "100%" }}>
+        <Alert
+          onClose={() => setSnackOpen(false)}
+          severity={snackSeverity}
+          sx={{ width: "100%" }}
+        >
           {snackMsg}
         </Alert>
       </Snackbar>

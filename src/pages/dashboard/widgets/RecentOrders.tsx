@@ -18,19 +18,23 @@ import { useTranslation } from "react-i18next";
 import dashboardApi from "@/api/dashboardApi";
 
 type Point = { x: string; value: number };
-type ApiResp = { success?: boolean; date?: string; isWeekly?: boolean; data?: number };
 
 const POINTS_PER_MODE: Record<string, number> = {
-  month: 6, 
-  week: 6,  
-  day: 7,   
+  month: 6,
+  week: 6,
+  day: 7,
+  year: 6, 
 };
 
 function isoDate(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-function buildDateSeries(baseDateISO: string, mode: "day" | "week" | "month", count: number) {
+function buildDateSeries(
+  baseDateISO: string,
+  mode: "day" | "week" | "month" | "year",
+  count: number
+) {
   const base = new Date(baseDateISO + "T00:00:00");
   const dates: string[] = [];
 
@@ -39,7 +43,8 @@ function buildDateSeries(baseDateISO: string, mode: "day" | "week" | "month", co
 
     if (mode === "day") d.setDate(d.getDate() - i);
     else if (mode === "week") d.setDate(d.getDate() - i * 7);
-    else d.setMonth(d.getMonth() - i);
+    else if (mode === "month") d.setMonth(d.getMonth() - i);
+    else if (mode === "year") d.setFullYear(d.getFullYear() - i);
 
     dates.push(isoDate(d));
   }
@@ -47,18 +52,16 @@ function buildDateSeries(baseDateISO: string, mode: "day" | "week" | "month", co
 }
 
 function parseCountResponse(res: any): number {
-  const api: ApiResp | undefined = res?.data;
-  if (!api) return 0;
-  if (typeof api.data === "number") return api.data;
-  return 0;
+  return res?.data?.data?.totalOrders ?? 0;
 }
 
 export default function RecentOrders() {
   const { t } = useTranslation("dashboard");
 
-  const [date, setDate] = useState<string>(() => isoDate(new Date()));
-  const [mode, setMode] = useState<"month" | "week" | "day">("month");
-  const [isWeekly, setIsWeekly] = useState(false); 
+  const [date, setDate] = useState(() => isoDate(new Date()));
+
+  const [mode, setMode] = useState<"month" | "week" | "day" | "year">("month");
+
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +70,7 @@ export default function RecentOrders() {
       {
         key: "active",
         label: t("recentOrders.groups.active"),
-        statuses: ["Renting", "Stored", "Pick up", "Processing", "Checkout","Delivered"],
+        statuses: ["Renting", "Stored", "Pick up", "Processing", "Checkout", "Delivered"],
         icon: <InboxIcon color="primary" />,
       },
       {
@@ -79,13 +82,12 @@ export default function RecentOrders() {
       {
         key: "completed",
         label: t("recentOrders.groups.completed"),
-        statuses: ["Retrieved","Completed"],
+        statuses: ["Retrieved", "Completed"],
         icon: <CheckCircleOutlineIcon color="primary" />,
       },
     ],
     [t]
   );
-
 
   useEffect(() => {
     let mounted = true;
@@ -96,23 +98,21 @@ export default function RecentOrders() {
         const promises = statusGroups.map(async (g) => {
           const calls = g.statuses.map((s) =>
             dashboardApi
-              .getOrderCount({ date, status: s, isWeekly })
+              .getOrderCount({ date, status: s, type: mode })
               .then(parseCountResponse)
               .catch(() => 0)
           );
+
           const values = await Promise.all(calls);
           return { key: g.key, total: values.reduce((a, b) => a + b, 0) };
         });
 
         const results = await Promise.all(promises);
-
         if (!mounted) return;
 
         const next: Record<string, number> = {};
         results.forEach((r) => (next[r.key] = r.total));
         setCounts(next);
-      } catch (err) {
-        console.error("RecentOrders summary failed", err);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -121,8 +121,7 @@ export default function RecentOrders() {
     return () => {
       mounted = false;
     };
-  }, [date, isWeekly, statusGroups]);
-
+  }, [date, mode, statusGroups]);
 
   const [chartLoading, setChartLoading] = useState(true);
   const [chartData, setChartData] = useState<Point[]>([]);
@@ -134,34 +133,32 @@ export default function RecentOrders() {
     (async () => {
       try {
         const count = POINTS_PER_MODE[mode];
-        const dates = buildDateSeries(date, mode, count); 
+        const dates = buildDateSeries(date, mode, count);
 
         const allStatuses = Array.from(new Set(statusGroups.flatMap((g) => g.statuses)));
 
-        const pointPromises = dates.map(async (d) => {
-          const calls = allStatuses.map((s) =>
-            dashboardApi
-              .getOrderCount({ date: d, status: s, isWeekly })
-              .then(parseCountResponse)
-              .catch(() => 0)
-          );
-          const values = await Promise.all(calls);
-          return values.reduce((a, b) => a + b, 0);
-        });
+        const totals = await Promise.all(
+          dates.map(async (d) => {
+            const calls = allStatuses.map((s) =>
+              dashboardApi
+                .getOrderCount({ date: d, status: s, type: mode })
+                .then(parseCountResponse)
+                .catch(() => 0)
+            );
 
-        const totals = await Promise.all(pointPromises);
+            const values = await Promise.all(calls);
+            return values.reduce((a, b) => a + b, 0);
+          })
+        );
 
         if (!mounted) return;
 
-        const pts: Point[] = dates.map((d, idx) => ({
-          x: d,
-          value: totals[idx] ?? 0,
-        }));
-
-        setChartData(pts);
-      } catch (err) {
-        console.error("RecentOrders chart failed", err);
-        if (mounted) setChartData([]);
+        setChartData(
+          dates.map((d, idx) => ({
+            x: d,
+            value: totals[idx] ?? 0,
+          }))
+        );
       } finally {
         if (mounted) setChartLoading(false);
       }
@@ -170,8 +167,7 @@ export default function RecentOrders() {
     return () => {
       mounted = false;
     };
-  }, [date, mode, isWeekly, statusGroups]);
-
+  }, [date, mode, statusGroups]);
 
   const percentText = useMemo(() => {
     if (chartLoading || chartData.length === 0) return "…";
@@ -180,28 +176,25 @@ export default function RecentOrders() {
     const last = chartData[chartData.length - 1].value;
 
     if (first === 0) return last === 0 ? "0%" : "∞";
+
     return `${Math.round(((last - first) / Math.abs(first)) * 100)}%`;
   }, [chartLoading, chartData]);
 
-
   return (
-    <Card sx={{ borderRadius: 2, boxShadow: "0 2px 6px rgba(0,0,0,0.04)", bgcolor: "#fff" }}>
+    <Card sx={{ borderRadius: 2, boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
       <CardContent>
         {/* HEADER */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
+        <Box display="flex" justifyContent="space-between" mb={2}>
           <Typography fontWeight={600}>{t("recentOrders.title")}</Typography>
 
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box display="flex" gap={1} alignItems="center">
             <Select
-              size="small"
               value={mode}
-              onChange={(e) => {
-                const v = e.target.value as any;
-                setMode(v);
-                setIsWeekly(v === "week");
-              }}
-              sx={{ fontSize: 13, height: 32 }}
+              size="small"
+              onChange={(e) => setMode(e.target.value as any)}
+              sx={{ fontSize: 13 }}
             >
+              <MenuItem value="year">{t("recentOrders.period.year")}</MenuItem> 
               <MenuItem value="month">{t("recentOrders.period.month")}</MenuItem>
               <MenuItem value="week">{t("recentOrders.period.week")}</MenuItem>
               <MenuItem value="day">{t("recentOrders.period.day")}</MenuItem>
@@ -221,10 +214,10 @@ export default function RecentOrders() {
           </Box>
         </Box>
 
-        {/* STATUS GROUP SUMMARY */}
-        <Stack direction="row" spacing={2} mb={1}>
+        {/* SUMMARY GROUPS */}
+        <Stack direction="row" spacing={2}>
           {statusGroups.map((g) => (
-            <Box key={g.key} sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1 }}>
+            <Box key={g.key} sx={{ flex: 1, display: "flex", gap: 1 }}>
               <Box
                 sx={{
                   p: 1,
@@ -232,7 +225,6 @@ export default function RecentOrders() {
                   bgcolor: "#f1f5ff",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
                 }}
               >
                 {g.icon}
@@ -249,19 +241,19 @@ export default function RecentOrders() {
         </Stack>
 
         {/* CHART */}
-        <Box sx={{ height: 140 }}>
+        <Box sx={{ height: 140, mt: 2 }}>
           <ResponsiveContainer>
             <LineChart data={chartData.map((p) => ({ day: p.x, value: p.value }))}>
               <XAxis dataKey="day" hide />
               <YAxis hide />
-              <Tooltip formatter={(v) => String(v)} />
-              <Line type="monotone" dataKey="value" stroke="#3CBD96" strokeWidth={2.5} dot={false} />
+              <Tooltip />
+              <Line type="monotone" dataKey="value" stroke="#3CBD96" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </Box>
 
-        {/* COMPARISON TEXT */}
-        <Box mt={1} display="flex" alignItems="center" gap={0.5}>
+        {/* PERCENT CHANGE */}
+        <Box mt={1} display="flex" gap={0.5} alignItems="center">
           <TrendingUpIcon sx={{ color: "green", fontSize: 18 }} />
           <Typography fontSize={13} color="green">
             {percentText}

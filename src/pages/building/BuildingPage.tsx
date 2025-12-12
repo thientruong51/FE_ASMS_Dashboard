@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -19,19 +19,22 @@ import {
   DialogActions,
   CircularProgress,
 } from "@mui/material";
+
 import AddIcon from "@mui/icons-material/Add";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import StorageIcon from "@mui/icons-material/Storage";
 import WarehouseIcon from "@mui/icons-material/Warehouse";
 import DeleteIcon from "@mui/icons-material/Delete";
-import BuildingList from "./components/BuildingList";
-import BuildingFormDialog from "./components/BuildingFormDialog";
+
 import type { Building, Pagination as Pag } from "./components/types";
 import * as api from "@/api/buildingApi";
 import { useGLTF } from "@react-three/drei";
 import { useTranslation } from "react-i18next";
 
 const UPLOADED_HEADER = "/mnt/data/5c1c4b28-14bf-4a18-b70c-5acac3461e5e.png";
+
+const BuildingList = lazy(() => import("./components/BuildingList"));
+const BuildingFormDialog = lazy(() => import("./components/BuildingFormDialog"));
 
 type CategoryKey = "self" | "warehouse";
 
@@ -45,14 +48,16 @@ function groupKeyFromName(name?: string): CategoryKey {
 
 export default function BuildingPage() {
   const { t } = useTranslation("building");
+
   const [list, setList] = useState<Building[]>([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<Building | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [snack, setSnack] = useState<{ open: boolean; message?: string; severity?: "success" | "error" }>({
+
+  const [snack, setSnack] = useState({
     open: false,
     message: "",
-    severity: "success",
+    severity: "success" as "success" | "error",
   });
 
   const [page, setPage] = useState(1);
@@ -62,8 +67,6 @@ export default function BuildingPage() {
 
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id?: number; name?: string }>({
     open: false,
-    id: undefined,
-    name: undefined,
   });
   const [deleting, setDeleting] = useState(false);
 
@@ -110,9 +113,9 @@ export default function BuildingPage() {
       const k = groupKeyFromName(b.name);
       byKey[k].push(b);
     }
-    (["self", "warehouse"] as CategoryKey[]).forEach((k) => {
-      byKey[k].sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
-    });
+    (["self", "warehouse"] as CategoryKey[]).forEach((k) =>
+      byKey[k].sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""))
+    );
     return byKey;
   }, [list]);
 
@@ -122,6 +125,7 @@ export default function BuildingPage() {
     setEditing(null);
     setOpenDialog(true);
   }
+
   function openEdit(b: Building) {
     setEditing(b);
     setOpenDialog(true);
@@ -154,10 +158,11 @@ export default function BuildingPage() {
 
   async function handleConfirmDelete() {
     const id = deleteDialog.id;
-    if (id == null) {
+    if (!id) {
       setDeleteDialog({ open: false });
       return;
     }
+
     setDeleting(true);
     try {
       await api.deleteBuilding(id);
@@ -165,7 +170,7 @@ export default function BuildingPage() {
 
       const nextList = list.filter((b) => b.buildingId !== id);
       if (nextList.length === 0 && page > 1) {
-        const newPage = Math.max(1, page - 1);
+        const newPage = page - 1;
         setPage(newPage);
         await fetchAll(newPage);
       } else {
@@ -183,15 +188,45 @@ export default function BuildingPage() {
   }
 
   function handleCancelDelete() {
-    setDeleteDialog({ open: false, id: undefined, name: undefined });
+    setDeleteDialog({ open: false });
   }
 
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
       <Stack spacing={4} alignItems="center">
-        <Box sx={{ width: "100%", borderRadius: 2, overflow: "hidden", boxShadow: "0 8px 30px rgba(18, 52, 86, 0.06)", position: "relative", minHeight: 140 }}>
-          <Box sx={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.06))`, zIndex: 1 }} />
-          <Box sx={{ position: "absolute", right: 0, top: 0, bottom: 0, width: { xs: 120, md: 240 }, backgroundImage: `url(${UPLOADED_HEADER})`, backgroundSize: "cover", backgroundPosition: "center", opacity: 0.14, zIndex: 0 }} />
+        {/* -------------------------------- HEADER -------------------------------- */}
+        <Box
+          sx={{
+            width: "100%",
+            borderRadius: 2,
+            overflow: "hidden",
+            boxShadow: "0 8px 30px rgba(18, 52, 86, 0.06)",
+            position: "relative",
+            minHeight: 140,
+          }}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: `linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.06))`,
+              zIndex: 1,
+            }}
+          />
+          <Box
+            sx={{
+              position: "absolute",
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: { xs: 120, md: 240 },
+              backgroundImage: `url(${UPLOADED_HEADER})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: 0.14,
+              zIndex: 0,
+            }}
+          />
           <Box sx={{ position: "relative", zIndex: 2, p: { xs: 3, md: 4 } }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Box display="flex" alignItems="center" gap={2}>
@@ -199,7 +234,9 @@ export default function BuildingPage() {
                   <ApartmentIcon />
                 </Avatar>
                 <Box>
-                  <Typography variant="h5" fontWeight={700}>{t("page.title")}</Typography>
+                  <Typography variant="h5" fontWeight={700}>
+                    {t("page.title")}
+                  </Typography>
                   <Typography color="text.secondary">{t("page.subtitle")}</Typography>
                 </Box>
               </Box>
@@ -211,7 +248,13 @@ export default function BuildingPage() {
           </Box>
         </Box>
 
-        <ToggleButtonGroup value={category} exclusive onChange={(_, v) => v && setCategory(v)} sx={{ borderRadius: 10, bgcolor: "#fff", p: 1 }}>
+        {/* -------------------------------- TABS -------------------------------- */}
+        <ToggleButtonGroup
+          value={category}
+          exclusive
+          onChange={(_, v) => v && setCategory(v)}
+          sx={{ borderRadius: 10, bgcolor: "#fff", p: 1 }}
+        >
           <ToggleButton value="self" sx={{ px: 3 }}>
             <StorageIcon sx={{ mr: 1 }} />
             {t("page.tabs.self")}
@@ -223,27 +266,63 @@ export default function BuildingPage() {
           </ToggleButton>
         </ToggleButtonGroup>
 
+        {/* -------------------------------- META COUNTS -------------------------------- */}
         <Box>
           <Chip label={t("page.total", { count: displayed.length })} sx={{ mr: 1 }} />
           <Chip label={t("page.category", { cat: category })} />
         </Box>
 
-        <Box width="100%">
-          <BuildingList list={displayed} onEdit={openEdit} onDelete={(id: number) => onDeleteRequested(id)} loading={loading} />
+        {/* -------------------------------- LAZY BUILDING LIST w/ LOADING -------------------------------- */}
+        <Box width="100%" minHeight={200}>
+          <Suspense
+            fallback={
+              <Box sx={{ width: "100%", py: 5, display: "flex", justifyContent: "center" }}>
+                <CircularProgress />
+              </Box>
+            }
+          >
+            <BuildingList list={displayed} onEdit={openEdit} onDelete={(id) => onDeleteRequested(id)} loading={loading} />
+          </Suspense>
         </Box>
       </Stack>
 
+      {/* -------------------------------- PAGINATION -------------------------------- */}
       {pagination && pagination.totalPages > 1 && (
         <Box display="flex" justifyContent="center" mt={3}>
           <MuiPagination count={pagination.totalPages} page={page} onChange={(_, v) => setPage(v)} color="primary" />
         </Box>
       )}
 
-      <BuildingFormDialog open={openDialog} initial={editing ?? undefined} onClose={() => setOpenDialog(false)} onSubmit={onSave} />
+      {/* -------------------------------- LAZY DIALOG -------------------------------- */}
+      <Suspense fallback={null}>
+        <BuildingFormDialog
+          open={openDialog}
+          initial={editing ?? undefined}
+          onClose={() => setOpenDialog(false)}
+          onSubmit={onSave}
+        />
+      </Suspense>
 
-      <Dialog open={deleteDialog.open} onClose={handleCancelDelete} PaperProps={{ sx: { borderRadius: 3, p: 1, minWidth: 360, boxShadow: "0 12px 40px rgba(0,0,0,0.12)" } }}>
+      {/* -------------------------------- DELETE DIALOG -------------------------------- */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={handleCancelDelete}
+        PaperProps={{
+          sx: { borderRadius: 3, p: 1, minWidth: 360, boxShadow: "0 12px 40px rgba(0,0,0,0.12)" },
+        }}
+      >
         <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box sx={{ width: 42, height: 42, borderRadius: "50%", background: "rgba(244,67,54,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Box
+            sx={{
+              width: 42,
+              height: 42,
+              borderRadius: "50%",
+              background: "rgba(244,67,54,0.12)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <DeleteIcon sx={{ color: "error.main" }} />
           </Box>
           {t("delete.title")}
@@ -251,7 +330,9 @@ export default function BuildingPage() {
 
         <DialogContent>
           <DialogContentText sx={{ color: "text.secondary", fontSize: 15 }}>
-            {deleteDialog.name ? t("delete.confirmWithName", { name: deleteDialog.name }) : t("delete.confirm")}
+            {deleteDialog.name
+              ? t("delete.confirmWithName", { name: deleteDialog.name })
+              : t("delete.confirm")}
           </DialogContentText>
         </DialogContent>
 
@@ -259,13 +340,26 @@ export default function BuildingPage() {
           <Button onClick={handleCancelDelete} disabled={deleting} sx={{ textTransform: "none" }}>
             {t("delete.cancel")}
           </Button>
-          <Button onClick={handleConfirmDelete} variant="contained" color="error" disabled={deleting} sx={{ textTransform: "none" }} startIcon={deleting ? <CircularProgress size={18} /> : undefined}>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={deleting}
+            sx={{ textTransform: "none" }}
+            startIcon={deleting ? <CircularProgress size={18} /> : undefined}
+          >
             {deleting ? t("delete.deleting") : t("delete.delete")}
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack((s) => ({ ...s, open: false }))} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+      {/* -------------------------------- SNACKBAR -------------------------------- */}
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={3000}
+        onClose={() => setSnack((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
         <Alert severity={snack.severity} onClose={() => setSnack((s) => ({ ...s, open: false }))}>
           {snack.message}
         </Alert>

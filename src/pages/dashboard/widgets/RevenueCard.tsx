@@ -113,7 +113,6 @@ function prevPeriodDateISO(dateISO: string, type: "day" | "week" | "month" | "ye
   return isoDate(d);
 }
 
-/** parse response => netRevenue + optional totals and start/end */
 function parseRevenueObject(res: any): {
   netRevenue: number;
   totalPrice?: number;
@@ -161,25 +160,21 @@ function formatDateForLabel(dateIso?: string, type?: "day" | "week" | "month" | 
 export default function RevenueCard() {
   const { t } = useTranslation("dashboard");
 
-  // === header kept as original ===
   const [date, setDate] = useState<string>(() => isoDate(new Date()));
   const [type, setType] = useState<"day" | "week" | "month" | "year">("month");
 
-  // loading / data
   const [loading, setLoading] = useState(true);
   const [series, setSeries] = useState<RevenuePoint[] | null>(null);
 
-  // current period (last point)
-  const [revenueTotal, setRevenueTotal] = useState<number | null>(null); // netRevenue
+  const [revenueTotal, setRevenueTotal] = useState<number | null>(null); 
   const [lastTotalPrice, setLastTotalPrice] = useState<number | null>(null);
   const [lastTotalRefund, setLastTotalRefund] = useState<number | null>(null);
   const [lastStartDate, setLastStartDate] = useState<string | null>(null);
   const [lastEndDate, setLastEndDate] = useState<string | null>(null);
 
-  // previous period (for comparison)
   const [prevRevenue, setPrevRevenue] = useState<number | null>(null);
-  const [prevTotalPrice, setPrevTotalPrice] = useState<number | null>(null);
-  const [prevTotalRefund, setPrevTotalRefund] = useState<number | null>(null);
+  const [, setPrevTotalPrice] = useState<number | null>(null);
+  const [, setPrevTotalRefund] = useState<number | null>(null);
   const [prevStartDate, setPrevStartDate] = useState<string | null>(null);
   const [prevEndDate, setPrevEndDate] = useState<string | null>(null);
 
@@ -192,7 +187,6 @@ export default function RevenueCard() {
         const count = POINTS_PER_TYPE[type] ?? 6;
         const currentDates = buildDateSeries(date, type, count);
 
-        // fetch series points
         const seriesPromises = currentDates.map((d) =>
           dashboardApi
             .getRevenue({ date: d, type })
@@ -212,7 +206,6 @@ export default function RevenueCard() {
             })
         );
 
-        // fetch previous period once for comparison
         const prevDate = prevPeriodDateISO(date, type);
         const prevPromise = dashboardApi
           .getRevenue({ date: prevDate, type })
@@ -246,7 +239,6 @@ export default function RevenueCard() {
 
         setSeries(chartSeries);
 
-        // last point = current selected period
         const lastPoint = chartSeries.length ? chartSeries[chartSeries.length - 1] : null;
         setRevenueTotal(lastPoint ? lastPoint.netRevenue : null);
         setLastTotalPrice(lastPoint && typeof lastPoint.totalPrice === "number" ? lastPoint.totalPrice : null);
@@ -254,7 +246,6 @@ export default function RevenueCard() {
         setLastStartDate(lastPoint && lastPoint.startDate ? lastPoint.startDate : null);
         setLastEndDate(lastPoint && lastPoint.endDate ? lastPoint.endDate : null);
 
-        // prev result -> for comparison
         if (prevResult) {
           setPrevRevenue(typeof prevResult.netRevenue === "number" ? prevResult.netRevenue : null);
           setPrevTotalPrice(typeof prevResult.totalPrice === "number" ? prevResult.totalPrice : null);
@@ -293,7 +284,6 @@ export default function RevenueCard() {
     };
   }, [date, type]);
 
-  // percent change compared to prevRevenue
   const percentChange = useMemo(() => {
     if (revenueTotal == null || prevRevenue == null) return null;
     if (prevRevenue === 0) return revenueTotal === 0 ? 0 : Infinity;

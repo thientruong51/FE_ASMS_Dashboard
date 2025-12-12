@@ -95,7 +95,8 @@
     "period": {
       "month": "Month",
       "week": "Week",
-      "day":"day"
+      "day":"day",
+      "year":"Year"
     },
     "groups": {
       "active": "Active Orders",

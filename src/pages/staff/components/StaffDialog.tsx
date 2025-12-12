@@ -21,7 +21,6 @@ export default function StaffDialog({
   onCancel
 }: Props) {
   const { t } = useTranslation("staffPage");
-  // key ensures component remounts when employee.id changes (or when switching new <-> edit)
   const key = employee ? `emp-${employee.id}` : "emp-new";
 
   return (

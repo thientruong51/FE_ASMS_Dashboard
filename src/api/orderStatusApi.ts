@@ -18,10 +18,7 @@ export async function updateStatus(orderCode: string): Promise<ApiResponse<void>
   return resp.data ?? resp;
 }
 
-/**
- * Gọi API gia hạn đơn hàng.
- * Nếu unpaidAmount được truyền (số), sẽ được gửi kèm như query param `unpaidAmount`.
- */
+
 export async function extendOrder(orderCode: string, newReturnDate: string, unpaidAmount?: number): Promise<ApiResponse<void>> {
   const params: Record<string, any> = { newReturnDate };
   if (unpaidAmount !== undefined && unpaidAmount !== null) {

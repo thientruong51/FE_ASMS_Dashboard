@@ -4,9 +4,9 @@ export const dashboardApi = {
   getOrderCount: (params?: {
     date?: string;
     status?: string;
-    isWeekly?: boolean;
+    type?: "day" | "week" | "month" | "year";
   }) =>
-    axiosClient.get("/api/Dashboard/Get-Number-of-Oders", {
+    axiosClient.get("/api/Dashboard/Get-Number-of-Orders", {
       params,
     }),
 
@@ -20,6 +20,9 @@ export const dashboardApi = {
 
   getWarehouseUsagePercent: () =>
     axiosClient.get("/api/Dashboard/warehouse-usage-percent"),
+
+  getBuildingUsageSummary: () =>
+    axiosClient.get("/api/Dashboard/building-usage-summary"),
 };
 
 export default dashboardApi;
