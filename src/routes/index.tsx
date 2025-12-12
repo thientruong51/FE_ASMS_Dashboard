@@ -27,8 +27,8 @@ import BusinessRulesPage from "@/pages/businessRule/BusinessRulesPage";
 import ContainerPage from "@/pages/container/ContainerPage";
 import PublicRoute from "./PublicRoute";
 
-// <-- NEW: import container location page (route for QR links)
 import ContainerLocationPage from "@/pages/container-location/ContainerLocationPage";
+import OrderScanPage from "@/pages/order-scan/OrderScanPage";
 
 const ALL = [1, 2, 3, 4];
 const ROLE_4 = [4];
@@ -43,11 +43,15 @@ export const router = createBrowserRouter([
     ),
   },
 
-  // <-- NEW: public route so QR links work without auth (move or protect as you need)
   {
     path: "/container-location",
     element: <ContainerLocationPage />,
   },
+   {
+    path: "/orders/scan",
+    element: <OrderScanPage/>,
+  },
+{ path: "/orders/scan/:orderCode", element: <OrderScanPage/> },
 
   {
     element: <ProtectedRoute />,

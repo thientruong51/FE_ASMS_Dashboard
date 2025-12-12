@@ -38,6 +38,7 @@ import {
 
 import ContainerLocationDialog from "../components/ContainerLocationDialog";
 import ContainerLocationQrDialog from "../components/ContainerLocationQrDialog";
+import OrderQrDialog from "../components/OrderQrDialog"; 
 
 type Props = {
   orderCode: string | null;
@@ -144,6 +145,9 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
 
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [qrOrderDetail, setQrOrderDetail] = useState<any | null>(null);
+
+  // order-level QR dialog state
+  const [orderQrOpen, setOrderQrOpen] = useState(false);
 
   const order = orderFull ?? {};
 
@@ -323,6 +327,12 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
     setQrOrderDetail(null);
   };
 
+  const openOrderQr = () => {
+    if (!orderCode) return;
+    setOrderQrOpen(true);
+  };
+  const closeOrderQr = () => setOrderQrOpen(false);
+
   return (
     <Drawer
       anchor="right"
@@ -357,6 +367,12 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
             <Tooltip title={t("tabs.customer")}>
               <IconButton size="small" color={tabIndex === 1 ? "primary" : "default"} onClick={() => setTabIndex(1)}>
                 <PersonOutlineRoundedIcon />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title={t("tabs.orderQr") ?? "Order QR"}>
+              <IconButton size="small" color="default" onClick={openOrderQr}>
+                <QrCodeRoundedIcon />
               </IconButton>
             </Tooltip>
 
@@ -709,7 +725,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                         <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.phone")}</Box>
                         <Box sx={{ flex: 1 }}>{order.phoneContact ?? order.phone}</Box>
                       </Box>
-                    )}
+                    )} 
 
                     {has(order.customerEmail || order.email) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
@@ -724,8 +740,6 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                         <Box sx={{ flex: 1 }}>{order.customerAddress ?? order.address}</Box>
                       </Box>
                     )}
-
-                 
                   </Stack>
                 </CardContent>
               </Card>
@@ -748,8 +762,11 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
       {/* ContainerLocationDialog - reusable component */}
       <ContainerLocationDialog open={locDialogOpen} onClose={closeLocateDialog} orderDetailId={locOrderDetailId} />
 
-      {/* QR dialog */}
+      {/* QR dialog for item */}
       <ContainerLocationQrDialog open={qrDialogOpen} onClose={closeQrDialog} orderDetail={qrOrderDetail} orderCode={orderCode} />
+
+      {/* Order-level QR dialog */}
+      <OrderQrDialog open={orderQrOpen} onClose={closeOrderQr} orderCode={orderCode} />
     </Drawer>
   );
 }

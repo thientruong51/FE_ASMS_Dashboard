@@ -20,6 +20,7 @@ export interface OrderRespItem {
   passkey?: number | null;
   refund?: number | null;
   imageUrls?: string[] | null;
+  orderDetails?: OrderDetailItem[] | any[] | null;
 }
 
 export interface OrderListResponse {

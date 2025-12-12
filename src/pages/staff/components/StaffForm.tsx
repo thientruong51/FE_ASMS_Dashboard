@@ -10,7 +10,7 @@ import {
   Typography,
   Divider
 } from "@mui/material";
-import type { Employee, EmployeeRole, Building } from "../../../types/staff";
+import type { Employee, EmployeeRole, Building } from "@/types/staff";
 import { useTranslation } from "react-i18next";
 
 interface StaffFormProps {
@@ -59,6 +59,9 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    // debug log to see when employee prop changes
+    // remove console.log when not needed
+    // console.log("StaffForm: employee prop changed", employee);
     if (employee) {
       setFormData({
         employeeCode: employee.employeeCode ?? "",
@@ -360,9 +363,4 @@ function StaffFormInner({ employee, roles, buildings, onSave, onCancel }: StaffF
   );
 }
 
-export default React.memo(StaffFormInner, (prev, next) => {
-  if (prev.employee !== next.employee) return false;
-  if (prev.roles !== next.roles) return false;
-  if (prev.buildings !== next.buildings) return false;
-  return true;
-});
+export default StaffFormInner;

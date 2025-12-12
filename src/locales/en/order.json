@@ -43,7 +43,10 @@
     "images": "Images",
     "refundImages": "Refund proof images",
     "refundImageUrl": "Refund image",
-    "refundNote": "Refund note"
+    "refundNote": "Refund note",
+    "status": "Status",
+    "paymentStatus": "Payment Status",
+    "unknown": "Unknown"
   },
 
   "item": {
@@ -196,5 +199,27 @@
   "placedAtNoSerial": "Placed at Layer {{layer}}",
   "logs": {
     "title": "Location logs"
-  }
+  },
+   "trackingHistory": "Tracking history",
+  "noTracking": "No tracking history",
+  "downloadJson": "Download JSON",
+  "actionTypeNames": {
+  "order_retrieved": "Order Retrieved",
+  "order_created": "Order Created",
+  "processing_order": "Processing Order",
+  "stored_in_warehouse": "Stored in Warehouse",
+  "picked_up": "Picked Up",
+  "checkout_completed": "Checkout Completed",
+  "verification": "Verification",
+  "ready_for_pickup": "Ready for Pickup",
+  "customer_retrieved_from_expired-storage":"Customer Retrieved from Expired Storage",
+  "renting_active":"Renting Active",
+  "noData": "-",
+  "order_overdue":"Order Overdue",
+  "delivered_to_warehouse/customer":"Delivered to Warehouse/Customer",
+  "order_completed":"Order Completed",
+  "auto_update_overdue_detected":"Auto Update Overdue Detected"
+},
+"oldStatus":"Old Status",
+    "newStatus":"New Status"
 }

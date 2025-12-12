@@ -40,10 +40,20 @@ export default function StaffCardList({ employees, onEdit, onDelete }: Props) {
             </Box>
 
             <Box sx={{ display: "flex", gap: 0.5, alignItems: "center" }}>
-              <IconButton size="small" color="primary" onClick={() => onEdit(emp)} aria-label={t("edit")}>
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => onEdit(emp)}
+                aria-label={t("edit")}
+              >
                 <EditIcon fontSize="small" />
               </IconButton>
-              <IconButton size="small" color="error" onClick={() => onDelete(emp.id)} aria-label={t("delete")}>
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => onDelete(emp.id)}
+                aria-label={t("delete")}
+              >
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Box>

@@ -43,7 +43,10 @@
     "images": "Ảnh",
     "refundImages": "Ảnh chứng từ hoàn tiền",
     "refundImageUrl": "Ảnh hoàn tiền",
-    "refundNote": "Ghi chú hoàn tiền"
+    "refundNote": "Ghi chú hoàn tiền",
+    "status": "Trạng thái",
+    "paymentStatus": "Trạng thái thanh toán",
+    "unknown": "Không rõ"
   },
 
   "item": {
@@ -184,10 +187,10 @@
   "downloadPng": "Tải PNG",
   "showingPayload": "Hiển thị payload",
   "showingLogs": "Hiển thị nhật ký",
-  "containerPlacement": "Đặt thùng",
+  "containerPlacement": "Thùng đã được đặt",
   "containerRemoval": "Gỡ thùng",
   "reason": {
-    "Container Placement": "Đặt thùng",
+    "Container Placement": "Thùng đã được đặt",
     "Container Removal": "Gỡ thùng",
     "Container Move": "Di chuyển thùng",
     "Manual Update": "Cập nhật thủ công"
@@ -201,5 +204,28 @@
   "containerType": "Loại thùng",
   "containerQuantity": "Số lượng thùng",
   "isPlaced": "Đã đặt",
-  "placedAtNoSerial": "Đặt tại Layer {{layer}}"
+  "placedAtNoSerial": "Đặt tại Layer {{layer}}",
+  "trackingHistory": "Lịch sử theo dõi",
+  "noTracking": "Không có lịch sử theo dõi",
+  "downloadJson": "Tải JSON",
+    "oldStatus":"Trạng thái cũ",
+    "newStatus":"Trạng thái mới",
+    "actionTypeNames": {
+  "order_retrieved": "Đơn đã nhận lại",
+  "order_created": "Đơn vừa tạo",
+  "processing_order": "Đang xử lý đơn hàng",
+  "stored_in_warehouse": "Đã lưu kho",
+  "picked_up": "Đã lấy hàng",
+  "checkout_completed": "Hoàn tất thanh toán đơn hàng",
+  "verification": "Xác minh",
+  "ready_for_pickup": "Sẵn sàng để lấy",
+  "customer_retrieved_from_expired-storage":"Đã lấy lại từ kho lưu trữ đã hết hạn",
+  "renting_active":"Đang cho thuê",
+  "noData": "-",
+  "order_overdue":"Đơn hàng quá hạn",
+  "delivered_to_warehouse/customer":"Đã giao đến Kho/Khách hàng",
+  "order_completed":"Đơn hàng đã hoàn tất",
+  "auto_update_overdue_detected":"Đơn hàng quá hạn tự động cập nhật"
+},
+"UnPaid":"Chưa thanh toán"
 }
