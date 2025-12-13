@@ -264,7 +264,7 @@ export default function OrderPanel() {
 
 
       const orderDetailPromise = (async () => {
-        if (!isPureNumeric) return null; 
+        if (!isPureNumeric) return null;
         try {
           return await orderDetailApi.getOrderDetail(Number(qRaw));
         } catch {
@@ -468,9 +468,10 @@ export default function OrderPanel() {
               display: "flex",
               flexWrap: "wrap",
               gap: 1,
-              overflowY: "auto",
               pr: 0.5,
-              maxHeight: { xs: "65vh", sm: "none" },
+
+              overflowY: "auto",
+              minHeight: 0,
             }}
           >
             {filtered.map((d, i) => (

@@ -60,7 +60,12 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
   const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
 
   const [openCreate, setOpenCreate] = useState(false);
-
+ const STORAGE_TABS = [
+    { key: "all", label: t("storageList.tabAll") },
+    { key: "ready", label: t("statusNames.ready") },
+    { key: "reserved", label: t("statusNames.reserved") },
+    { key: "rented", label: t("statusNames.rented") },
+  ];
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -119,16 +124,22 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
   const filteredStorages = useMemo(() => {
     let list = [...storages];
 
-    if (tab === 1) list = list.filter((s) => /Loading/i.test(s.status ?? ""));
-    if (tab === 2) list = list.filter((s) => /Unloading/i.test(s.status ?? ""));
-    if (tab === 3) list = list.filter((s) => /Arriving/i.test(s.status ?? ""));
-    if (tab === 4) list = list.filter((s) => /Preparing/i.test(s.status ?? ""));
+    const tabKey = STORAGE_TABS[tab]?.key;
 
+    // lọc theo status
+    if (tabKey && tabKey !== "all") {
+      list = list.filter(
+        (s) => canonicalStatusKey(s.status) === tabKey
+      );
+    }
+
+    // lọc theo search
     if (searchText.trim()) {
       const q = searchText.trim().toLowerCase();
-
       list = list.filter((s) => {
-        const nameTranslated = translateStorageTypeName(t as any, s.storageTypeName)?.toLowerCase() ?? "";
+        const nameTranslated =
+          translateStorageTypeName(t as any, s.storageTypeName)
+            ?.toLowerCase() ?? "";
         return (
           (s.storageCode ?? "").toLowerCase().includes(q) ||
           nameTranslated.includes(q)
@@ -138,6 +149,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
 
     return list;
   }, [storages, tab, searchText, t]);
+
 
   const colorMap: Record<string, string> = {
     arriving: "#fbc02d",
@@ -152,14 +164,7 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
     occupied: "#d32f2f",
   };
 
-  const tabLabels = [
-    t("storageList.tabAll"),
-    t("storageList.tabLoading"),
-    t("storageList.tabUnloading"),
-    t("storageList.tabArriving"),
-    t("storageList.tabPreparing"),
-  ];
-
+ 
   const buildingOptions = useMemo(() => {
     return (buildings ?? []).map((b) => ({
       ...b,
@@ -174,8 +179,18 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
   };
 
   return (
-    <Card sx={{ borderRadius: 3, bgcolor: "#fff", overflow: "hidden", height: "40%", display: "flex", flexDirection: "column" }}>
-      <CardContent sx={{ p: { xs: 2, sm: 2.5 }, pb: 0, display: "flex", flexDirection: "column", height: "100%" }}>
+    <Card sx={{ borderRadius: 3, bgcolor: "#fff", overflow: "hidden", height: "100%", display: "flex", flexDirection: "column" }}>
+      <CardContent
+        sx={{
+          p: { xs: 2, sm: 2.5 },
+          pb: 0,
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          minHeight: 0,
+          overflow: "hidden",
+        }}
+      >
 
         {/* HEADER */}
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.2}>
@@ -279,8 +294,8 @@ export default function StorageList({ onSelectStorage, selectedStorage }: Props)
           scrollButtons="auto"
           sx={{ mb: 1.5 }}
         >
-          {tabLabels.map((label, i) => (
-            <Tab key={i} label={label} />
+          {STORAGE_TABS.map((t) => (
+            <Tab key={t.key} label={t.label} />
           ))}
         </Tabs>
 

@@ -1,4 +1,4 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -12,7 +12,11 @@ import {
   CircularProgress,
 } from "@mui/material";
 import type { EmployeeRoleItem } from "@/api/employeeRoleApi";
-import { createEmployeeRole, getEmployeeRole, updateEmployeeRole } from "@/api/employeeRoleApi";
+import {
+  createEmployeeRole,
+  getEmployeeRole,
+  updateEmployeeRole,
+} from "@/api/employeeRoleApi";
 import { useTranslation } from "react-i18next";
 
 type Props = {
@@ -22,28 +26,35 @@ type Props = {
   onSaved?: (item: EmployeeRoleItem) => void;
 };
 
-export default function EmployeeRoleDialog({ open, onClose, employeeRoleId, onSaved }: Props) {
+export default function EmployeeRoleDialog({
+  open,
+  onClose,
+  employeeRoleId,
+  onSaved,
+}: Props) {
   const { t } = useTranslation("employeeRole");
 
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<Partial<EmployeeRoleItem>>({
-    name: "",
+    roleName: "",
     isActive: true,
   });
 
   useEffect(() => {
     if (!open) return;
+
     if (!employeeRoleId) {
-      setForm({ name: "", isActive: true });
+      setForm({ roleName: "", isActive: true });
       return;
     }
+
     let mounted = true;
+
     (async () => {
       try {
         setLoading(true);
-        const resp = await getEmployeeRole(employeeRoleId);
-        if (!mounted) return;
-        setForm(resp);
+        const data = await getEmployeeRole(employeeRoleId);
+        if (mounted) setForm(data);
       } catch (err) {
         console.error(err);
         alert(t("messages.loadFailed"));
@@ -51,29 +62,39 @@ export default function EmployeeRoleDialog({ open, onClose, employeeRoleId, onSa
         if (mounted) setLoading(false);
       }
     })();
+
     return () => {
       mounted = false;
     };
   }, [open, employeeRoleId, t]);
 
-  const handleChange = (k: keyof EmployeeRoleItem) => (e: any) => {
-    const value = e?.target?.type === "checkbox" ? e.target.checked : e.target.value;
-    setForm((s) => ({ ...s, [k]: value }));
-  };
+  const handleChange =
+    (k: keyof EmployeeRoleItem) => (e: any) => {
+      const value =
+        e?.target?.type === "checkbox"
+          ? e.target.checked
+          : e.target.value;
+      setForm((s) => ({ ...s, [k]: value }));
+    };
 
   const handleSubmit = async () => {
-    if (!form.name || form.name.trim() === "") {
+    if (!form.roleName?.trim()) {
       alert(t("form.required"));
       return;
     }
+
     try {
       setLoading(true);
-      let saved: EmployeeRoleItem;
-      if (employeeRoleId) {
-        saved = await updateEmployeeRole(employeeRoleId, form);
-      } else {
-        saved = await createEmployeeRole(form);
-      }
+
+      const payload = {
+        roleName: form.roleName,
+        isActive: form.isActive,
+      };
+
+      const saved = employeeRoleId
+        ? await updateEmployeeRole(employeeRoleId, payload)
+        : await createEmployeeRole(payload);
+
       onSaved?.(saved);
       onClose();
     } catch (err: any) {
@@ -86,29 +107,50 @@ export default function EmployeeRoleDialog({ open, onClose, employeeRoleId, onSa
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{employeeRoleId ? t("form.editTitle") : t("form.createTitle")}</DialogTitle>
+      <DialogTitle>
+        {employeeRoleId
+          ? t("form.editTitle")
+          : t("form.createTitle")}
+      </DialogTitle>
+
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} pt={1}>
           <TextField
             label={t("form.name")}
-            value={form.name ?? ""}
-            onChange={handleChange("name")}
+            value={form.roleName ?? ""}
+            onChange={handleChange("roleName")}
             fullWidth
             required
             disabled={loading}
           />
+
           <FormControlLabel
-            control={<Checkbox checked={!!form.isActive} onChange={handleChange("isActive")} />}
+            control={
+              <Checkbox
+                checked={!!form.isActive}
+                onChange={handleChange("isActive")}
+                disabled={loading}
+              />
+            }
             label={t("form.active")}
           />
         </Box>
       </DialogContent>
+
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
           {t("form.cancel")}
         </Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-          {loading ? <CircularProgress size={18} /> : t("form.save")}
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          disabled={loading}
+        >
+          {loading ? (
+            <CircularProgress size={18} />
+          ) : (
+            t("form.save")
+          )}
         </Button>
       </DialogActions>
     </Dialog>

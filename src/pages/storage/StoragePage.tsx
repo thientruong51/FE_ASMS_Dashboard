@@ -23,7 +23,7 @@ export default function StoragePage() {
         },
         gap: { xs: 1.5, sm: 2 },
         minHeight: { xs: "calc(100vh - 88px)", sm: "calc(100vh - 90px)" },
-        height: { md: "auto" },
+        height: {sm: "calc(100vh - 90px)" },
         px: { xs: 1, sm: 2 },
         "& > *": {
           display: "flex",

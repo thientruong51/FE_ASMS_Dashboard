@@ -36,7 +36,6 @@ export default function StaffPage() {
     setDialogOpen(true);
   };
   const handleOpenEdit = (employee: Employee) => {
-    // create a shallow copy so reference changes and child effects run
     setEditingEmployee({ ...employee });
     setDialogOpen(true);
   };
@@ -49,7 +48,6 @@ export default function StaffPage() {
       } else {
         await create(data);
       }
-      // ensure we reload fresh data
       await refresh();
       setDialogOpen(false);
     } catch (err) {
@@ -275,7 +273,7 @@ export default function StaffPage() {
         </CardContent>
       </Card>
 
-      <StaffDialog open={dialogOpen} employee={editingEmployee} roles={roles} buildings={buildings} onSave={handleSave} onCancel={handleCancel} />
+      <StaffDialog open={dialogOpen} employee={editingEmployee} roles={roles} buildings={buildings} onSave={handleSave} onCancel={handleCancel} onReload={refresh} />
     </Box>
   );
 }

@@ -32,7 +32,7 @@ import {
 } from "@/api/employeeRoleApi";
 import EmployeeRoleDialog from "./components/EmployeeRoleDialog";
 import { useTranslation } from "react-i18next";
-import { translateRoleName } from "@/utils/roleNames"; 
+import { translateRoleName } from "@/utils/roleNames";
 
 export default function EmployeeRolePage() {
   const { t } = useTranslation("employeeRole");
@@ -45,12 +45,31 @@ export default function EmployeeRolePage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [snack, setSnack] = useState<{ open: boolean; message?: string; severity?: "success" | "error" }>({ open: false });
+
+  const [snack, setSnack] = useState<{
+    open: boolean;
+    message?: string;
+    severity?: "success" | "error";
+  }>({ open: false });
 
   const [q, setQ] = useState("");
   const [filterActive, setFilterActive] = useState<string>("");
 
-  const debounceRef = useRef<number | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* =========================
+     Helpers
+  ========================== */
+
+  const getRoleDisplayName = useCallback(
+    (r: EmployeeRoleItem) =>
+      translateRoleName(t, r.roleName),
+    [t]
+  );
+
+  /* =========================
+     Data
+  ========================== */
 
   const fetchAll = useCallback(async () => {
     try {
@@ -61,7 +80,11 @@ export default function EmployeeRolePage() {
       setRows(data);
     } catch (err) {
       console.error(err);
-      setSnack({ open: true, message: t("messages.fetchFailed"), severity: "error" });
+      setSnack({
+        open: true,
+        message: t("messages.fetchFailed"),
+        severity: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -71,85 +94,128 @@ export default function EmployeeRolePage() {
     fetchAll();
   }, [fetchAll]);
 
+  /* =========================
+     Search + Filter (debounce)
+  ========================== */
+
   useEffect(() => {
-    if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    debounceRef.current = window.setTimeout(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(() => {
       const qLower = q.trim().toLowerCase();
+
       const filtered = allRows.filter((r) => {
         const matchesQ =
           !qLower ||
-          (r.name && r.name.toLowerCase().includes(qLower)) ||
+          r.roleName?.toLowerCase().includes(qLower) ||
           String(r.employeeRoleId).includes(qLower);
+
         const matchesActive =
           filterActive === ""
             ? true
             : filterActive === "active"
             ? !!r.isActive
             : !r.isActive;
+
         return matchesQ && matchesActive;
       });
+
       setRows(filtered);
     }, 260);
+
     return () => {
-      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [q, filterActive, allRows]);
+
+  /* =========================
+     Actions
+  ========================== */
 
   const openCreate = () => {
     setEditId(null);
     setDialogOpen(true);
   };
+
   const openEdit = (id: number) => {
     setEditId(id);
     setDialogOpen(true);
   };
 
-  const onSaved = () => {
+  const onSaved = useCallback(() => {
     setDialogOpen(false);
     setEditId(null);
     fetchAll();
-    setSnack({ open: true, message: t("messages.saved"), severity: "success" });
-  };
+    setSnack({
+      open: true,
+      message: t("messages.saved"),
+      severity: "success",
+    });
+  }, [fetchAll, t]);
 
   const handleDelete = async (id?: number | null) => {
     if (!id) return;
     if (!window.confirm(t("dialog.deleteConfirm"))) return;
+
     try {
       await deleteEmployeeRole(id);
       setAllRows((prev) => prev.filter((r) => r.employeeRoleId !== id));
       setRows((prev) => prev.filter((r) => r.employeeRoleId !== id));
-      setSnack({ open: true, message: t("messages.deleted"), severity: "success" });
+      setSnack({
+        open: true,
+        message: t("messages.deleted"),
+        severity: "success",
+      });
     } catch (err) {
       console.error(err);
-      setSnack({ open: true, message: t("messages.deleteFailed"), severity: "error" });
+      setSnack({
+        open: true,
+        message: t("messages.deleteFailed"),
+        severity: "error",
+      });
     }
   };
 
+  /* =========================
+     Table columns
+  ========================== */
+
   const columns: GridColDef[] = useMemo(
     () => [
-      { field: "employeeRoleId", headerName: t("table.id"), width: 100 },
+      {
+        field: "employeeRoleId",
+        headerName: t("table.id"),
+        width: 100,
+      },
       {
         field: "name",
         headerName: t("table.name"),
         flex: 1,
         minWidth: 240,
-        renderCell: (params) => {
-          const display = translateRoleName(t, params.row.name, params.row.nameEn);
-          return (
-            <Box display="flex" alignItems="center" gap={1}>
-              <PersonIcon sx={{ fontSize: 18, color: "primary.main" }} />
-              <Typography fontWeight={600} sx={{ fontSize: { xs: 12, sm: 14 } }}>
-                {display}
-              </Typography>
-            </Box>
-          );
-        },
+        renderCell: (params) => (
+          <Box display="flex" alignItems="center" gap={1}>
+            <PersonIcon sx={{ fontSize: 18, color: "primary.main" }} />
+            <Typography fontWeight={600} sx={{ fontSize: { xs: 12, sm: 14 } }}>
+              {getRoleDisplayName(params.row)}
+            </Typography>
+          </Box>
+        ),
       },
       {
         field: "isActive",
         headerName: t("table.active"),
         width: 120,
-        renderCell: (params) => <Chip label={params.value ? t("table.active") : t("dialog.delete")} size="small" color={params.value ? "success" : "default"} />,
+        renderCell: (params) => (
+          <Chip
+            label={
+              params.value
+                ? t("status.active")
+                : t("status.inactive")
+            }
+            size="small"
+            color={params.value ? "success" : "default"}
+          />
+        ),
       },
       {
         field: "actions",
@@ -158,18 +224,30 @@ export default function EmployeeRolePage() {
         sortable: false,
         renderCell: (params) => (
           <Box display="flex" gap={1}>
-            <Box component="span" sx={{ cursor: "pointer" }} onClick={() => openEdit(params.row.employeeRoleId)}>
+            <Box
+              component="span"
+              sx={{ cursor: "pointer" }}
+              onClick={() => openEdit(params.row.employeeRoleId)}
+            >
               <EditIcon fontSize="small" />
             </Box>
-            <Box component="span" sx={{ cursor: "pointer" }} onClick={() => handleDelete(params.row.employeeRoleId)}>
+            <Box
+              component="span"
+              sx={{ cursor: "pointer" }}
+              onClick={() => handleDelete(params.row.employeeRoleId)}
+            >
               <DeleteIcon fontSize="small" color="error" />
             </Box>
           </Box>
         ),
       },
     ],
-    [t]
+    [t, getRoleDisplayName]
   );
+
+  /* =========================
+     Render
+  ========================== */
 
   return (
     <Container maxWidth={false} sx={{ py: 6 }}>
@@ -185,143 +263,182 @@ export default function EmployeeRolePage() {
             boxShadow: "0 8px 30px rgba(18,52,86,0.04)",
           }}
         >
-          <Box sx={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(59,130,246,0.08), rgba(16,185,129,0.04))", zIndex: 1 }} />
           <Box
             sx={{
               position: "absolute",
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: { xs: 100, md: 240 },
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              opacity: 0.12,
-              zIndex: 0,
+              inset: 0,
+              background:
+                "linear-gradient(135deg, rgba(59,130,246,0.08), rgba(16,185,129,0.04))",
+              zIndex: 1,
             }}
           />
           <Box sx={{ position: "relative", zIndex: 2, p: { xs: 2, md: 3 } }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" gap={2} flexDirection={{ xs: "column", sm: "row" }}>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              gap={2}
+              flexDirection={{ xs: "column", sm: "row" }}
+            >
               <Box>
                 <Typography variant="h5" fontWeight={700}>
                   {t("page.title")}
                 </Typography>
-                <Typography color="text.secondary">{t("page.subtitle")}</Typography>
+                <Typography color="text.secondary">
+                  {t("page.subtitle")}
+                </Typography>
               </Box>
 
-              <Box sx={{ display: "flex", gap: 1, width: { xs: "100%", sm: "auto" }, justifyContent: { xs: "stretch", sm: "flex-end" } }}>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} sx={{ width: { xs: "100%", sm: "auto" } }}>
-                  {t("page.create")}
-                </Button>
-              </Box>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={openCreate}
+                sx={{ width: { xs: "100%", sm: "auto" } }}
+              >
+                {t("page.create")}
+              </Button>
             </Box>
           </Box>
         </Box>
 
-        {/* toolbar card */}
+        {/* toolbar */}
         <Card sx={{ width: "100%", borderRadius: 2 }}>
           <CardContent>
-            <Box display="flex" gap={2} flexDirection={{ xs: "column", sm: "row" }} alignItems="center" width="30%">
-              <Box sx={{ flex: { xs: "1 1 100%", sm: "1 1 auto" }, minWidth: 0 }}>
-                <TextField
-                  placeholder={t("page.searchPlaceholder")}
-                  size="small"
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  fullWidth
-                />
-              </Box>
-
-              <Box sx={{ width: { xs: "100%", sm: 150 } }}>
-                <TextField
-                  select
-                  label={t("page.filterAll")}
-                  size="small"
-                  value={filterActive}
-                  onChange={(e) => setFilterActive(e.target.value)}
-                  fullWidth
-                >
-                  <MenuItem value="">{t("page.filterAll")}</MenuItem>
-                  <MenuItem value="active">{t("page.filterActive")}</MenuItem>
-                  <MenuItem value="inactive">{t("page.filterInactive")}</MenuItem>
-                </TextField>
-              </Box>
+            <Box
+              display="flex"
+              gap={2}
+              flexDirection={{ xs: "column", sm: "row" }}
+              width="30%"
+            >
+              <TextField
+                placeholder={t("page.searchPlaceholder")}
+                size="small"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                fullWidth
+              />
+              <TextField
+                select
+                label={t("page.filterAll")}
+                size="small"
+                value={filterActive}
+                onChange={(e) => setFilterActive(e.target.value)}
+                sx={{ width: 150 }}
+              >
+                <MenuItem value="">{t("page.filterAll")}</MenuItem>
+                <MenuItem value="active">{t("page.filterActive")}</MenuItem>
+                <MenuItem value="inactive">{t("page.filterInactive")}</MenuItem>
+              </TextField>
             </Box>
           </CardContent>
         </Card>
 
         {/* content */}
-        <Box width="100%">
-          <Card sx={{ borderRadius: 2 }}>
-            <CardContent sx={{ px: { xs: 1, sm: 2 }, py: { xs: 1, sm: 2 } }}>
-              {loading ? (
-                <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
-                  <CircularProgress />
-                </Box>
-              ) : (
-                <Box sx={{ width: "100%" }}>
-                  {isSmDown ? (
-                    <List>
-                      {rows.length === 0 ? (
-                        <ListItem>
-                          <ListItemText primary={t("page.noRolesFound")} />
-                        </ListItem>
-                      ) : (
-                        rows.map((r) => (
-                          <ListItem
-                            key={r.employeeRoleId}
-                            secondaryAction={
-                              <Box>
-                                <IconButton edge="end" aria-label="edit" onClick={() => openEdit(r.employeeRoleId)}>
-                                  <EditIcon fontSize="small" />
-                                </IconButton>
-                                <IconButton edge="end" aria-label="delete" onClick={() => handleDelete(r.employeeRoleId)}>
-                                  <DeleteIcon fontSize="small" color="error" />
-                                </IconButton>
-                              </Box>
+        <Card sx={{ width: "100%", borderRadius: 2 }}>
+          <CardContent>
+            {loading ? (
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                minHeight={200}
+              >
+                <CircularProgress />
+              </Box>
+            ) : isSmDown ? (
+              <List>
+                {rows.length === 0 ? (
+                  <ListItem>
+                    <ListItemText primary={t("page.noRolesFound")} />
+                  </ListItem>
+                ) : (
+                  rows.map((r) => (
+                    <ListItem
+                      key={r.employeeRoleId}
+                      secondaryAction={
+                        <>
+                          <IconButton onClick={() => openEdit(r.employeeRoleId)}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton onClick={() => handleDelete(r.employeeRoleId)}>
+                            <DeleteIcon fontSize="small" color="error" />
+                          </IconButton>
+                        </>
+                      }
+                    >
+                      <ListItemText
+                        primary={
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <PersonIcon sx={{ fontSize: 18, color: "primary.main" }} />
+                            <Typography fontWeight={700}>
+                              {getRoleDisplayName(r)}
+                            </Typography>
+                          </Box>
+                        }
+                        secondary={
+                          <Chip
+                            label={
+                              r.isActive
+                                ? t("status.active")
+                                : t("status.inactive")
                             }
-                          >
-                            <ListItemText
-                              primary={
-                                <Box display="flex" alignItems="center" gap={1}>
-                                  <PersonIcon sx={{ fontSize: 18, color: "primary.main" }} />
-                                  <Typography fontWeight={700}>{translateRoleName(t, r.name)}</Typography>
-                                </Box>
-                              }
-                              secondary={<>{r.isActive ? <Chip label={t("table.active")} size="small" color="success" /> : <Chip label={t("dialog.delete")} size="small" />} </>}
-                            />
-                          </ListItem>
-                        ))
-                      )}
-                    </List>
-                  ) : (
-                    <DataGrid
-                      rows={rows.map((r) => ({ id: r.employeeRoleId, ...r }))}
-                      columns={columns}
-                      autoHeight
-                      pageSizeOptions={[5, 10, 25]}
-                      pagination
-                      paginationMode="client"
-                      initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-                      disableRowSelectionOnClick
-                      sx={{
-                        border: "none",
-                        "& .MuiDataGrid-cell": { borderBottom: "1px solid #f0f0f0" },
-                        "& .MuiDataGrid-columnHeaders": { bgcolor: "#f8f9fa", borderBottom: "2px solid #e0e0e0" },
-                        "& .MuiDataGrid-cell, & .MuiDataGrid-columnHeader": { fontSize: 13 },
-                      }}
-                    />
-                  )}
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Box>
+                            size="small"
+                            color={r.isActive ? "success" : "default"}
+                          />
+                        }
+                      />
+                    </ListItem>
+                  ))
+                )}
+              </List>
+            ) : (
+              <DataGrid
+                rows={rows.map((r) => ({ ...r, id: r.employeeRoleId }))}
+                columns={columns}
+                autoHeight
+                pageSizeOptions={[5, 10, 25]}
+                initialState={{
+                  pagination: { paginationModel: { pageSize: 10 } },
+                }}
+                disableRowSelectionOnClick
+                sx={{
+                  border: "none",
+                  "& .MuiDataGrid-cell": {
+                    borderBottom: "1px solid #f0f0f0",
+                  },
+                  "& .MuiDataGrid-columnHeaders": {
+                    bgcolor: "#f8f9fa",
+                    borderBottom: "2px solid #e0e0e0",
+                  },
+                  "& .MuiDataGrid-cell, & .MuiDataGrid-columnHeader": {
+                    fontSize: 13,
+                  },
+                }}
+              />
+            )}
+          </CardContent>
+        </Card>
       </Stack>
 
-      <EmployeeRoleDialog open={dialogOpen} onClose={() => setDialogOpen(false)} employeeRoleId={editId ?? undefined} onSaved={() => onSaved()} />
+      <EmployeeRoleDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        employeeRoleId={editId ?? undefined}
+        onSaved={onSaved}
+      />
 
-      <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack((s) => ({ ...s, open: false }))} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
-        <Alert severity={snack.severity} onClose={() => setSnack((s) => ({ ...s, open: false }))}>{snack.message}</Alert>
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={3000}
+        onClose={() => setSnack((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          severity={snack.severity}
+          onClose={() => setSnack((s) => ({ ...s, open: false }))}
+        >
+          {snack.message}
+        </Alert>
       </Snackbar>
     </Container>
   );

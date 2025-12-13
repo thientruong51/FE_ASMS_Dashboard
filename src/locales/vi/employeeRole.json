@@ -48,5 +48,9 @@
     "delivery_staff": "Nhân viên giao hàng",
     "admin": "Quản trị viên",
     "noData": "-"
+  },
+  "status":{
+    "active":"Hoạt động",
+    "inactive":"Xóa"
   }
 }

@@ -13,7 +13,8 @@
 
   "labels": {
     "pricing": "Pricing",
-    "shippingRate": "Shipping Rate"
+    "shippingRate": "Shipping Rate",
+    "active": "Active"
   },
 
   "table": {
@@ -43,7 +44,10 @@
     "confirm": "Confirm",
     "refresh": "Refresh",
     "export": "Export",
-    "exportCsv": "Export CSV"
+    "exportCsv": "Export CSV",
+    "addPricing": "Add pricing",
+    "create": "Create",
+    "update": "Update"
   },
 
   "confirm": "Confirm",

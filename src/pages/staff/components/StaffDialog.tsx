@@ -10,6 +10,7 @@ type Props = {
   buildings: Building[];
   onSave: (data: Partial<Employee>) => Promise<void> | void;
   onCancel: () => void;
+  onReload: () => Promise<void> | void;
 };
 
 export default function StaffDialog({
@@ -18,10 +19,17 @@ export default function StaffDialog({
   roles,
   buildings,
   onSave,
-  onCancel
+  onCancel,
+  onReload,
 }: Props) {
   const { t } = useTranslation("staffPage");
   const key = employee ? `emp-${employee.id}` : "emp-new";
+
+  const handleSave = async (data: Partial<Employee>) => {
+    await onSave(data);  
+    await onReload(); 
+    onCancel();           
+  };
 
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
@@ -32,10 +40,11 @@ export default function StaffDialog({
           employee={employee}
           roles={roles}
           buildings={buildings}
-          onSave={onSave}
+          onSave={handleSave}  
           onCancel={onCancel}
         />
       </DialogContent>
     </Dialog>
   );
 }
+
