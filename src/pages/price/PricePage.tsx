@@ -1,4 +1,4 @@
-import  { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Card,
@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next";
 import priceApi, { type PricingItem, type ShippingRateItem } from "@/api/priceApi";
 import PricingDetailDrawer from "./components/PricingDetailDrawer";
 import priceI18nHelper from "@/utils/priceI18nHelper";
+import PricingFormDialog from "./components/PricingFormDialog";
 
 function a11yProps(index: number) {
   return {
@@ -415,14 +416,37 @@ export default function PricePage() {
       return columnHasData(String(col.field), rows);
     });
   }, [filteredCurrent, isShippingTab, priceMonthField, priceWeekField, priceTripField, langShort]);
+  const [addOpen, setAddOpen] = useState(false);
 
   return (
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
-      <Box mb={2}>
-        <Typography variant="h4" fontWeight={700}>
-          {t("page.title") ?? "Pricing"}
-        </Typography>
-        <Typography color="text.secondary">{t("page.subtitle") ?? "Manage pricing & shipping rates"}</Typography>
+      <Box
+        mb={2}
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <Box>
+          <Typography variant="h4" fontWeight={700}>
+            {t("page.title") ?? "Pricing"}
+          </Typography>
+          <Typography color="text.secondary">
+            {t("page.subtitle") ?? "Manage pricing & shipping rates"}
+          </Typography>
+        </Box>
+
+        {/* ADD BUTTON */}
+        {!isShippingTab && (
+          <Button
+            variant="contained"
+            onClick={() => setAddOpen(true)}
+          >
+            {t("actions.addPricing")}
+          </Button>
+        )}
       </Box>
 
       <Card sx={{ mb: 2 }}>
@@ -504,6 +528,14 @@ export default function PricePage() {
           setSelected(null);
         }}
         onRefresh={fetchAll}
+      />
+      <PricingFormDialog
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onSaved={() => {
+          setAddOpen(false);
+          fetchAll(); 
+        }}
       />
     </Box>
   );

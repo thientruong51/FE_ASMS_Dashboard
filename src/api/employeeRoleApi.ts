@@ -1,9 +1,14 @@
-// src/api/employeeRoleApi.ts
 import axiosClient from "./axiosClient";
+
+type EmployeeRoleApiItem = {
+  employeeRoleId: number;
+  name: string;
+  isActive?: boolean;
+};
 
 export type EmployeeRoleItem = {
   employeeRoleId: number;
-  name: string;
+  roleName: string;
   isActive?: boolean;
 };
 
@@ -15,34 +20,65 @@ export type EmployeeRoleListResponse = {
     totalRecords?: number;
     totalPages?: number;
   };
-  page?: number;
-  pageSize?: number;
-  totalCount?: number;
-  totalPages?: number;
 };
 
 const BASE = "/api/EmployeeRole";
 
-export async function getEmployeeRoles(params?: Record<string, any>): Promise<EmployeeRoleListResponse> {
-  const resp = await axiosClient.get<EmployeeRoleListResponse>(BASE, { params });
-  return resp.data;
+export async function getEmployeeRoles(
+  params?: Record<string, any>
+): Promise<EmployeeRoleListResponse> {
+  const resp = await axiosClient.get<{
+    data: EmployeeRoleApiItem[];
+    pagination?: any;
+  }>(BASE, { params });
+
+  return {
+    ...resp.data,
+    data: resp.data.data.map(mapApiToItem),
+  };
 }
 
-export async function getEmployeeRole(id: number): Promise<EmployeeRoleItem> {
-  const resp = await axiosClient.get<EmployeeRoleItem>(`${BASE}/${id}`);
-  return resp.data;
+export async function getEmployeeRole(
+  id: number
+): Promise<EmployeeRoleItem> {
+  const resp = await axiosClient.get<EmployeeRoleApiItem>(
+    `${BASE}/${id}`
+  );
+  return mapApiToItem(resp.data);
 }
 
-export async function createEmployeeRole(payload: Partial<EmployeeRoleItem>): Promise<EmployeeRoleItem> {
-  const resp = await axiosClient.post<EmployeeRoleItem>(BASE, payload);
-  return resp.data;
+export async function createEmployeeRole(
+  payload: Pick<EmployeeRoleItem, "roleName" | "isActive">
+): Promise<EmployeeRoleItem> {
+  const resp = await axiosClient.post<EmployeeRoleApiItem>(BASE, {
+    name: payload.roleName, 
+    isActive: payload.isActive,
+  });
+  return mapApiToItem(resp.data);
 }
 
-export async function updateEmployeeRole(id: number, payload: Partial<EmployeeRoleItem>): Promise<EmployeeRoleItem> {
-  const resp = await axiosClient.put<EmployeeRoleItem>(`${BASE}/${id}`, payload);
-  return resp.data;
+export async function updateEmployeeRole(
+  id: number,
+  payload: Pick<EmployeeRoleItem, "roleName" | "isActive">
+): Promise<EmployeeRoleItem> {
+  const resp = await axiosClient.put<EmployeeRoleApiItem>(
+    `${BASE}/${id}`,
+    {
+      roleName: payload.roleName,
+      isActive: payload.isActive,
+    }
+  );
+  return mapApiToItem(resp.data);
 }
 
 export async function deleteEmployeeRole(id: number): Promise<void> {
   await axiosClient.delete(`${BASE}/${id}`);
+}
+
+function mapApiToItem(api: EmployeeRoleApiItem): EmployeeRoleItem {
+  return {
+    employeeRoleId: api.employeeRoleId,
+    roleName: api.name,
+    isActive: api.isActive,
+  };
 }

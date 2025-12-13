@@ -13,7 +13,8 @@
 
   "labels": {
     "pricing": "Giá dịch vụ",
-    "shippingRate": "Giá vận chuyển"
+    "shippingRate": "Giá vận chuyển",
+    "active": "Đang áp dụng"
   },
 
   "table": {
@@ -43,7 +44,10 @@
     "confirm": "Xác nhận",
     "refresh": "Tải lại",
     "export": "Xuất",
-    "exportCsv": "Xuất CSV"
+    "exportCsv": "Xuất CSV",
+    "addPricing": "Thêm giá",
+    "create": "Tạo mới",
+    "update": "Cập nhật"
   },
 
   "confirm": "Xác nhận",
