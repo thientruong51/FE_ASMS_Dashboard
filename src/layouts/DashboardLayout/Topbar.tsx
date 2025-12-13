@@ -133,7 +133,7 @@ export default function Topbar() {
         if (!mounted) return;
         const map: Record<number, string> = {};
         arr.forEach((r) => {
-          if (r?.employeeRoleId != null) map[Number(r.employeeRoleId)] = r.name;
+          if (r?.employeeRoleId != null) map[Number(r.employeeRoleId)] = r.roleName;
         });
         setRolesMap(map);
       } catch (err) {
