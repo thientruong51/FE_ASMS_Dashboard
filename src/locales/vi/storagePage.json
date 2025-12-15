@@ -248,6 +248,7 @@
   "rented": "Đã được thuê",
   "delivered":"Đã vận chuyển xong",
   "completed":"Hoàn thành",
+   "waiting_refund":"Chờ hoàn tiền",
   "cancelled":"Đã bị hủy"
 },
 

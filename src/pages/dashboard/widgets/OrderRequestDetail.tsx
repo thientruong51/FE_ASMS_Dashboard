@@ -3,7 +3,6 @@ import {
   Typography,
   Divider,
   Avatar,
-  Button,
   IconButton,
   Tooltip,
   useTheme,
@@ -133,26 +132,6 @@ export default function OrderRequestDetail({ data, onClose }: Props) {
           </Box>
         </Box>
 
-        <Box display="flex" alignItems="center" gap={1} width={isXs ? "100%" : "auto"} justifyContent={isXs ? "space-between" : "flex-end"}>
-          <Button
-            variant="contained"
-            size={isXs ? "medium" : "small"}
-            sx={{ textTransform: "none", minWidth: 100, flex: isXs ? 1 : "unset" }}
-            onClick={() => {
-            }}
-          >
-            {t("orderRequest.accept")}
-          </Button>
-          <Button
-            variant="outlined"
-            size={isXs ? "medium" : "small"}
-            sx={{ textTransform: "none", minWidth: 100, flex: isXs ? 1 : "unset" }}
-            onClick={() => {
-            }}
-          >
-            {t("orderRequest.reject")}
-          </Button>
-        </Box>
       </Box>
 
       <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13, textAlign: "right", mb: 2 }}>

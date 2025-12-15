@@ -62,6 +62,20 @@ export async function getOrderStatus(orderCode: string): Promise<ApiResponse<Ord
   const resp = await axiosClient.get<ApiResponse<OrderStatusInfo>>(`${BASE}/${encodeURIComponent(orderCode)}/status`);
   return resp.data ?? resp;
 }
+export type CancelOrderRequest = {
+  orderCode: string;
+  cancelReason: string;
+};
+
+export async function cancelOrder(
+  payload: CancelOrderRequest
+): Promise<ApiResponse<void>> {
+  const resp = await axiosClient.post<ApiResponse<void>>(
+    `${BASE}/cancel`,
+    payload
+  );
+  return resp.data ?? resp;
+}
 
 const orderStatusApi = {
   checkOverdue,
@@ -70,6 +84,7 @@ const orderStatusApi = {
   moveToExpiredStorage,
   togglePayment,
   getOrderStatus,
+  cancelOrder,
 };
 
 export default orderStatusApi;

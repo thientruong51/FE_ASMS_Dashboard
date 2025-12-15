@@ -29,6 +29,8 @@ import PaymentOutlinedIcon from "@mui/icons-material/PaymentOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import QrCodeRoundedIcon from "@mui/icons-material/QrCodeRounded";
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
+import ContactCustomerDialog from "../components/ContactCustomerDialog";
+import ContactMailIcon from "@mui/icons-material/ContactMail";
 import orderApi, { type OrderDetailItem } from "@/api/orderApi";
 import { getContainerTypes } from "@/api/containerTypeApi";
 import shelfTypeApi from "@/api/shelfTypeApi";
@@ -142,6 +144,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
   const [loading, setLoading] = useState(false);
   const [details, setDetails] = useState<OrderDetailItem[]>([]);
   const [, setMeta] = useState<{ success?: boolean; message?: string }>({});
+  const [contactOpen, setContactOpen] = useState(false);
 
   const [containerMap, setContainerMap] = useState<Record<number, any>>({});
   const [shelfMap, setShelfMap] = useState<Record<number, any>>({});
@@ -419,6 +422,11 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
             <Tooltip title={t("tabs.orderQr") ?? "Order QR"}>
               <IconButton size="small" color="default" onClick={openOrderQr}>
                 <QrCodeRoundedIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t("actions.contactCustomer") ?? "Contact customer"}>
+              <IconButton size="small" onClick={() => setContactOpen(true)}>
+                <ContactMailIcon />
               </IconButton>
             </Tooltip>
 
@@ -820,7 +828,16 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
 
       {/* Order-level QR dialog */}
       <OrderQrDialog open={orderQrOpen} onClose={closeOrderQr} orderCode={orderCode} />
-
+      <ContactCustomerDialog
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        orderCode={orderCode}
+        customerCode={order.customerCode}
+        customerName={order.customerName}
+        phoneContact={order.phoneContact ?? order.phone}
+        email={order.customerEmail ?? order.email}
+        employeeCode={order.employeeCode}
+      />
       {/* Refund dialog */}
       <Dialog open={refundDialogOpen} onClose={closeRefundDialog}>
         <DialogTitle>{t("actions.refund") ?? "Refund"}</DialogTitle>

@@ -76,7 +76,10 @@
     "copyOrderCode": "Sao chép mã đơn",
     "refund": "Hoàn tiền",
      "confirm": "Xác nhận",
-    "cancel": "Hủy"
+    "cancel": "Hủy",
+    "viewQr": "Xem mã QR",
+    "contactCustomer": "Liên hệ khách hàng"
+    
   },
 
   "table": {
@@ -143,7 +146,8 @@
     "noData": "-",
     "delivered": "Đã vận chuyển xong",
     "completed": "Hoàn thành",
-    "cancelled": "Đã bị hủy"
+     "waiting_refund":"Chờ hoàn tiền",
+  "cancelled":"Đã bị hủy"
   },
 
   "serviceNames": {
@@ -233,7 +237,16 @@
   "order_overdue":"Đơn hàng quá hạn",
   "delivered_to_warehouse/customer":"Đã giao đến Kho/Khách hàng",
   "order_completed":"Đơn hàng đã hoàn tất",
-  "auto_update_overdue_detected":"Đơn hàng quá hạn tự động cập nhật"
+  "auto_update_overdue_detected":"Đơn hàng quá hạn tự động cập nhật",
+  "refunded":"Đã hoàn tiền",
+  "refund_completed":"Hoàn tiền đã hoàn tất",
+  "resume_workflow_after_refund":"Tiếp tục quy trình sau hoàn tiền",
+
+    "order_extended": "Gia hạn đơn hàng",
+    "waiting_refund": "Đang chờ hoàn tiền",
+    "order_cancelled_after_refund": "Hủy đơn sau khi hoàn tiền",
+     "order_cancelled": "Hủy đơn hàng",
+    "auto_update": "Cập nhật tự động"
 },
 "UnPaid":"Chưa thanh toán",
 

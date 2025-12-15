@@ -17,6 +17,7 @@ const statusesList = [
   "Overdue",
   "Retrieved",
   "Completed",
+  "Cancelled"
 ];
 
 const COLORS = [
@@ -32,6 +33,7 @@ const COLORS = [
   "#795548",
   "#9c0202",
   "#6a1b9a",
+  "#000000ff",
 ];
 
 export default function LoadingTrucks() {
@@ -66,6 +68,7 @@ export default function LoadingTrucks() {
     overdue: "overdue",
     "store in expired storage": "store_in_expired_storage",
     completed: "completed",
+    cancelled:"cancelled"
   };
 
   const canonicalStatusKey = (s?: string | null) => {

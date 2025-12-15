@@ -1,4 +1,3 @@
-// src/components/TrackingHistoryDetailDrawer.tsx
 import { useEffect, useMemo, useState } from "react";
 import {
   Drawer,
@@ -187,8 +186,11 @@ export default function TrackingHistoryDetailDrawer({
   const statusRaw = (data?.newStatus ?? data?.oldStatus ?? "") as string;
   const statusNorm = String(statusRaw).toLowerCase().trim();
   const isCompleted = statusNorm === "completed";
-  const overdueAliases = ["overdue", "late", "expired"];
+  const isCancelled = statusNorm === "cancelled";
+  const overdueAliases = ["overdue"];
   const isOverdue = overdueAliases.some((a) => statusNorm === a || statusNorm.includes(a));
+  const isRefunded = statusNorm === "refunded";
+  const isExpired = statusNorm === "expired" || statusNorm.includes("expired");
 
   const toDateISO = (d: Date | null) => {
     if (!d) return null;
@@ -206,11 +208,11 @@ export default function TrackingHistoryDetailDrawer({
         setData((d) =>
           d
             ? {
-                ...d,
-                newStatus: info.status ?? d.newStatus,
-                paymentStatus: info.paymentStatus ?? (d as any).paymentStatus,
-                returnDate: info.returnDate ?? (d as any).returnDate,
-              }
+              ...d,
+              newStatus: info.status ?? d.newStatus,
+              paymentStatus: info.paymentStatus ?? (d as any).paymentStatus,
+              returnDate: info.returnDate ?? (d as any).returnDate,
+            }
             : d
         );
       }
@@ -414,6 +416,41 @@ export default function TrackingHistoryDetailDrawer({
       }
     });
   };
+  const handleCancelOrder = () => {
+    if (!data?.orderCode) {
+      openSnackbar(t("orderCodeMissing"), "error");
+      return;
+    }
+
+    const orderCode = data.orderCode;
+
+    openConfirm(
+      t("cancelOrderConfirmTitle") ?? "Cancel order",
+      t("cancelOrderConfirmMsg", { code: orderCode }) ??
+      `Are you sure you want to cancel order ${orderCode}?`,
+      async () => {
+        const prev = data;
+
+        setData((d) =>
+          d ? { ...d, newStatus: "Cancelled" } : d
+        );
+
+        try {
+          await orderStatusApi.cancelOrder({
+            orderCode,
+            cancelReason: "Refunded / Stored in expired",
+          });
+
+          await refreshOrderStatus(orderCode);
+        } catch (err) {
+          console.error("Cancel order failed:", err);
+          setData(prev);
+          openSnackbar(t("saveFailed"), "error");
+          throw err;
+        }
+      }
+    );
+  };
 
   // Cloudinary (Vite)
   const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME ?? "";
@@ -455,7 +492,6 @@ export default function TrackingHistoryDetailDrawer({
 
   const uploadFilesToCloudinary = async (files: File[]) => Promise.all(files.map((f) => uploadFileToCloudinary(f)));
 
-  // append + dedupe flow
   const handleUploadImages = async () => {
     if (!data?.orderCode) {
       openSnackbar(t("orderCodeMissing"), "error");
@@ -729,37 +765,78 @@ export default function TrackingHistoryDetailDrawer({
             <Box sx={{ mb: 2 }}>
               {!isChild && (
                 <Stack direction="row" spacing={1} alignItems="center">
-                  {isOverdue ? (
+                  {/* OVERDUE */}
+                  {isOverdue && (
                     <>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <DatePicker
-                          label={t("newReturnDateLabel")}
-                          value={extendDate}
-                          onChange={(d: Date | null) => setExtendDate(d)}
-                          slotProps={{ textField: { size: "small" } as any }}
-                        />
-                      </Box>
+                      <DatePicker
+                        label={t("newReturnDateLabel")}
+                        value={extendDate}
+                        onChange={(d: Date | null) => setExtendDate(d)}
+                        slotProps={{ textField: { size: "small" } as any }}
+                      />
 
-                      <Button variant="contained" size="small" onClick={handleExtendOrder} disabled={actionLoading}>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={handleExtendOrder}
+                        disabled={actionLoading}
+                      >
                         {actionLoading ? <CircularProgress size={16} /> : t("extendOrder")}
                       </Button>
 
-                      <Button variant="outlined" size="small" onClick={handleMoveToExpiredStorage} disabled={actionLoading}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={handleMoveToExpiredStorage}
+                        disabled={actionLoading}
+                      >
                         {t("moveToExpired")}
                       </Button>
                     </>
-                  ) : (
-                    <Button variant="contained" size="small" onClick={() => handleUpdateStatus("SomeNewStatus")} disabled={actionLoading || isCompleted}>
-                      {t("updateStatus")}
+                  )}
+
+                  {/* UPDATE STATUS */}
+                  {!isOverdue &&
+                    !isCancelled &&
+                    !isCompleted &&
+                     (
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => handleUpdateStatus("SomeNewStatus")}
+                        disabled={actionLoading}
+                      >
+                        {t("updateStatus")}
+                      </Button>
+                    )}
+
+                  {/* CANCEL ORDER */}
+                  {(isRefunded || isExpired) && (
+                    <Button
+                      variant="contained"
+                      color="error"
+                      size="small"
+                      onClick={handleCancelOrder}
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? <CircularProgress size={16} /> : t("cancelOrder")}
                     </Button>
                   )}
 
-                  <Button variant="outlined" size="small" onClick={openImageDialog} disabled={actionLoading || imgUploading}>
+                  {/* UPDATE IMAGE luôn có */}
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={openImageDialog}
+                    disabled={actionLoading || imgUploading}
+                  >
                     <ImageIcon sx={{ mr: 1 }} />
-                    {t("updateImage") ?? "Update Image"}
+                    {t("updateImage")}
                   </Button>
                 </Stack>
               )}
+
+
             </Box>
           </Box>
 

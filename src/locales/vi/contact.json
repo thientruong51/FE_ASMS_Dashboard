@@ -5,31 +5,48 @@
     "searchPlaceholder": "Tìm kiếm liên hệ",
     "clickToView": "Nhấp để xem"
   },
+
   "tabs": {
     "contact": "Liên hệ",
     "support": "Cần xử lí",
     "processed": "Đã xử lí"
   },
+
   "labels": {
     "contact": "Liên hệ",
     "contactInformation": "Thông tin liên hệ",
+      "orderCode": "Mã đơn hàng",
     "name": "Tên",
     "phone": "Điện thoại",
     "email": "Email",
-    "message": "Nội dung"
+    "message": "Nội dung",
+
+    "images": "Hình ảnh",
+    "noImage": "Chưa có hình ảnh",
+    "initialsFallback": "LH"
   },
+
   "actions": {
     "export": "Xuất",
     "exportCsv": "Xuất CSV",
     "refresh": "Làm mới",
     "view": "Xem",
     "close": "Đóng",
+
     "markProcessed": "Đánh dấu đã xử lí",
-    "reopen": "Đặt lại active"
+    "reopen": "Đặt lại active",
+    "contactCustomer": "Liên hệ khách hàng",
+
+    "updateImages": "Cập nhật hình ảnh",
+    "upload": "Tải ảnh lên",
+    "confirm": "Xác nhận",
+    "cancel": "Huỷ"
   },
+
   "export": {
     "filenamePrefix": "contacts"
   },
+
   "table": {
     "id": "ID",
     "customerCode": "Mã KH",
@@ -38,22 +55,27 @@
     "phone": "Số điện thoại",
     "actions": "Hành động",
     "isActive": "Xử lí",
-    "active":"Chưa xử lí",
-    "inactive":"Đã xử lí"
+    "active": "Chưa xử lí",
+    "inactive": "Đã xử lí"
   },
- 
-  
-  
- 
+
   "messages": {
-    "toggleSuccess": "Cập nhật thành công"
+    "toggleSuccess": "Cập nhật thành công",
+
+    "updateImageSuccess": "Cập nhật hình ảnh thành công"
   },
+
   "errors": {
     "noContactId": "Không có ID liên hệ",
     "apiMissing": "API toggle không khả dụng",
     "fetchDetail": "Lấy chi tiết liên hệ thất bại",
-    "unknown": "Thao tác thất bại"
+    "unknown": "Thao tác thất bại",
+
+    "uploadFailed": "Tải ảnh lên thất bại",
+    "noImageProvided": "Vui lòng chọn ít nhất một hình ảnh",
+    "cloudinaryConfigMissing": "Thiếu cấu hình Cloudinary"
   },
+
   "fields": {
     "contactId": "ID",
     "customerCode": "Mã khách hàng",
@@ -62,5 +84,10 @@
     "employeeName": "Nhân viên",
     "orderCode": "Mã đơn",
     "isActive": "Đang hoạt động"
+  },
+
+  "help": {
+    "contactMessage": "Nhập nội dung liên hệ với khách hàng",
+    "uploadImages": "Chọn hoặc tải lên hình ảnh liên quan"
   }
 }
