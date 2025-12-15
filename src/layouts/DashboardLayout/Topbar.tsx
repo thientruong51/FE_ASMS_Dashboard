@@ -1,4 +1,3 @@
-// src/pages/components/Topbar.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
@@ -26,7 +25,6 @@ import authApi, { clearAuthStorage, getRefreshToken } from "@/api/auth";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
-/* ====================== ROLE TRANSFORM HELPERS ====================== */
 
 const cleanWhitespace = (s?: string | null) =>
   (s ?? "")
@@ -86,7 +84,6 @@ export const translateRoleName = (t: TFunction, raw?: string | null, alt?: strin
   return raw ?? alt ?? key ?? noData;
 };
 
-/* ============================ JWT + UI UTILS ============================ */
 
 function parseJwt(token?: string | null) {
   if (!token) return null;
@@ -109,7 +106,6 @@ function getInitials(name?: string | null) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-/* ======================================================================== */
 
 export default function Topbar() {
   const { t } = useTranslation("topbar");
@@ -123,7 +119,6 @@ export default function Topbar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
-  /* ===== Load employee roles ===== */
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -145,7 +140,6 @@ export default function Topbar() {
     };
   }, []);
 
-  /* ====================== FIXED VERSION OF refreshUserFromToken ====================== */
   const refreshUserFromToken = async () => {
     try {
       const token = localStorage.getItem("accessToken");
@@ -167,21 +161,15 @@ export default function Topbar() {
       const roleId =
         payload.EmployeeRoleId ?? payload.employeeRoleId ?? payload.RoleId ?? null;
 
-      /* ------------------------------------------------------------------
-         ✅ FIXED: Always go through translateRoleName (i18n-based)
-         Even if rolesMap gives "Warehouse Staff", convert → warehouse_staff → i18n
-      ------------------------------------------------------------------ */
+
 
       if (roleId != null && rolesMap[Number(roleId)]) {
-        // Case: backend returns role ID → use rolesMap → normalize → translate
         const raw = rolesMap[Number(roleId)];
         roleName = translateRoleName(t, raw, raw);
       } else {
-        // Case: only string available from payload
         roleName = translateRoleName(t, rawRoleFromToken, rawRoleFromToken);
       }
 
-      // Clean fallback
       if (!roleName || roleName.trim() === "") {
         roleName =
           rawRoleFromToken ??
@@ -208,7 +196,6 @@ export default function Topbar() {
     return () => window.removeEventListener("storage", handler);
   }, []);
 
-  /* ========================== Derived Fields ========================== */
 
   const displayName = useMemo(() => {
     if (!user) return t("userDefault");
@@ -219,7 +206,6 @@ export default function Topbar() {
 
   const initials = getInitials(user?.name ?? user?.username ?? "");
 
-  /* ========================== UI ========================== */
 
   const handleAvatarClick = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);

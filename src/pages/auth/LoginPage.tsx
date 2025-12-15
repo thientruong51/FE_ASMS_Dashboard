@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -110,7 +110,7 @@ export default function LoginPage() {
             sx={{
               width: { sm: 160, md: 220 },
               mb: { sm: 2, md: 3 },
-              mr: {  md: 30 },
+              mr: { md: 30 },
               alignSelf: "center",
             }}
           />
@@ -142,11 +142,18 @@ export default function LoginPage() {
             alignItems: "center",
             justifyContent: "center",
             minHeight: { xs: "auto", sm: 360 },
-            ml:{md:7},
+            ml: { md: 7 },
             bgcolor: "background.paper",
           }}
         >
-          <Box sx={{ width: "100%", maxWidth: 420 }}>
+          <Box
+            component="form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
+            sx={{ width: "100%", maxWidth: 420 }}
+          >
             <Stack spacing={2.5}>
               <Box display="flex" flexDirection="column" gap={0.5}>
                 {/* On mobile show small logo above form */}
@@ -195,9 +202,9 @@ export default function LoginPage() {
               )}
 
               <Button
+                type="submit"
                 fullWidth
                 variant="contained"
-                onClick={handleLogin}
                 disabled={loading}
                 sx={{
                   py: 1.25,
@@ -207,14 +214,18 @@ export default function LoginPage() {
                   ":hover": { bgcolor: "#2E9E7C" },
                 }}
               >
-                {loading ? <CircularProgress size={20} color="inherit" /> : (t("loginButton") ?? "Login")}
+                {loading ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  t("loginButton") ?? "Login"
+                )}
               </Button>
 
               <Box display="flex" justifyContent="space-between" flexWrap="wrap" gap={1}>
                 <Link component="button" variant="body2" onClick={() => navigate("/forgot")}>
                   {t("forgot") ?? "Forgot?"}
                 </Link>
-               
+
               </Box>
 
               <Typography variant="caption" textAlign="center" sx={{ color: "text.secondary", mt: 1 }}>

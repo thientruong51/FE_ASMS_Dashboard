@@ -84,7 +84,13 @@
   "order_overdue":"Order Overdue",
   "delivered_to_warehouse/customer":"Delivered to Warehouse/Customer",
   "order_completed":"Order Completed",
-  "auto_update_overdue_detected":"Auto Update Overdue Detected"
+  "auto_update_overdue_detected":"Auto Update Overdue Detected",
+   "resume_workflow_after_refund": "Resume Workflow After Refund",
+    "refund_completed": "Refund Completed",
+
+    "order_extended": "Order Extended",
+    "waiting_refund": "Waiting Refund",
+    "order_cancelled_after_refund": "Order Cancelled After Refund"
 },
 "updateImage": "Update image",
 "updateImageDialogTitle": "Update tracking images",
@@ -94,6 +100,8 @@
 "noImageProvided": "Please provide at least one image.",
 "updateImageSuccess": "Images updated successfully.",
 "updateImageFailed": "Failed to update images.",
-"uploadingImages": "Uploading images..."
+"uploadingImages": "Uploading images...",
+"cancelOrder": "Cancel order",
+"cancelConfirmTitle": "Confirm order cancellation"
 
 }

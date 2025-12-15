@@ -29,6 +29,7 @@ import PublicRoute from "./PublicRoute";
 
 import ContainerLocationPage from "@/pages/container-location/ContainerLocationPage";
 import OrderScanPage from "@/pages/order-scan/OrderScanPage";
+import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 
 const ALL = [1, 2, 3, 4];
 const ROLE_4 = [4];
@@ -42,6 +43,14 @@ export const router = createBrowserRouter([
       </PublicRoute>
     ),
   },
+  {
+  path: "/forgot",
+  element: (
+    <PublicRoute>
+      <ForgotPasswordPage />
+    </PublicRoute>
+  ),
+},
 
   {
     path: "/container-location",
@@ -78,7 +87,7 @@ export const router = createBrowserRouter([
 
           { path: "customers", element: <ProtectedRoute allowedRoles={[1,4]}><CustomerPage /></ProtectedRoute> },
 
-          { path: "shelfs", element: <ProtectedRoute allowedRoles={[1,4]}><ShelfPage /></ProtectedRoute> },
+          { path: "shelfs", element: <ProtectedRoute allowedRoles={ROLE_4}><ShelfPage /></ProtectedRoute> },
 
           { path: "buildings", element: <ProtectedRoute allowedRoles={ROLE_4}><BuildingPage /></ProtectedRoute> },
 
@@ -92,9 +101,9 @@ export const router = createBrowserRouter([
 
           { path: "product-types", element: <ProtectedRoute allowedRoles={ROLE_4}><ProductTypePage /></ProtectedRoute> },
 
-          { path: "prices", element: <ProtectedRoute allowedRoles={[1,4]}><PricePage /></ProtectedRoute> },
+          { path: "prices", element: <ProtectedRoute allowedRoles={ROLE_4}><PricePage /></ProtectedRoute> },
 
-          { path: "businessRules", element: <ProtectedRoute allowedRoles={[1,4]}><BusinessRulesPage /></ProtectedRoute> },
+          { path: "businessRules", element: <ProtectedRoute allowedRoles={ROLE_4}><BusinessRulesPage /></ProtectedRoute> },
 
           { path: "settings", element: <ProtectedRoute allowedRoles={ALL}><SettingsPage /></ProtectedRoute> },
         ],

@@ -67,7 +67,10 @@
   "delivered":"Đã vận chuyển xong",
   "completed":"Hoàn thành",
   "order_completed":"Đơn hàng đã hoàn tất",
-  "auto_update_overdue_detected":"Đơn hàng quá hạn tự động cập nhật"
+  "auto_update_overdue_detected":"Đơn hàng quá hạn tự động cập nhật",
+  "refunded":"Đã hoàn tiền",
+  "waiting_refund":"Chờ hoàn tiền",
+  "cancelled":"Đã bị hủy"
 },
 "actionTypeNames": {
   "order_retrieved": "Đơn đã nhận lại",
@@ -84,7 +87,14 @@
   "order_overdue":"Đơn hàng quá hạn",
   "delivered_to_warehouse/customer":"Đã giao đến Kho/Khách hàng",
   "order_completed":"Đơn hàng đã hoàn tất",
-  "auto_update_overdue_detected":"Đơn hàng quá hạn tự động cập nhật"
+  "auto_update_overdue_detected":"Đơn hàng quá hạn tự động cập nhật",
+  "refund_completed":"Hoàn tiền đã hoàn tất",
+  "resume_workflow_after_refund":"Tiếp tục quy trình sau hoàn tiền",
+  "order_extended": "Gia hạn đơn hàng",
+  "waiting_refund": "Đang chờ hoàn tiền",
+  "order_cancelled_after_refund": "Hủy đơn sau khi hoàn tiền",
+   "order_cancelled": "Hủy đơn hàng",
+    "auto_update": "Cập nhật tự động"
 },
 "updateImage": "Cập nhật hình",
 "updateImageDialogTitle": "Cập nhật hình cho đơn",
@@ -95,7 +105,9 @@
 "updateImageSuccess": "Cập nhật hình thành công.",
 "updateImageFailed": "Cập nhật hình thất bại.",
 "uploadingImages": "Đang tải ảnh...",
-"noFileChosen": "Chưa chọn file"
+"noFileChosen": "Chưa chọn file",
+"cancelOrder": "Hủy đơn",
+"cancelConfirmTitle": "Xác nhận hủy đơn"
 
 
   

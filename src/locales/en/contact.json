@@ -1,62 +1,90 @@
 {
   "page": {
     "title": "Contacts",
-    "subtitle": "Manage incoming contacts / support requests",
+    "subtitle": "Manage contact and support requests",
     "searchPlaceholder": "Search contacts",
     "clickToView": "Click to view"
   },
+
   "tabs": {
     "contact": "Contact",
-    "support": "To handle",
+    "support": "To process",
     "processed": "Processed"
   },
+
   "labels": {
     "contact": "Contact",
     "contactInformation": "Contact information",
     "name": "Name",
     "phone": "Phone",
     "email": "Email",
-    "message": "Message"
+    "message": "Message",
+"orderCode": "Order code",
+    "images": "Images",
+    "noImage": "No images",
+    "initialsFallback": "CT"
   },
+
   "actions": {
     "export": "Export",
     "exportCsv": "Export CSV",
     "refresh": "Refresh",
     "view": "View",
     "close": "Close",
+
     "markProcessed": "Mark as processed",
-    "reopen": "Reopen"
+    "reopen": "Reopen",
+"contactCustomer": "Contact Customer",
+    "updateImages": "Update images",
+    "upload": "Upload images",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
   },
+
   "export": {
     "filenamePrefix": "contacts"
   },
+
   "table": {
     "id": "ID",
-    "customerCode": "Customer Code",
+    "customerCode": "Customer code",
     "customerName": "Customer",
-    "orderCode": "Order",
+    "orderCode": "Order code",
     "phone": "Phone",
     "actions": "Actions",
-    "isActive": "Active",
-    "active":"Unprocessed",
-     "inactive":"Processed"
+    "isActive": "Status",
+    "active": "Pending",
+    "inactive": "Processed"
   },
+
   "messages": {
-    "toggleSuccess": "Updated successfully"
+    "toggleSuccess": "Updated successfully",
+    "updateImageSuccess": "Images updated successfully"
   },
+
   "errors": {
-    "noContactId": "No contact id",
-    "apiMissing": "Toggle API not available",
+    "noContactId": "Contact ID not found",
+    "apiMissing": "Toggle API is not available",
     "fetchDetail": "Failed to fetch contact detail",
-    "unknown": "Operation failed"
+    "unknown": "Operation failed",
+
+    "uploadFailed": "Image upload failed",
+    "noImageProvided": "Please select at least one image",
+    "cloudinaryConfigMissing": "Cloudinary configuration is missing"
   },
+
   "fields": {
     "contactId": "ID",
-    "customerCode": "Customer Code",
+    "customerCode": "Customer code",
     "customerName": "Customer",
-    "employeeCode": "Employee Code",
+    "employeeCode": "Employee code",
     "employeeName": "Employee",
-    "orderCode": "Order Code",
+    "orderCode": "Order code",
     "isActive": "Active"
+  },
+
+  "help": {
+    "contactMessage": "Enter message to contact the customer",
+    "uploadImages": "Select or upload related images"
   }
 }

@@ -71,12 +71,12 @@ export default function Sidebar() {
     { label: t("services"), icon: <BallotIcon />, to: "/services", allowedRoles: [1,4] },
     { label: t("buildings"), icon: <ApartmentIcon />, to: "/buildings", allowedRoles: [4] },
     { label: t("storageTypes"), icon: <WarehouseIcon />, to: "/storage-types", allowedRoles: [4] },
-    { label: t("shelfsTypes"), icon: <ShelvesIcon />, to: "/shelfs", allowedRoles: [1,4] },
+    { label: t("shelfsTypes"), icon: <ShelvesIcon />, to: "/shelfs", allowedRoles: [4] },
     { label: t("containers"), icon: <AllInboxIcon />, to: "/containers", allowedRoles: [4] },
     { label: t("containerTypes"), icon: <WidgetsIcon />, to: "/container-types", allowedRoles: [4] },
     { label: t("productTypes"), icon: <LiquorIcon />, to: "/product-types", allowedRoles: [4] },
-    { label: t("prices"), icon: <PriceChangeIcon />, to: "/prices", allowedRoles: [1,4] },
-    { label: t("businessRules"), icon: <AnnouncementIcon />, to: "/businessRules", allowedRoles: [1,4] },
+    { label: t("prices"), icon: <PriceChangeIcon />, to: "/prices", allowedRoles: [4] },
+    { label: t("businessRules"), icon: <AnnouncementIcon />, to: "/businessRules", allowedRoles: [4] },
     { label: t("settings"), icon: <SettingsIcon />, to: "/settings", allowedRoles: ALL },
   ];
 
