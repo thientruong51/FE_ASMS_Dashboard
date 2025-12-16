@@ -3,7 +3,7 @@ import { RouterProvider } from "react-router-dom";
 import { theme } from "@/theme";
 import { router } from "@/routes";
 import { useAutoUIMode } from "@/hooks/useAutoUIMode";
-
+import AppBootstrap from "@/app/AppBootstrap";
 import { Provider } from "react-redux";
 import { store } from "@/app/store";
 
@@ -14,6 +14,7 @@ export default function App() {
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <AppBootstrap />
         <RouterProvider router={router} />
       </ThemeProvider>
     </Provider>

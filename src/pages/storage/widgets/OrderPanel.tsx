@@ -20,7 +20,8 @@ import ViewListOutlinedIcon from "@mui/icons-material/ViewListOutlined";
 import DragIndicatorOutlinedIcon from "@mui/icons-material/DragIndicatorOutlined";
 import { useEffect, useState, useCallback } from "react";
 import Drawer from "@mui/material/Drawer";
-
+import { useDispatch } from "react-redux";
+import { setPendingStorageCount } from "@/features/storage/storageSlice";
 import { getOrders, getOrderDetails } from "@/api/orderApi";
 import { getProductTypes } from "@/api/productTypeApi";
 import { getServices } from "@/api/serviceApi";
@@ -39,6 +40,7 @@ import containerLocationLogApi from "@/api/containerLocationLogApi";
 import TrackingLogDialog from "./TrackingLogDialog";
 
 export default function OrderPanel() {
+  const dispatch = useDispatch();
   const { t } = useTranslation(["storagePage", "statusNames"]);
   const theme = useTheme();
 
@@ -59,7 +61,11 @@ export default function OrderPanel() {
   const [trackingDialogData, setTrackingDialogData] = useState<any[] | null>(
     null
   );
+  const [containerDialogOpen, setContainerDialogOpen] = useState(false);
+  const [containerDialogData, setContainerDialogData] = useState<any | null>(null);
 
+  const [orderDetailDialogOpen, setOrderDetailDialogOpen] = useState(false);
+  const [orderDetailDialogData, setOrderDetailDialogData] = useState<any | null>(null);
   const loadAllDetailsForFullOrders = useCallback(
     async () => {
       setLoading(true);
@@ -189,6 +195,21 @@ export default function OrderPanel() {
   useEffect(() => {
     loadAllDetailsForFullOrders();
   }, [loadAllDetailsForFullOrders]);
+  useEffect(() => {
+    if (open || orderDetailDialogOpen || containerDialogOpen || trackingDialogOpen) return;
+
+    const interval = setInterval(() => {
+      loadAllDetailsForFullOrders();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [
+    loadAllDetailsForFullOrders,
+    open,
+    orderDetailDialogOpen,
+    containerDialogOpen,
+    trackingDialogOpen,
+  ]);
 
   const handleOpenDetail = (detail: any) => {
     setSelectedDetail(detail);
@@ -208,6 +229,10 @@ export default function OrderPanel() {
         d.serviceIds.join(",").toLowerCase().includes(q))
     );
   });
+  useEffect(() => {
+    dispatch(setPendingStorageCount(details.length));
+  }, [details.length, dispatch]);
+
 
   const extractOrderDetailFromResp = (resp: any) => {
     if (!resp && resp !== 0) return null;
@@ -223,14 +248,7 @@ export default function OrderPanel() {
   };
 
   const [searchLoading, setSearchLoading] = useState(false);
-  const [containerDialogOpen, setContainerDialogOpen] = useState(false);
-  const [containerDialogData, setContainerDialogData] = useState<
-    any | null
-  >(null);
-  const [orderDetailDialogOpen, setOrderDetailDialogOpen] = useState(false);
-  const [orderDetailDialogData, setOrderDetailDialogData] = useState<
-    any | null
-  >(null);
+
 
   const handleSearch = async () => {
     const qRaw = (search ?? "").trim();

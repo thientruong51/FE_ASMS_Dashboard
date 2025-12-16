@@ -9,11 +9,8 @@ import {
   MenuItem,
   ListItemIcon,
   Divider,
-  Tooltip,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import AddIcon from "@mui/icons-material/Add";
-import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -255,8 +252,6 @@ export default function Topbar() {
 
       {/* RIGHT */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-        <Tooltip title={t("add")}><IconButton><AddIcon /></IconButton></Tooltip>
-        <Tooltip title={t("notifications")}><IconButton><NotificationsNoneIcon /></IconButton></Tooltip>
 
         {/* USER AVATAR */}
         {isMobile ? (

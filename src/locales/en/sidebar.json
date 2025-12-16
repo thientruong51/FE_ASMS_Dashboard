@@ -16,5 +16,7 @@
   "productTypes": "Product Types",
   "settings": "Settings",
   "prices":"Prices",
-  "businessRules":"Business Rules"
+  "businessRules":"Business Rules",
+  "buildingUsages": "Building Usages",
+  "containers":"Containers"
 }

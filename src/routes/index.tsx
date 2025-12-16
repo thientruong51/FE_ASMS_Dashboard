@@ -30,6 +30,7 @@ import PublicRoute from "./PublicRoute";
 import ContainerLocationPage from "@/pages/container-location/ContainerLocationPage";
 import OrderScanPage from "@/pages/order-scan/OrderScanPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
+import BuildingUsagePage from "@/pages/buildingUsage/BuildingUsagePage";
 
 const ALL = [1, 2, 3, 4];
 const ROLE_4 = [4];
@@ -70,6 +71,7 @@ export const router = createBrowserRouter([
         element: <DashboardLayout />,
         children: [
           { index: true, element: <ProtectedRoute allowedRoles={ALL}><DashboardPage /></ProtectedRoute> },
+          { path: "buildingUsages", element: <ProtectedRoute allowedRoles={[1,2,4]}><BuildingUsagePage /></ProtectedRoute> },
 
           { path: "orders", element: <ProtectedRoute allowedRoles={ALL}><OrderPage /></ProtectedRoute> },
 
