@@ -25,7 +25,8 @@ import * as trackingApi from "@/api/trackingHistoryApi";
 import TrackingHistoryDetailDrawer from "./components/TrackingHistoryDetailDrawer";
 import { useTranslation } from "react-i18next";
 import { getAuthClaimsFromStorage } from "@/utils/auth";
-
+import { useDispatch } from "react-redux";
+import { setPendingTrackingCount } from "@/features/tracking/trackingSlice";
 import {
   translateStatus,
   translateActionType,
@@ -42,6 +43,7 @@ function ToolbarExtras({ onExport, onRefresh }: { onExport: () => void; onRefres
 }
 
 export default function TrackingHistoryPage() {
+  const dispatch = useDispatch();
   const { t } = useTranslation("trackingHistoryPage");
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down("sm"));
@@ -93,6 +95,12 @@ export default function TrackingHistoryPage() {
       }
 
       setItems(data);
+      const pendingCount = data.filter((it: any) => {
+        const status = String(it.newStatus ?? "").toLowerCase();
+        return status !== "completed" && status !== "cancelled";
+      }).length;
+
+      dispatch(setPendingTrackingCount(pendingCount));
     } catch (err) {
       console.error("getTrackingHistories failed", err);
       setItems([]);
@@ -103,6 +111,17 @@ export default function TrackingHistoryPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  useEffect(() => {
+    if (drawerOpen) return;
+
+    const interval = setInterval(() => {
+      fetchAll();
+    }, 5000); // 5 giây
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [fetchAll, drawerOpen]);
   const openDrawerFor = (row: trackingApi.TrackingHistoryItem) => {
     if (!row) return;
     setSelectedId(row.trackingHistoryId);
@@ -363,7 +382,7 @@ export default function TrackingHistoryPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `tracking_history_latest_per_order_${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = `tracking_history_latest_per_order_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

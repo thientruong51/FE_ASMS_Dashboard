@@ -1,11 +1,16 @@
 import { configureStore } from "@reduxjs/toolkit";
 import uiReducer from "@/features/ui/uiSlice";
 import ordersReducer from "@/features/orders/ordersSlice";
-
+import contactReducer from "../features/contact/contactSlice";
+import trackingReducer from "@/features/tracking/trackingSlice";
+import storageReducer from "@/features/storage/storageSlice";
 export const store = configureStore({
   reducer: {
     ui: uiReducer,
-    orders: ordersReducer,
+    order: ordersReducer,
+    contact: contactReducer,
+    tracking: trackingReducer,
+    storage: storageReducer,
   },
 });
 

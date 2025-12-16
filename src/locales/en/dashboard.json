@@ -156,6 +156,97 @@
     "order_extended": "Order Extended",
     "waiting_refund": "Waiting Refund",
     "order_cancelled_after_refund": "Order Cancelled After Refund"
+},
+ "page": {
+    "buildingUsage": "Building Usage",
+    "buildingUsageSubtitle": "Overview of warehouse and self-storage usage"
+  },
+
+  "table": {
+    "building": "Building",
+    "type": "Type",
+    "total": "Total",
+    "used": "Used",
+    "available": "Available",
+    "percentUsed": "% Used",
+    "details": "Details",
+    "noDetails": "None",
+    "actions": "Actions",
+    "rooms": "rooms"
+  },
+
+  "summary": {
+    "buildings": "Buildings",
+    "storages": "Storages",
+    "usedVolume": "Used volume",
+    "totalVolume": "Total volume",
+    "percentUsed": "% Used"
+  },
+
+  "actions": {
+    "view": "View",
+    "refresh": "Refresh"
+  },
+
+  "buildingTypeMap": {
+    "Self-Storage": "Self-Storage",
+    "WareHouse": "Warehouse",
+    "Self-Storage With AC": "Self Storage (AC)",
+    "WareHouse Expired": "Expired Warehouse",
+    "WareHouse Oversized": "Oversized Warehouse",
+    "WareHouse With AC": "Warehouse (AC)"
+  },
+
+  "storageTypeMap": {
+    "Small": "Small",
+    "Medium": "Medium",
+    "Large": "Large",
+    "SmallAC": "Small (AC)",
+    "MediumAC": "Medium (AC)",
+    "LargeAC": "Large (AC)",
+    "WareHouse": "Warehouse",
+    "WareHouseAC": "Warehouse (AC)",
+    "WarehouseOversize": "Oversized Warehouse",
+    "WarehouseExpired": "Expired Warehouse"
+  },
+
+  "units": {
+    "rooms": "rooms",
+    "volume": "m³"
+  },
+  "drawer": {
+    "type": "Type",
+    "percentUsed": "% Used",
+    "occupiedRooms": "Occupied rooms",
+    "totalRooms": "Total rooms",
+    "usedVolume": "Used volume",
+    "totalVolume": "Total volume",
+    "storageTypeDetails": "Storage type details"
+  },
+  "storageTypeNames": {
+
+"small": "Small",
+
+"medium": "Medium",
+
+"large": "Large",
+
+"small_ac": "Small (Air-conditioned)",
+
+"medium_ac": "Medium (Air-conditioned)",
+
+"large_ac": "Large (Air-conditioned)",
+
+"warehouse": "Service warehouse",
+
+"warehouse_ac": "Service warehouse (Air-conditioned)",
+
+"warehouse_expired": "Expired warehouse",
+
+"warehouse_oversize": "Oversized warehouse",
+
+"noData": "-"
+
 }
 
   

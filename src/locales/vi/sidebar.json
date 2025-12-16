@@ -16,5 +16,7 @@
   "productTypes": "Loại sản phẩm",
   "settings": "Cài đặt",
   "prices":"Giá",
-  "businessRules":"Quy tắc kinh doanh"
+  "businessRules":"Quy tắc kinh doanh",
+  "buildingUsages": "Tình trạng sử dụng kho",
+  "containers":"Thùng chứa"
 }

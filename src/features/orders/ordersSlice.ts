@@ -1,28 +1,29 @@
-import { createSlice } from "@reduxjs/toolkit";
-import type { PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-interface OrderState {
-  list: any[];
-  loading: boolean;
-}
-
-const initialState: OrderState = {
-  list: [],
-  loading: false,
+type OrderState = {
+  pendingCount: number;
 };
 
-const ordersSlice = createSlice({
-  name: "orders",
+const initialState: OrderState = {
+  pendingCount: 0,
+};
+
+const orderSlice = createSlice({
+  name: "order",
   initialState,
   reducers: {
-    setOrders: (state, action: PayloadAction<any[]>) => {
-      state.list = action.payload;
+    setPendingOrderCount(state, action: PayloadAction<number>) {
+      state.pendingCount = action.payload;
     },
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.loading = action.payload;
+    clearPendingOrderCount(state) {
+      state.pendingCount = 0;
     },
   },
 });
 
-export const { setOrders, setLoading } = ordersSlice.actions;
-export default ordersSlice.reducer;
+export const {
+  setPendingOrderCount,
+  clearPendingOrderCount,
+} = orderSlice.actions;
+
+export default orderSlice.reducer;

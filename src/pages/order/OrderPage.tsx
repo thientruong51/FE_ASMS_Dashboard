@@ -24,7 +24,8 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import orderApi, { type OrderRespItem } from "@/api/orderApi";
 import OrderDetailDrawer from "./components/OrderDetailDrawer";
 import { useTranslation } from "react-i18next";
-
+import { useDispatch } from "react-redux";
+import { setPendingOrderCount } from "@/features/orders/ordersSlice";
 import { translateStatus, translatePaymentStatus, translateStyle } from "@/utils/translationHelpers";
 
 function ToolbarExtras({
@@ -51,6 +52,7 @@ function ToolbarExtras({
 }
 
 export default function OrderPage() {
+  const dispatch = useDispatch();
   const { t } = useTranslation("order");
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down("sm"));
@@ -74,6 +76,11 @@ export default function OrderPage() {
       const resp = await orderApi.getOrders({ page: 1, pageSize: 1000, q: search, paymentStatus: filterPayment });
       const list = resp?.data ?? [];
       setOrders(list);
+      const pendingCount = (list ?? []).filter(
+  (o) => String(o.status).toLowerCase() !== "completed"
+).length;
+
+dispatch(setPendingOrderCount(pendingCount));
     } catch (err) {
       console.error("getOrders failed", err);
       setOrders([]);
@@ -85,6 +92,18 @@ export default function OrderPage() {
   useEffect(() => {
     fetchAllOrders();
   }, []);
+  
+  useEffect(() => {
+  if (drawerOpen) return;
+
+  const interval = setInterval(() => {
+    fetchAllOrders();
+  }, 5000);
+
+  return () => {
+    clearInterval(interval);
+  };
+}, [search, filterPayment, drawerOpen]);
 
   const looksLikeFullOrder = (o: any) => {
     if (!o) return false;
