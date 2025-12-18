@@ -22,7 +22,9 @@
 "orderCode": "Order code",
     "images": "Images",
     "noImage": "No images",
-    "initialsFallback": "CT"
+    "initialsFallback": "CT",
+      "contactDate": "Contact date",
+    "retrievedDate": "Retrieved date"
   },
 
   "actions": {
@@ -54,7 +56,9 @@
     "actions": "Actions",
     "isActive": "Status",
     "active": "Pending",
-    "inactive": "Processed"
+    "inactive": "Processed",
+     "contactDate": "Contact date",
+    "retrievedDate": "Retrieved date"
   },
 
   "messages": {

@@ -23,7 +23,9 @@
 
     "images": "Hình ảnh",
     "noImage": "Chưa có hình ảnh",
-    "initialsFallback": "LH"
+    "initialsFallback": "LH",
+     "contactDate": "Ngày liên hệ",
+    "retrievedDate": "Ngày lấy hàng"
   },
 
   "actions": {
@@ -56,7 +58,9 @@
     "actions": "Hành động",
     "isActive": "Xử lí",
     "active": "Chưa xử lí",
-    "inactive": "Đã xử lí"
+    "inactive": "Đã xử lí",
+     "contactDate": "Ngày liên hệ",
+    "retrievedDate": "Ngày lấy hàng"
   },
 
   "messages": {
