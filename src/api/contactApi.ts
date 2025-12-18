@@ -1,8 +1,6 @@
 import axiosClient from "./axiosClient";
 
-/* =========================
- * Types
- * ========================= */
+
 
 export type ContactItem = {
   contactId?: number;
@@ -23,9 +21,9 @@ export type ContactItem = {
 
   isActive?: boolean | null;
 
-  /** NEW */
   image?: string[] | null;
-
+  contactDate: string | null;    
+  retrievedDate: string | null;
   [key: string]: any;
 };
 
@@ -39,9 +37,7 @@ export type ContactListResponse = {
   pagination?: any;
 };
 
-/* =========================
- * CRUD APIs
- * ========================= */
+
 
 export async function getContacts(
   params?: Record<string, any>
@@ -98,9 +94,7 @@ export async function toggleActive(
   return resp.data;
 }
 
-/* =========================
- * NEW: create with email
- * ========================= */
+
 
 export async function createContactWithEmail(
   payload: Partial<ContactItem>

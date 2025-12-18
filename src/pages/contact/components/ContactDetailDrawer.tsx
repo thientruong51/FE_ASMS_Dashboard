@@ -40,6 +40,23 @@ function a11yProps(index: number) {
 function fallbackLabelFromKey(k: string) {
   return k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
 }
+function formatDate(
+  iso?: string | null,
+  lang?: string
+): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+
+  return new Intl.DateTimeFormat(
+    lang?.startsWith("vi") ? "vi-VN" : "en-US",
+    {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }
+  ).format(d);
+}
 
 export default function ContactDetailDrawer({
   contact: contactProp,
@@ -131,9 +148,9 @@ export default function ContactDetailDrawer({
     } catch (err: any) {
       setSnackMsg(
         err?.response?.data?.message ??
-          err?.message ??
-          t("errors.unknown") ??
-          "Operation failed"
+        err?.message ??
+        t("errors.unknown") ??
+        "Operation failed"
       );
       setSnackSeverity("error");
       setSnackOpen(true);
@@ -223,6 +240,21 @@ export default function ContactDetailDrawer({
                       value={contact.message}
                     />
                   )}
+                  {/* CONTACT DATE */}
+                  {has(contact?.contactDate) && (
+                    <Field
+                      label={t("labels.contactDate", "Ngày liên hệ")}
+                      value={formatDate(contact.contactDate)}
+                    />
+                  )}
+
+                  {/* RETRIEVED DATE */}
+                  {has(contact?.retrievedDate) && (
+                    <Field
+                      label={t("labels.retrievedDate", "Ngày lấy hàng")}
+                      value={formatDate(contact.retrievedDate)}
+                    />
+                  )}
 
                   {/* IMAGE GALLERY */}
                   <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
@@ -288,6 +320,8 @@ export default function ContactDetailDrawer({
                             "email",
                             "message",
                             "image",
+                            "contactDate",
+                            "retrievedDate",
                           ].includes(k)
                       )
                       .map((k) => {

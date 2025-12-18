@@ -21,7 +21,6 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import {
   DataGrid,
   type GridColDef,
-  type GridRenderCellParams,
   type GridRowParams,
 } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
@@ -71,7 +70,6 @@ export default function ContactPage() {
   const dispatch = useDispatch();
 
   const theme = useTheme();
-  // ❗ CHỈ xs + sm
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const [contacts, setContacts] = useState<any[]>([]);
@@ -133,7 +131,11 @@ export default function ContactPage() {
   );
 
   const currentList =
-    tabIndex === 0 ? contactsWithoutOrder : tabIndex === 1 ? contactsWithOrder : contactsProcessed;
+    tabIndex === 0
+      ? contactsWithoutOrder
+      : tabIndex === 1
+        ? contactsWithOrder
+        : contactsProcessed;
 
   /* ======================
      Rows
@@ -163,41 +165,64 @@ export default function ContactPage() {
   };
 
   /* ======================
-     DESKTOP columns (100% code cũ)
+     DESKTOP columns
   ====================== */
   const desktopColumns: GridColDef<any>[] = [
-    { field: "contactId", headerName: t("table.id") ?? "ID", minWidth: 90, flex: 0.5 },
-    { field: "customerCode", headerName: t("table.customerCode") ?? "Customer", minWidth: 140, flex: 1 },
-    { field: "customerName", headerName: t("table.customerName") ?? "Name", minWidth: 160, flex: 1.2 },
-    { field: "orderCode", headerName: t("table.orderCode") ?? "Order", minWidth: 150, flex: 1 },
-    { field: "phoneContact", headerName: t("table.phone") ?? "Phone", minWidth: 140, flex: 1 },
-    {
-      field: "isActive",
-      headerName: t("table.isActive") ?? "Active",
-      minWidth: 120,
-      flex: 0.6,
-      renderCell: (params: GridRenderCellParams<any>) =>
-        params.row?.isActive === false ? (
-          <Chip size="small" label={t("table.inactive") ?? "No"} />
-        ) : (
-          <Chip size="small" color="success" label={t("table.active") ?? "Yes"} />
-        ),
-    },
-    {
-      field: "actions",
-      headerName: t("table.actions") ?? "Actions",
-      width: 120,
-      sortable: false,
-      renderCell: (params: GridRenderCellParams<any>) => (
-        <IconButton size="small" onClick={() => openDrawerFor(params.row)}>
-          <VisibilityIcon fontSize="small" />
-        </IconButton>
+  { field: "contactId", headerName: t("table.id") ?? "ID", minWidth: 90, flex: 0.5 },
+
+  { field: "customerCode", headerName: t("table.customerCode") ?? "Customer", minWidth: 140, flex: 1 },
+
+  { field: "customerName", headerName: t("table.customerName") ?? "Name", minWidth: 160, flex: 1.2 },
+
+  { field: "orderCode", headerName: t("table.orderCode") ?? "Order", minWidth: 150, flex: 1 },
+
+  { field: "phoneContact", headerName: t("table.phone") ?? "Phone", minWidth: 140, flex: 1 },
+
+  {
+    field: "contactDate",
+    headerName: t("table.contactDate") ?? "Contact date",
+    minWidth: 140,
+    flex: 1,
+    valueGetter: (_value, row) => row?.contactDate ?? "—",
+  },
+
+  {
+    field: "retrievedDate",
+    headerName: t("table.retrievedDate") ?? "Retrieved date",
+    minWidth: 140,
+    flex: 1,
+    valueGetter: (_value, row) => row?.retrievedDate ?? "—",
+  },
+
+  {
+    field: "isActive",
+    headerName: t("table.isActive") ?? "Active",
+    minWidth: 120,
+    flex: 0.6,
+    renderCell: (params) =>
+      params.row?.isActive === false ? (
+        <Chip size="small" label={t("table.inactive") ?? "No"} />
+      ) : (
+        <Chip size="small" color="success" label={t("table.active") ?? "Yes"} />
       ),
-    },
-  ];
+  },
+
+  {
+    field: "actions",
+    headerName: t("table.actions") ?? "Actions",
+    width: 120,
+    sortable: false,
+    renderCell: (params) => (
+      <IconButton size="small" onClick={() => openDrawerFor(params.row)}>
+        <VisibilityIcon fontSize="small" />
+      </IconButton>
+    ),
+  },
+];
+
 
   /* ======================
-     MOBILE columns (xs / sm)
+     MOBILE columns
   ====================== */
   const mobileColumns: GridColDef<any>[] = [
     {
@@ -238,6 +263,8 @@ export default function ContactPage() {
       "orderCode",
       "phoneContact",
       "email",
+      "contactDate",
+      "retrievedDate",
       "message",
       "isActive",
     ];

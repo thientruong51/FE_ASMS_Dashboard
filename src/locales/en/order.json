@@ -77,7 +77,9 @@
      "refund": "Refund",
       "confirm": "Confirm",
     "cancel": "Cancel",
-    "contactCustomer": "Contact Customer"
+    "contactCustomer": "Contact Customer",
+    "remove": "Remove",
+    "viewQr": "View QR"
   },
 
   "table": {
