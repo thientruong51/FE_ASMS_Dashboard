@@ -137,7 +137,10 @@
     "applyConfirmBody_plural": "Are you sure you want to apply updates to {{count}} container(s)?",
     "confirmApply": "Yes, apply",
     "containersTitle": "Containers (Floor {{floor}})",
-    "noContainers": "No containers."
+    "noContainers": "No containers.",
+    "loadingContainers": "Loading containers...",
+    "failedLoadContainers": "Failed to load containers",
+    "removeSuccess": "Container removed successfully"
   },
   "common": {
     "yes": "Yes",
@@ -339,5 +342,10 @@
   },
   "width": "Width",
 "length": "Length",
-"height": "Height"
+"height": "Height",
+ "confirmTakeOut": "Confirm take out",
+  "confirmTakeOutMessage": "Are you sure you want to take out this container?",
+  "containerIsDamaged": "Container is damaged",
+  "confirm": "Confirm",
+  "cancel": "Cancel"
 }

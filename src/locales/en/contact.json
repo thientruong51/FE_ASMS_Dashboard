@@ -100,5 +100,9 @@
     "damage_report": "Damage report",
     "refund": "Refund",
     "request_to_retrieve": "Request to retrieve"
+  },
+  "filters": {
+    "contactType": "Contact type",
+    "all": "All"
   }
 }

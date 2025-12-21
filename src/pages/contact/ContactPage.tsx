@@ -13,6 +13,7 @@ import {
   Chip,
   useTheme,
   useMediaQuery,
+  MenuItem,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -93,7 +94,12 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [tabIndex, setTabIndex] = useState(0);
-
+const [contactTypeFilter, setContactTypeFilter] = useState<string>("all");
+const CONTACT_TYPES = [
+  { value: "damage report" },
+  { value: "refund" },
+  { value: "request to retrieve" },
+];
   const [selectedContact, setSelectedContact] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -151,24 +157,39 @@ export default function ContactPage() {
         : contactsProcessed;
 
 
-  const rows = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return currentList
-      .filter((c) => {
-        if (!q) return true;
-        return (
+const rows = useMemo(() => {
+  const q = search.trim().toLowerCase();
+
+  return currentList
+    .filter((c) => {
+      // 🔎 Search
+      if (q) {
+        const matched =
           String(c.customerCode ?? "").toLowerCase().includes(q) ||
           String(c.customerName ?? "").toLowerCase().includes(q) ||
           String(c.orderCode ?? "").toLowerCase().includes(q) ||
-          String(c.phoneContact ?? "").toLowerCase().includes(q)
-        );
-      })
-      .map((r) => ({
-        id: r.contactId ?? r.id,
-        __full: r,
-        ...r,
-      }));
-  }, [currentList, search]);
+          String(c.phoneContact ?? "").toLowerCase().includes(q);
+
+        if (!matched) return false;
+      }
+
+      // 🏷 contactType filter
+      if (
+        contactTypeFilter !== "all" &&
+        c.contactType !== contactTypeFilter
+      ) {
+        return false;
+      }
+
+      return true;
+    })
+    .map((r) => ({
+      id: r.contactId ?? r.id,
+      __full: r,
+      ...r,
+    }));
+}, [currentList, search, contactTypeFilter]);
+
 
   const openDrawerFor = (row: any) => {
     setSelectedContact(row.__full ?? row);
@@ -421,6 +442,25 @@ export default function ContactPage() {
                 ),
               }}
             />
+            <TextField
+  size="small"
+  select
+  value={contactTypeFilter}
+  onChange={(e) => setContactTypeFilter(e.target.value)}
+  sx={{ minWidth: 200 }}
+  label={t("filters.contactType")}
+>
+  <MenuItem value="all">
+    {t("filters.all")}
+  </MenuItem>
+
+  {CONTACT_TYPES.map((ct) => (
+    <MenuItem key={ct.value} value={ct.value}>
+      {getContactTypeLabel(t, ct.value)}
+    </MenuItem>
+  ))}
+</TextField>
+
             <Button startIcon={<DownloadIcon />} onClick={handleExportCsv}>
               {t("actions.export")}
             </Button>

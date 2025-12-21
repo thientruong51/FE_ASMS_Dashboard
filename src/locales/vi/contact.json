@@ -104,5 +104,9 @@
     "damage_report": "Báo hỏng",
     "refund": "Hoàn tiền",
     "request_to_retrieve": "Yêu cầu lấy hàng"
+  },
+   "filters": {
+    "contactType": "Loại liên hệ",
+    "all": "Tất cả"
   }
 }

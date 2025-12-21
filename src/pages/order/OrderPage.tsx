@@ -14,6 +14,8 @@ import {
   Chip,
   Tooltip,
   CircularProgress,
+  Alert,
+  Snackbar,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -27,6 +29,12 @@ import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
 import { setPendingOrderCount } from "@/features/orders/ordersSlice";
 import { translateStatus, translatePaymentStatus, translateStyle } from "@/utils/translationHelpers";
+import orderDetailApi from "@/api/orderDetailApi";
+import { getContainer as apiGetContainer } from "@/api/containerApi";
+import containerLocationLogApi from "@/api/containerLocationLogApi";
+import TrackingLogDialog from "../storage/widgets/TrackingLogDialog";
+import ContainerDetailDialog from "../storage/widgets/ContainerDetailDialog";
+
 
 function ToolbarExtras({
   onExport,
@@ -69,6 +77,20 @@ export default function OrderPage() {
   const [orderLoading, setOrderLoading] = useState(false);
 
   const [density, setDensity] = useState<"compact" | "standard" | "comfortable">("standard");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [snackOpen, setSnackOpen] = useState(false);
+  const [snackMsg, setSnackMsg] = useState("");
+  const [snackSeverity, setSnackSeverity] = useState<
+    "success" | "error" | "info" | "warning"
+  >("info");
+
+  // Tracking
+  const [trackingDialogOpen, setTrackingDialogOpen] = useState(false);
+  const [trackingDialogData, setTrackingDialogData] = useState<any[] | null>(null);
+
+  // Container
+  const [containerDialogOpen, setContainerDialogOpen] = useState(false);
+  const [containerDialogData, setContainerDialogData] = useState<any | null>(null);
 
   const fetchAllOrders = async () => {
     setLoading(true);
@@ -77,10 +99,10 @@ export default function OrderPage() {
       const list = resp?.data ?? [];
       setOrders(list);
       const pendingCount = (list ?? []).filter(
-  (o) => String(o.status).toLowerCase() !== "completed"
-).length;
+        (o) => String(o.status).toLowerCase() !== "completed"
+      ).length;
 
-dispatch(setPendingOrderCount(pendingCount));
+      dispatch(setPendingOrderCount(pendingCount));
     } catch (err) {
       console.error("getOrders failed", err);
       setOrders([]);
@@ -92,18 +114,18 @@ dispatch(setPendingOrderCount(pendingCount));
   useEffect(() => {
     fetchAllOrders();
   }, []);
-  
+
   useEffect(() => {
-  if (drawerOpen) return;
+    if (drawerOpen) return;
 
-  const interval = setInterval(() => {
-    fetchAllOrders();
-  }, 5000);
+    const interval = setInterval(() => {
+      fetchAllOrders();
+    }, 5000);
 
-  return () => {
-    clearInterval(interval);
-  };
-}, [search, filterPayment, drawerOpen]);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [search, filterPayment, drawerOpen]);
 
   const looksLikeFullOrder = (o: any) => {
     if (!o) return false;
@@ -176,19 +198,131 @@ dispatch(setPendingOrderCount(pendingCount));
     return s;
   };
 
+  const extractOrderDetailFromResp = (resp: any) => {
+    if (!resp && resp !== 0) return null;
+    if (resp?.data && typeof resp.data === "object") return resp.data;
+    if (resp?.data?.data && typeof resp.data.data === "object")
+      return resp.data.data;
+    if (
+      typeof resp === "object" &&
+      ("orderDetailId" in resp || "orderCode" in resp)
+    )
+      return resp;
+    return null;
+  };
+
+  const handleSearch = async () => {
+    const qRaw = (search ?? "").trim();
+    if (!qRaw) return;
+
+    setSearchLoading(true);
+
+    try {
+      const isPureNumeric = /^\d+$/.test(qRaw);
+
+      // 1️⃣ Tracking log theo OrderDetailId
+      if (isPureNumeric) {
+        try {
+          const logResp = await containerLocationLogApi.getLogs({
+            orderDetailId: Number(qRaw),
+            pageNumber: 1,
+            pageSize: 20,
+          });
+
+          const logs = logResp?.data?.items ?? [];
+          if (logs.length > 0) {
+            setTrackingDialogData(logs);
+            setTrackingDialogOpen(true);
+            return;
+          }
+        } catch (err) {
+          console.warn("tracking log fetch error", err);
+        }
+      }
+
+      // 2️⃣ Song song tìm OrderDetail & Container
+      const orderDetailPromise = (async () => {
+        if (!isPureNumeric) return null;
+        try {
+          return await orderDetailApi.getOrderDetail(Number(qRaw));
+        } catch {
+          return null;
+        }
+      })();
+
+      const containerPromise = (async () => {
+        try {
+          return await apiGetContainer(qRaw);
+        } catch {
+          return null;
+        }
+      })();
+
+      const [odResp, containerResp] = await Promise.all([
+        orderDetailPromise,
+        containerPromise,
+      ]);
+
+      // 3️⃣ Ưu tiên OrderDetail
+      if (isPureNumeric) {
+        const od = extractOrderDetailFromResp(odResp);
+        if (od) {
+          openDrawerFor({ orderCode: od.orderCode });
+          return;
+        }
+
+        if (containerResp) {
+          setContainerDialogData(containerResp);
+          setContainerDialogOpen(true);
+          return;
+        }
+
+        setSnackMsg(t("page.searchNotFound"));
+        setSnackSeverity("error");
+        setSnackOpen(true);
+        return;
+      }
+
+      // 4️⃣ Text → Container trước
+      if (containerResp) {
+        setContainerDialogData(containerResp);
+        setContainerDialogOpen(true);
+        return;
+      }
+
+      const odFallback = extractOrderDetailFromResp(odResp);
+      if (odFallback) {
+        openDrawerFor({ orderCode: odFallback.orderCode });
+        return;
+      }
+
+      setSnackMsg(t("page.searchNotFound"));
+      setSnackSeverity("error");
+      setSnackOpen(true);
+    } catch (err) {
+      console.error(err);
+      setSnackMsg(t("page.searchError"));
+      setSnackSeverity("error");
+      setSnackOpen(true);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
 
   const withTooltip = (original?: string | null, translated?: string | null) => {
-    const orig = original ?? "";
-    const trans = translated ?? orig ?? "-";
-    if (!orig) return <span>{trans}</span>;
+    const text = translated ?? original ?? "-";
+    if (!original || String(text).length < 30) {
+      return <span>{text}</span>;
+    }
+
     return (
-      <Tooltip title={orig}>
-        <span style={{ display: "inline-block", maxWidth: 320, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {trans}
-        </span>
+      <Tooltip title={original}>
+        <span className="ellipsis">{text}</span>
       </Tooltip>
     );
   };
+
 
   const columns = useMemo<GridColDef<any, any, any>[]>(() => {
     return [
@@ -216,14 +350,14 @@ dispatch(setPendingOrderCount(pendingCount));
       },
       { field: "customerCode", headerName: t("table.customer"), minWidth: 120, flex: 0.9 },
 
-      
+
       {
         field: "phoneContact",
         headerName: t("table.phone") ?? "Phone",
         minWidth: 130,
         flex: 0.8,
       },
-     {
+      {
         field: "address",
         headerName: t("table.address") ?? "Address",
         minWidth: 220,
@@ -238,7 +372,7 @@ dispatch(setPendingOrderCount(pendingCount));
         flex: 0.8,
         renderCell: (params: any) => fmtDate(params.value),
       },
-     
+
       {
         field: "returnDate",
         headerName: t("table.returnDate") ?? "Return",
@@ -279,7 +413,7 @@ dispatch(setPendingOrderCount(pendingCount));
         renderCell: (params: any) => fmtMoney(params.value),
         type: "number",
       },
-      
+
       {
         field: "style",
         headerName: t("table.style"),
@@ -292,13 +426,13 @@ dispatch(setPendingOrderCount(pendingCount));
         },
       },
 
-      
-      
 
-      
 
-   
-     
+
+
+
+
+
 
       {
         field: "actions",
@@ -340,7 +474,9 @@ dispatch(setPendingOrderCount(pendingCount));
       .map((r) => ({ id: r.orderCode, __orderFull: r, ...r }));
   }
 
-  const rowsWithFull = filteredWithMemo(orders, search, filterPayment);
+  const rowsWithFull = useMemo(() => {
+    return filteredWithMemo(orders, search, filterPayment);
+  }, [orders, search, filterPayment]);
 
   const handleExportCsv = () => {
     if (!orders || orders.length === 0) return;
@@ -414,14 +550,29 @@ dispatch(setPendingOrderCount(pendingCount));
                 fullWidth
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearch();
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
                       <SearchIcon fontSize="small" />
                     </InputAdornment>
                   ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Tooltip title={t("page.searchTooltip") ?? "Search Order / Container"}>
+                        <span>
+                          <IconButton size="small" onClick={handleSearch} disabled={searchLoading}>
+                            {searchLoading ? <CircularProgress size={18} /> : <SearchIcon fontSize="small" />}
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </InputAdornment>
+                  ),
                 }}
               />
+
             </Box>
 
             <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
@@ -475,6 +626,9 @@ dispatch(setPendingOrderCount(pendingCount));
                   columns={columns as GridColDef<any, any, any>[]}
                   autoHeight
                   pageSizeOptions={[10, 25, 50, 100]}
+                  initialState={{
+                    pagination: { paginationModel: { pageSize: 10, page: 0 } },
+                  }}
                   loading={loading}
                   getRowId={(r: any) => r.orderCode}
                   sx={{
@@ -493,8 +647,47 @@ dispatch(setPendingOrderCount(pendingCount));
           )}
         </CardContent>
       </Card>
+      {/* Tracking Dialog */}
+      <TrackingLogDialog
+        open={trackingDialogOpen}
+        data={trackingDialogData}
+        onClose={() => {
+          setTrackingDialogOpen(false);
+          setTrackingDialogData(null);
+        }}
+      />
 
+      {/* Container detail dialog */}
+      <ContainerDetailDialog
+        open={containerDialogOpen}
+        container={containerDialogData}
+        onClose={() => {
+          setContainerDialogOpen(false);
+          setContainerDialogData(null);
+        }}
+        onSaveLocal={() => fetchAllOrders()}
+        onNotify={(msg, sev) => {
+          setSnackMsg(msg);
+          setSnackSeverity(sev ?? "info");
+          setSnackOpen(true);
+        }}
+        onRemoved={() => {
+          fetchAllOrders();
+          setContainerDialogOpen(false);
+          setContainerDialogData(null);
+        }}
+      />
       <OrderDetailDrawer orderCode={selectedOrderCode} open={drawerOpen} onClose={closeDrawer} orderFull={orderFull} />
+      <Snackbar
+        open={snackOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={snackSeverity} onClose={() => setSnackOpen(false)}>
+          {snackMsg}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
