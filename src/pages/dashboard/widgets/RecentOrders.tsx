@@ -70,19 +70,19 @@ export default function RecentOrders() {
       {
         key: "active",
         label: t("recentOrders.groups.active"),
-        statuses: ["Renting", "Stored", "Pick up", "Processing", "Checkout", "Delivered"],
+        statuses: ["Renting", "Stored"],
         icon: <InboxIcon color="primary" />,
       },
       {
         key: "pending",
         label: t("recentOrders.groups.pending"),
-        statuses: ["Pending", "Wait pick up", "Verify"],
+        statuses: ["Pending"],
         icon: <HourglassEmptyIcon color="primary" />,
       },
       {
         key: "completed",
         label: t("recentOrders.groups.completed"),
-        statuses: ["Retrieved", "Completed"],
+        statuses: [ "Completed"],
         icon: <CheckCircleOutlineIcon color="primary" />,
       },
     ],
