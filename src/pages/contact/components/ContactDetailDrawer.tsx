@@ -36,7 +36,25 @@ function a11yProps(index: number) {
     "aria-controls": `contact-tabpanel-${index}`,
   };
 }
+function normalizeContactType(type?: string | null): string | null {
+  if (!type) return null;
 
+  return type
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+}
+function getContactTypeLabel(
+  t: (key: string, options?: any) => string,
+  contactType?: string | null
+) {
+  const key = normalizeContactType(contactType);
+  if (!key) return "—";
+
+  return t(`contactType.${key}`, {
+    defaultValue: contactType,
+  });
+}
 function fallbackLabelFromKey(k: string) {
   return k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
 }
@@ -240,6 +258,19 @@ export default function ContactDetailDrawer({
                       value={contact.message}
                     />
                   )}
+                  {has(contact?.contactType) && (
+                    <Field
+                      label={t("labels.contactType")}
+                      value={getContactTypeLabel(t, contact?.contactType)}
+                    />
+                  )}
+
+                  {has(contact?.orderDetailId) && (
+                    <Field
+                      label={t("labels.orderDetailId", "Order detail ID")}
+                      value={String(contact.orderDetailId)}
+                    />
+                  )}
                   {/* CONTACT DATE */}
                   {has(contact?.contactDate) && (
                     <Field
@@ -322,6 +353,8 @@ export default function ContactDetailDrawer({
                             "image",
                             "contactDate",
                             "retrievedDate",
+                            "contactType",
+                            "orderDetailId",
                           ].includes(k)
                       )
                       .map((k) => {
@@ -368,7 +401,7 @@ export default function ContactDetailDrawer({
             >
               {isActive
                 ? t("actions.markProcessed") ?? "Đánh dấu đã xử lí"
-                : t("actions.reopen") ?? "Đặt lại active"}
+                : t("actions.reopen") ?? "Đặt lại chưa xử lí"}
             </Button>
           </Box>
         </Box>

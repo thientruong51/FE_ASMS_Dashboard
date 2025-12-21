@@ -24,7 +24,9 @@
     "noImage": "No images",
     "initialsFallback": "CT",
       "contactDate": "Contact date",
-    "retrievedDate": "Retrieved date"
+    "retrievedDate": "Retrieved date",
+    "contactType": "Contact type",
+    "orderDetailId": "Order detail ID"
   },
 
   "actions": {
@@ -58,7 +60,10 @@
     "active": "Pending",
     "inactive": "Processed",
      "contactDate": "Contact date",
-    "retrievedDate": "Retrieved date"
+    "retrievedDate": "Retrieved date",
+      "contactType": "Contact type",
+    "orderDetailId": "Order detail ID",
+    "retrieveCount": "Retrieve count"
   },
 
   "messages": {
@@ -90,5 +95,10 @@
   "help": {
     "contactMessage": "Enter message to contact the customer",
     "uploadImages": "Select or upload related images"
+  },
+   "contactType": {
+    "damage_report": "Damage report",
+    "refund": "Refund",
+    "request_to_retrieve": "Request to retrieve"
   }
 }

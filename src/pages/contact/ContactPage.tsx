@@ -29,9 +29,7 @@ import ContactDetailDrawer from "./components/ContactDetailDrawer";
 import { useDispatch } from "react-redux";
 import { setContactCounters } from "@/features/contact/contactSlice";
 
-/* ======================
-   A11y
-====================== */
+
 function a11yProps(index: number) {
   return {
     id: `contact-tab-${index}`,
@@ -39,9 +37,27 @@ function a11yProps(index: number) {
   };
 }
 
-/* ======================
-   Toolbar
-====================== */
+function normalizeContactType(type?: string | null): string | null {
+  if (!type) return null;
+
+  return type
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+}
+
+function getContactTypeLabel(
+  t: (key: string, options?: any) => string,
+  contactType?: string | null
+) {
+  const key = normalizeContactType(contactType);
+  if (!key) return "—";
+
+  return t(`contactType.${key}`, {
+    defaultValue: contactType,
+  });
+}
+
 function ToolbarExtras({
   onExport,
   onRefresh,
@@ -68,6 +84,7 @@ function ToolbarExtras({
 export default function ContactPage() {
   const { t } = useTranslation("contact");
   const dispatch = useDispatch();
+  const [retrieveCounts, setRetrieveCounts] = useState<Record<string, number>>({});
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -80,9 +97,7 @@ export default function ContactPage() {
   const [selectedContact, setSelectedContact] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  /* ======================
-     Fetch
-  ====================== */
+
   const fetchContacts = async () => {
     setLoading(true);
     try {
@@ -114,9 +129,7 @@ export default function ContactPage() {
     fetchContacts();
   }, []);
 
-  /* ======================
-     Lists
-  ====================== */
+  
   const contactsProcessed = useMemo(
     () => contacts.filter((c) => c?.isActive === false),
     [contacts]
@@ -137,9 +150,7 @@ export default function ContactPage() {
         ? contactsWithOrder
         : contactsProcessed;
 
-  /* ======================
-     Rows
-  ====================== */
+
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
     return currentList
@@ -163,67 +174,146 @@ export default function ContactPage() {
     setSelectedContact(row.__full ?? row);
     setDrawerOpen(true);
   };
+  useEffect(() => {
+    if (!contacts.length) return;
 
-  /* ======================
-     DESKTOP columns
-  ====================== */
+    const orderCodes = Array.from(
+      new Set(
+        contacts
+          .map((c) => c?.orderCode)
+          .filter((oc): oc is string => !!oc)
+      )
+    );
+
+    if (!orderCodes.length) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const results = await Promise.all(
+          orderCodes.map(async (oc) => {
+            try {
+              const resp = await contactApi.getRetrieveRequestCount(oc);
+              return [oc, resp?.requestToRetrieveCount ?? 0] as const;
+            } catch {
+              return [oc, 0] as const;
+            }
+          })
+        );
+
+        if (!cancelled) {
+          setRetrieveCounts(Object.fromEntries(results));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [contacts]);
+
+ 
   const desktopColumns: GridColDef<any>[] = [
-  { field: "contactId", headerName: t("table.id") ?? "ID", minWidth: 90, flex: 0.5 },
+    { field: "contactId", headerName: t("table.id") ?? "ID", minWidth: 90, flex: 0.5 },
 
-  { field: "customerCode", headerName: t("table.customerCode") ?? "Customer", minWidth: 140, flex: 1 },
+    { field: "customerCode", headerName: t("table.customerCode") ?? "Customer", minWidth: 140, flex: 1 },
 
-  { field: "customerName", headerName: t("table.customerName") ?? "Name", minWidth: 160, flex: 1.2 },
+    { field: "customerName", headerName: t("table.customerName") ?? "Name", minWidth: 160, flex: 1.2 },
 
-  { field: "orderCode", headerName: t("table.orderCode") ?? "Order", minWidth: 150, flex: 1 },
-
-  { field: "phoneContact", headerName: t("table.phone") ?? "Phone", minWidth: 140, flex: 1 },
-
-  {
-    field: "contactDate",
-    headerName: t("table.contactDate") ?? "Contact date",
-    minWidth: 140,
-    flex: 1,
-    valueGetter: (_value, row) => row?.contactDate ?? "—",
-  },
-
-  {
-    field: "retrievedDate",
-    headerName: t("table.retrievedDate") ?? "Retrieved date",
-    minWidth: 140,
-    flex: 1,
-    valueGetter: (_value, row) => row?.retrievedDate ?? "—",
-  },
-
-  {
-    field: "isActive",
-    headerName: t("table.isActive") ?? "Active",
-    minWidth: 120,
-    flex: 0.6,
-    renderCell: (params) =>
-      params.row?.isActive === false ? (
-        <Chip size="small" label={t("table.inactive") ?? "No"} />
-      ) : (
-        <Chip size="small" color="success" label={t("table.active") ?? "Yes"} />
+    { field: "orderCode", headerName: t("table.orderCode") ?? "Order", minWidth: 150, flex: 1 },
+    {
+      field: "contactType",
+      headerName: t("table.contactType") ?? "Type",
+      minWidth: 160,
+      renderCell: (params) => (
+        <Chip
+          size="small"
+          label={getContactTypeLabel(t, params.row?.contactType)}
+        />
       ),
-  },
-
-  {
-    field: "actions",
-    headerName: t("table.actions") ?? "Actions",
-    width: 120,
-    sortable: false,
-    renderCell: (params) => (
-      <IconButton size="small" onClick={() => openDrawerFor(params.row)}>
-        <VisibilityIcon fontSize="small" />
-      </IconButton>
-    ),
-  },
-];
+    },
 
 
-  /* ======================
-     MOBILE columns
-  ====================== */
+    {
+      field: "orderDetailId",
+      headerName: t("table.orderDetailId") ?? "Order detail ID",
+      minWidth: 140,
+      flex: 1,
+    },
+
+    { field: "phoneContact", headerName: t("table.phone") ?? "Phone", minWidth: 140, flex: 1 },
+
+    {
+      field: "contactDate",
+      headerName: t("table.contactDate") ?? "Contact date",
+      minWidth: 140,
+      flex: 1,
+      valueGetter: (_value, row) => row?.contactDate ?? "—",
+    },
+
+    {
+      field: "retrievedDate",
+      headerName: t("table.retrievedDate") ?? "Retrieved date",
+      minWidth: 140,
+      flex: 1,
+      valueGetter: (_value, row) => row?.retrievedDate ?? "—",
+    },
+
+    {
+      field: "isActive",
+      headerName: t("table.isActive") ?? "Active",
+      minWidth: 120,
+      flex: 0.6,
+      renderCell: (params) =>
+        params.row?.isActive === false ? (
+          <Chip size="small" label={t("table.inactive") ?? "No"} />
+        ) : (
+          <Chip size="small" color="success" label={t("table.active") ?? "Yes"} />
+        ),
+    },
+    {
+      field: "requestToRetrieveCount",
+      headerName: t("table.retrieveCount") ?? "Retrieve requests",
+      minWidth: 160,
+      flex: 0.8,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => {
+        const orderCode = params.row?.orderCode;
+        if (!orderCode) return "—";
+
+        const count = retrieveCounts[orderCode];
+
+        if (count === undefined) return "…"; 
+
+        return (
+          <Chip
+            size="small"
+            color={count > 0 ? "warning" : "default"}
+            label={count}
+          />
+        );
+      },
+    },
+
+    {
+      field: "actions",
+      headerName: t("table.actions") ?? "Actions",
+      width: 120,
+      sortable: false,
+      renderCell: (params) => (
+        <IconButton size="small" onClick={() => openDrawerFor(params.row)}>
+          <VisibilityIcon fontSize="small" />
+        </IconButton>
+      ),
+    },
+  ];
+
+
+ 
   const mobileColumns: GridColDef<any>[] = [
     {
       field: "customerName",
@@ -261,6 +351,7 @@ export default function ContactPage() {
       "customerCode",
       "customerName",
       "orderCode",
+      "requestToRetrieveCount",
       "phoneContact",
       "email",
       "contactDate",
@@ -271,7 +362,14 @@ export default function ContactPage() {
     const csv = [
       keys.join(","),
       ...rows.map((r) =>
-        keys.map((k) => `"${String(r[k] ?? "").replace(/"/g, '""')}"`).join(",")
+        keys
+          .map((k) => {
+            if (k === "requestToRetrieveCount") {
+              return `"${retrieveCounts[r.orderCode] ?? 0}"`;
+            }
+            return `"${String(r[k] ?? "").replace(/"/g, '""')}"`;
+          })
+          .join(",")
       ),
     ].join("\n");
 
