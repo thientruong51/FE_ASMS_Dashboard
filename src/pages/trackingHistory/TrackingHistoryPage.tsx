@@ -473,6 +473,9 @@ export default function TrackingHistoryPage() {
                 columns={columns as GridColDef<any, any, any>[]}
                 autoHeight
                 pageSizeOptions={[10, 25, 50, 100]}
+                  initialState={{
+                    pagination: { paginationModel: { pageSize: 10, page: 0 } },
+                  }}
                 loading={loading}
                 getRowId={getRowId}
                 sx={{ border: "none" }}

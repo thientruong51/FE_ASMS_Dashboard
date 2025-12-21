@@ -129,6 +129,18 @@ export async function markOrderDetailDamaged(
   );
   return resp.data;
 }
+
+export async function resetOrderPasskey(
+  orderCode: string
+): Promise<{ success?: boolean; message?: string }> {
+  const resp = await axiosClient.post(
+    "/api/OrderStatus/reset-passkey",
+    {
+      orderCode,
+    }
+  );
+  return resp.data;
+}
 export default {
   getContacts,
   getContact,
@@ -138,5 +150,6 @@ export default {
   toggleActive,
   createContactWithEmail,
   getRetrieveRequestCount,
-  markOrderDetailDamaged
+  markOrderDetailDamaged,
+  resetOrderPasskey
 };

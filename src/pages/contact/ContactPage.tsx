@@ -94,12 +94,12 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [tabIndex, setTabIndex] = useState(0);
-const [contactTypeFilter, setContactTypeFilter] = useState<string>("all");
-const CONTACT_TYPES = [
-  { value: "damage report" },
-  { value: "refund" },
-  { value: "request to retrieve" },
-];
+  const [contactTypeFilter, setContactTypeFilter] = useState<string>("all");
+  const CONTACT_TYPES = [
+    { value: "damage report" },
+    { value: "refund" },
+    { value: "request to retrieve" },
+  ];
   const [selectedContact, setSelectedContact] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -135,7 +135,7 @@ const CONTACT_TYPES = [
     fetchContacts();
   }, []);
 
-  
+
   const contactsProcessed = useMemo(
     () => contacts.filter((c) => c?.isActive === false),
     [contacts]
@@ -150,51 +150,55 @@ const CONTACT_TYPES = [
   );
 
   const currentList =
-    tabIndex === 0
+    tabIndex === 2
       ? contactsWithoutOrder
-      : tabIndex === 1
+      : tabIndex === 0
         ? contactsWithOrder
         : contactsProcessed;
 
 
-const rows = useMemo(() => {
-  const q = search.trim().toLowerCase();
+  const rows = useMemo(() => {
+    const q = search.trim().toLowerCase();
 
-  return currentList
-    .filter((c) => {
-      // 🔎 Search
-      if (q) {
-        const matched =
-          String(c.customerCode ?? "").toLowerCase().includes(q) ||
-          String(c.customerName ?? "").toLowerCase().includes(q) ||
-          String(c.orderCode ?? "").toLowerCase().includes(q) ||
-          String(c.phoneContact ?? "").toLowerCase().includes(q);
+    return currentList
+      .filter((c) => {
+        // 🔎 Search
+        if (q) {
+          const matched =
+            String(c.customerCode ?? "").toLowerCase().includes(q) ||
+            String(c.customerName ?? "").toLowerCase().includes(q) ||
+            String(c.orderCode ?? "").toLowerCase().includes(q) ||
+            String(c.phoneContact ?? "").toLowerCase().includes(q);
 
-        if (!matched) return false;
-      }
+          if (!matched) return false;
+        }
 
-      // 🏷 contactType filter
-      if (
-        contactTypeFilter !== "all" &&
-        c.contactType !== contactTypeFilter
-      ) {
-        return false;
-      }
+        // 🏷 contactType filter
+        if (
+          contactTypeFilter !== "all" &&
+          c.contactType !== contactTypeFilter
+        ) {
+          return false;
+        }
 
-      return true;
-    })
-    .map((r) => ({
-      id: r.contactId ?? r.id,
-      __full: r,
-      ...r,
-    }));
-}, [currentList, search, contactTypeFilter]);
+        return true;
+      })
+      .map((r) => ({
+        id: r.contactId ?? r.id,
+        __full: r,
+        ...r,
+      }));
+  }, [currentList, search, contactTypeFilter]);
 
 
-  const openDrawerFor = (row: any) => {
-    setSelectedContact(row.__full ?? row);
-    setDrawerOpen(true);
-  };
+const openDrawerFor = (row: any) => {
+  setSelectedContact({
+    ...(row.__full ?? row),
+    requestToRetrieveCount: retrieveCounts[row.orderCode] ?? 0,
+  });
+  setDrawerOpen(true);
+};
+
   useEffect(() => {
     if (!contacts.length) return;
 
@@ -236,7 +240,7 @@ const rows = useMemo(() => {
     };
   }, [contacts]);
 
- 
+
   const desktopColumns: GridColDef<any>[] = [
     { field: "contactId", headerName: t("table.id") ?? "ID", minWidth: 90, flex: 0.5 },
 
@@ -308,7 +312,7 @@ const rows = useMemo(() => {
 
         const count = retrieveCounts[orderCode];
 
-        if (count === undefined) return "…"; 
+        if (count === undefined) return "…";
 
         return (
           <Chip
@@ -334,7 +338,7 @@ const rows = useMemo(() => {
   ];
 
 
- 
+
   const mobileColumns: GridColDef<any>[] = [
     {
       field: "customerName",
@@ -422,9 +426,10 @@ const rows = useMemo(() => {
             onChange={(_, v) => setTabIndex(v)}
             variant={isMobile ? "scrollable" : "standard"}
           >
-            <Tab label={`${t("tabs.contact")} (${contactsWithoutOrder.length})`} {...a11yProps(0)} />
-            <Tab label={`${t("tabs.support")} (${contactsWithOrder.length})`} {...a11yProps(1)} />
-            <Tab label={`${t("tabs.processed")} (${contactsProcessed.length})`} {...a11yProps(2)} />
+            <Tab label={`${t("tabs.support")} (${contactsWithOrder.length})`} {...a11yProps(0)} />
+            <Tab label={`${t("tabs.processed")} (${contactsProcessed.length})`} {...a11yProps(1)} />
+            <Tab label={`${t("tabs.contact")} (${contactsWithoutOrder.length})`} {...a11yProps(2)} />
+            
           </Tabs>
 
           <Box sx={{ display: "flex", gap: 1, mt: 2, flexWrap: "wrap" }}>
@@ -443,23 +448,23 @@ const rows = useMemo(() => {
               }}
             />
             <TextField
-  size="small"
-  select
-  value={contactTypeFilter}
-  onChange={(e) => setContactTypeFilter(e.target.value)}
-  sx={{ minWidth: 200 }}
-  label={t("filters.contactType")}
->
-  <MenuItem value="all">
-    {t("filters.all")}
-  </MenuItem>
+              size="small"
+              select
+              value={contactTypeFilter}
+              onChange={(e) => setContactTypeFilter(e.target.value)}
+              sx={{ minWidth: 200 }}
+              label={t("filters.contactType")}
+            >
+              <MenuItem value="all">
+                {t("filters.all")}
+              </MenuItem>
 
-  {CONTACT_TYPES.map((ct) => (
-    <MenuItem key={ct.value} value={ct.value}>
-      {getContactTypeLabel(t, ct.value)}
-    </MenuItem>
-  ))}
-</TextField>
+              {CONTACT_TYPES.map((ct) => (
+                <MenuItem key={ct.value} value={ct.value}>
+                  {getContactTypeLabel(t, ct.value)}
+                </MenuItem>
+              ))}
+            </TextField>
 
             <Button startIcon={<DownloadIcon />} onClick={handleExportCsv}>
               {t("actions.export")}

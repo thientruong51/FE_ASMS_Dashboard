@@ -44,7 +44,8 @@
     "updateImages": "Cập nhật hình ảnh",
     "upload": "Tải ảnh lên",
     "confirm": "Xác nhận",
-    "cancel": "Huỷ"
+    "cancel": "Huỷ",
+    "resetPasskey": "Đặt lại mật khẩu phòng"
   },
 
   "export": {

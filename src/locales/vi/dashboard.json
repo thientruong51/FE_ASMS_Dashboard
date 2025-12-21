@@ -161,7 +161,8 @@
     "order_cancelled_after_refund": "Hủy đơn sau khi hoàn tiền",
      "order_cancelled": "Hủy đơn hàng",
     "auto_update": "Cập nhật tự động",
-    "order_cancelled_from_pending": "Đơn bị hủy  Lý do: Khách hàng hủy"
+    "order_cancelled_from_pending": "Đơn bị hủy  Lý do: Khách hàng hủy",
+    "moved_to_expired_storage": "Chuyển đến kho hết hạn"
 },
 
 "page": {

@@ -42,7 +42,8 @@
     "updateImages": "Update images",
     "upload": "Upload images",
     "confirm": "Confirm",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "resetPasskey": "Reset room passkey"
   },
 
   "export": {
