@@ -6,7 +6,14 @@
     "clickToView": "Bấm vào đơn để xem chi tiết",
     "noItems": "Không có mục nào",
     "itemsCount": "{{count}} mục",
-    "itemsCount_plural": "{{count}} mục"
+    "itemsCount_plural": "{{count}} mục",
+    "loading": "Đang tải...",
+    "loadingItems": "Đang tải mục...",
+    "refreshing": "Đang làm mới...",
+    "exporting": "Đang xuất...",
+    "densityNormal": "Mật độ bình thường",
+    "densityCompact": "Mật độ gọn",
+    "searchNotFound": "Không tìm thấy"
   },
 
   "tabs": {
