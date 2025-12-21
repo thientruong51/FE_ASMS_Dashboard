@@ -142,7 +142,10 @@
     "applyConfirmBody_plural": "Bạn có chắc muốn áp dụng cập nhật cho {{count}} thùng không?",
     "confirmApply": "Có, áp dụng",
     "containersTitle": "Thùng (Tầng {{floor}})",
-    "noContainers": "Không có thùng."
+    "noContainers": "Không có thùng.",
+    "loadingContainers": "Đang tải thùng...",
+    "failedLoadContainers": "Tải thùng thất bại",
+    "removeSuccess": "Đã gỡ thùng thành công"
   },
   "common": {
     "yes": "Có",
@@ -353,5 +356,10 @@
   },
   "width": "Rộng",
 "length": "Dài",
-"height": "Cao"
+"height": "Cao",
+"confirmTakeOut": "Xác nhận lấy thùng ra",
+  "confirmTakeOutMessage": "Bạn có chắc chắn muốn lấy thùng này ra không?",
+  "containerIsDamaged": "Thùng bị hư",
+  "confirm": "Xác nhận",
+  "cancel": "Hủy"
 }

@@ -36,7 +36,25 @@ function a11yProps(index: number) {
     "aria-controls": `contact-tabpanel-${index}`,
   };
 }
+function normalizeContactType(type?: string | null): string | null {
+  if (!type) return null;
 
+  return type
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+}
+function getContactTypeLabel(
+  t: (key: string, options?: any) => string,
+  contactType?: string | null
+) {
+  const key = normalizeContactType(contactType);
+  if (!key) return "—";
+
+  return t(`contactType.${key}`, {
+    defaultValue: contactType,
+  });
+}
 function fallbackLabelFromKey(k: string) {
   return k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
 }
@@ -76,7 +94,35 @@ export default function ContactDetailDrawer({
   const [snackMsg, setSnackMsg] = useState("");
   const [snackSeverity, setSnackSeverity] =
     useState<"success" | "error" | "info">("info");
+  const canResetPasskey =
+    contact?.orderCode &&
+    contact?.requestToRetrieveCount === 3;
+  const handleResetPasskey = async () => {
+    if (!contact?.orderCode) return;
 
+    try {
+      setLoading(true);
+
+      await contactApi.resetOrderPasskey(contact.orderCode);
+
+      setSnackMsg(
+        t("messages.resetPasskeySuccess") ??
+        "Reset passkey thành công"
+      );
+      setSnackSeverity("success");
+      setSnackOpen(true);
+    } catch (err: any) {
+      setSnackMsg(
+        err?.response?.data?.message ??
+        err?.message ??
+        "Reset passkey thất bại"
+      );
+      setSnackSeverity("error");
+      setSnackOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     setContact(contactProp ?? null);
@@ -95,7 +141,10 @@ export default function ContactDetailDrawer({
         setLoading(true);
         const resp = await contactApi.getContact(contact.contactId);
         if (!mounted) return;
-        setContact(resp?.data ?? resp);
+        setContact((prev: any) => ({
+  ...(resp?.data ?? resp),
+  requestToRetrieveCount: prev?.requestToRetrieveCount,
+}));
       } catch (err) {
         setSnackMsg(t("errors.fetchDetail") ?? "Failed to fetch contact detail");
         setSnackSeverity("error");
@@ -240,6 +289,19 @@ export default function ContactDetailDrawer({
                       value={contact.message}
                     />
                   )}
+                  {has(contact?.contactType) && (
+                    <Field
+                      label={t("labels.contactType")}
+                      value={getContactTypeLabel(t, contact?.contactType)}
+                    />
+                  )}
+
+                  {has(contact?.orderDetailId) && (
+                    <Field
+                      label={t("labels.orderDetailId", "Order detail ID")}
+                      value={String(contact.orderDetailId)}
+                    />
+                  )}
                   {/* CONTACT DATE */}
                   {has(contact?.contactDate) && (
                     <Field
@@ -322,6 +384,8 @@ export default function ContactDetailDrawer({
                             "image",
                             "contactDate",
                             "retrievedDate",
+                            "contactType",
+                            "orderDetailId",
                           ].includes(k)
                       )
                       .map((k) => {
@@ -352,6 +416,17 @@ export default function ContactDetailDrawer({
               justifyContent: "flex-end",
             }}
           >
+            {canResetPasskey && (
+              <Button
+                color="warning"
+                variant="contained"
+                onClick={handleResetPasskey}
+                disabled={loading}
+              >
+                {t("actions.resetPasskey") ?? "Reset passkey"}
+              </Button>
+            )}
+
             <Button
               variant="outlined"
               startIcon={<ImageIcon />}
@@ -368,7 +443,7 @@ export default function ContactDetailDrawer({
             >
               {isActive
                 ? t("actions.markProcessed") ?? "Đánh dấu đã xử lí"
-                : t("actions.reopen") ?? "Đặt lại active"}
+                : t("actions.reopen") ?? "Đặt lại chưa xử lí"}
             </Button>
           </Box>
         </Box>

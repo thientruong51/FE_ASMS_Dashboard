@@ -11,6 +11,7 @@ import {
     Stack,
     Typography,
     IconButton,
+    MenuItem,
 } from "@mui/material";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import { useTranslation } from "react-i18next";
@@ -74,7 +75,13 @@ export default function ContactCustomerDialog({
         const json = await resp.json();
         return json.secure_url ?? json.url;
     };
-
+    const CONTACT_TYPE_OPTIONS = [
+        { value: "damage report", i18nKey: "contactType.damage_report" },
+        { value: "refund", i18nKey: "contactType.refund" },
+        { value: "request to retrieve", i18nKey: "contactType.request_to_retrieve" },
+    ];
+    const [contactType, setContactType] = useState<string>("");
+    const [orderDetailId, setOrderDetailId] = useState<string>("");
     /* ================= Effects ================= */
     useEffect(() => {
         if (mode === "update-images" && Array.isArray(existingImages)) {
@@ -106,6 +113,16 @@ export default function ContactCustomerDialog({
     };
 
     const handleSubmit = async () => {
+        if (
+            contactType === "damage report" &&
+            !orderDetailId
+        ) {
+            alert(
+                t("errors.orderDetailRequired") ??
+                "Order detail ID is required for damage report"
+            );
+            return;
+        }
         setLoading(true);
         try {
             let finalImages = [...images];
@@ -114,8 +131,18 @@ export default function ContactCustomerDialog({
                 const uploaded = await Promise.all(
                     selectedFiles.map(uploadFileToCloudinary)
                 );
-
                 finalImages = Array.from(new Set([...finalImages, ...uploaded]));
+            }
+
+
+            if (
+                mode === "create" &&
+                contactType === "damage report" &&
+                orderDetailId
+            ) {
+                await contactApi.markOrderDetailDamaged(
+                    Number(orderDetailId)
+                );
             }
 
             if (mode === "update-images") {
@@ -136,6 +163,8 @@ export default function ContactCustomerDialog({
                 customerCode,
                 employeeCode,
                 orderCode,
+                orderDetailId: orderDetailId ? Number(orderDetailId) : undefined,
+                contactType,
                 name: customerName,
                 phoneContact,
                 email,
@@ -151,6 +180,7 @@ export default function ContactCustomerDialog({
             setLoading(false);
         }
     };
+
 
 
     return (
@@ -171,6 +201,36 @@ export default function ContactCustomerDialog({
                                 fullWidth
                                 InputProps={{ readOnly: true }}
                             />
+                            {mode === "create" && (
+                                <>
+                                    {/* CONTACT TYPE */}
+                                    <TextField
+                                        select
+                                        label={t("labels.contactType") ?? "Contact type"}
+                                        value={contactType}
+                                        onChange={(e) => setContactType(e.target.value)}
+                                        fullWidth
+                                        required
+                                    >
+                                        {CONTACT_TYPE_OPTIONS.map((opt) => (
+                                            <MenuItem key={opt.value} value={opt.value}>
+                                                {t(opt.i18nKey)}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+
+                                    {/* ORDER DETAIL ID */}
+                                    <TextField
+                                        label={t("labels.orderDetailId") ?? "Order detail ID"}
+                                        value={orderDetailId}
+                                        onChange={(e) => setOrderDetailId(e.target.value)}
+                                        type="number"
+                                        fullWidth
+                                        disabled={contactType !== "damage report"}
+                                    />
+                                </>
+                            )}
+
 
                             <TextField
                                 label={t("labels.name") ?? "Name"}

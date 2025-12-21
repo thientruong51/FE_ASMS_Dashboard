@@ -57,7 +57,9 @@ export interface OrderDetailItem {
   width?: number | null;
   height?: number | null;
   isOversize?: boolean | null;
-
+ status?: string | null;
+  lastUpdatedDate?: string | null;
+  isDamaged?: boolean | null;
   productTypeNames?: string[];
   serviceNames?: string[];
 }
@@ -96,8 +98,15 @@ export async function getOrderDetails(orderCode: string, params?: Record<string,
   const url = `/api/Order/${encodeURIComponent(orderCode)}/details`;
   const resp = await axiosClient.get<OrderDetailListResponse>(url, { params });
 
-  const raw = resp.data?.data ?? [];
-  const normalized = (raw as any[]).map((it) => {
+ const rawData = resp.data?.data;
+
+const rawArray = Array.isArray(rawData)
+  ? rawData
+  : rawData
+  ? [rawData]
+  : [];
+
+const normalized = rawArray.map((it) => {
     // normalize numeric fields
     const length = toNumberOrNull(it.length ?? it?.length);
     const width = toNumberOrNull(it.width ?? it?.width);
@@ -136,7 +145,17 @@ export async function getOrderDetails(orderCode: string, params?: Record<string,
     } else {
       isPlaced = null;
     }
-
+let isDamaged: boolean | null = null;
+if (typeof it.isDamaged === "boolean") isDamaged = it.isDamaged;
+else if (typeof it.isDamaged === "number") isDamaged = it.isDamaged === 1;
+else if (typeof it.isDamaged === "string") {
+  const s = it.isDamaged.toLowerCase();
+  if (s === "true" || s === "1") isDamaged = true;
+  else if (s === "false" || s === "0") isDamaged = false;
+  else isDamaged = null;
+} else {
+  isDamaged = null;
+}
     // normalized item
     const normalizedItem: OrderDetailItem = {
       orderDetailId: typeof it.orderDetailId === "number" ? it.orderDetailId : Number(it.orderDetailId),
@@ -158,6 +177,9 @@ export async function getOrderDetails(orderCode: string, params?: Record<string,
       width,
       height,
       isOversize,
+      status: it.status ?? null,
+  lastUpdatedDate: it.lastUpdatedDate ?? it.last_updated_date ?? null,
+  isDamaged,
       productTypeNames,
       serviceNames,
     };

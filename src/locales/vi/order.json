@@ -6,7 +6,14 @@
     "clickToView": "Bấm vào đơn để xem chi tiết",
     "noItems": "Không có mục nào",
     "itemsCount": "{{count}} mục",
-    "itemsCount_plural": "{{count}} mục"
+    "itemsCount_plural": "{{count}} mục",
+    "loading": "Đang tải...",
+    "loadingItems": "Đang tải mục...",
+    "refreshing": "Đang làm mới...",
+    "exporting": "Đang xuất...",
+    "densityNormal": "Mật độ bình thường",
+    "densityCompact": "Mật độ gọn",
+    "searchNotFound": "Không tìm thấy"
   },
 
   "tabs": {
@@ -248,7 +255,8 @@
     "order_cancelled_after_refund": "Hủy đơn sau khi hoàn tiền",
      "order_cancelled": "Hủy đơn hàng",
     "auto_update": "Cập nhật tự động",
-        "order_cancelled_from_pending": "Đơn bị hủy - Lý do: Khách hàng hủy"
+        "order_cancelled_from_pending": "Đơn bị hủy - Lý do: Khách hàng hủy",
+    "moved_to_expired_storage": "Chuyển đến kho hết hạn"
 
 },
 "UnPaid":"Chưa thanh toán",

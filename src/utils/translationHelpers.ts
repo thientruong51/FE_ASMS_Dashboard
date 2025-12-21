@@ -194,6 +194,7 @@ const actionTypeKeyMapRaw: Record<string, string> = {
   "waiting refund": "waiting_refund",
   "order cancelled after refund": "order_cancelled_after_refund",
   "Order Cancelled from Pending - Reason: Customer cancel": "order_cancelled_from_pending",
+  "Moved to Expired Storage": "moved_to_expired_storage",
 };
 
 const actionTypeMaps = buildNormalizedMap(actionTypeKeyMapRaw);

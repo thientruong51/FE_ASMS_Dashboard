@@ -25,7 +25,9 @@
     "noImage": "Chưa có hình ảnh",
     "initialsFallback": "LH",
      "contactDate": "Ngày liên hệ",
-    "retrievedDate": "Ngày lấy hàng"
+    "retrievedDate": "Ngày lấy hàng",
+    "contactType": "Loại liên hệ",
+    "orderDetailId": "Mã chi tiết đơn"
   },
 
   "actions": {
@@ -36,13 +38,14 @@
     "close": "Đóng",
 
     "markProcessed": "Đánh dấu đã xử lí",
-    "reopen": "Đặt lại active",
+    "reopen": "Đặt lại chưa xử lí",
     "contactCustomer": "Liên hệ khách hàng",
 
     "updateImages": "Cập nhật hình ảnh",
     "upload": "Tải ảnh lên",
     "confirm": "Xác nhận",
-    "cancel": "Huỷ"
+    "cancel": "Huỷ",
+    "resetPasskey": "Đặt lại mật khẩu phòng"
   },
 
   "export": {
@@ -60,7 +63,10 @@
     "active": "Chưa xử lí",
     "inactive": "Đã xử lí",
      "contactDate": "Ngày liên hệ",
-    "retrievedDate": "Ngày lấy hàng"
+    "retrievedDate": "Ngày lấy hàng",
+     "contactType": "Loại liên hệ",
+    "orderDetailId": "Mã chi tiết đơn",
+    "retrieveCount": "Số lần đã liên hệ"
   },
 
   "messages": {
@@ -77,7 +83,8 @@
 
     "uploadFailed": "Tải ảnh lên thất bại",
     "noImageProvided": "Vui lòng chọn ít nhất một hình ảnh",
-    "cloudinaryConfigMissing": "Thiếu cấu hình Cloudinary"
+    "cloudinaryConfigMissing": "Thiếu cấu hình Cloudinary",
+    "orderDetailRequired": "Mã chi tiết đơn là bắt buộc cho báo hỏng"
   },
 
   "fields": {
@@ -93,5 +100,14 @@
   "help": {
     "contactMessage": "Nhập nội dung liên hệ với khách hàng",
     "uploadImages": "Chọn hoặc tải lên hình ảnh liên quan"
+  },
+  "contactType": {
+    "damage_report": "Báo hỏng",
+    "refund": "Hoàn tiền",
+    "request_to_retrieve": "Yêu cầu lấy hàng"
+  },
+   "filters": {
+    "contactType": "Loại liên hệ",
+    "all": "Tất cả"
   }
 }

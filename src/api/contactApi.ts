@@ -12,7 +12,7 @@ export type ContactItem = {
   employeeName?: string | null;
 
   orderCode?: string | null;
-
+ orderDetailId?: number | null;
   name?: string | null;
   phoneContact?: string | null;
   email?: string | null;
@@ -24,6 +24,7 @@ export type ContactItem = {
   image?: string[] | null;
   contactDate: string | null;    
   retrievedDate: string | null;
+  contactType?: string | null;
   [key: string]: any;
 };
 
@@ -105,7 +106,41 @@ export async function createContactWithEmail(
   );
   return resp.data;
 }
+export async function getRetrieveRequestCount(
+  orderCode: string
+): Promise<{
+  success?: boolean;
+  orderCode?: string;
+  requestToRetrieveCount?: number;
+}> {
+  const resp = await axiosClient.get(
+    `/api/Contacts/count-retrieve-requests/${encodeURIComponent(orderCode)}`
+  );
+  return resp.data;
+}
+export async function markOrderDetailDamaged(
+  id: number
+): Promise<{ success?: boolean }> {
+  const resp = await axiosClient.patch(
+    `/api/OrderDetail/${encodeURIComponent(String(id))}/damage`,
+    {
+      isDamaged: true,
+    }
+  );
+  return resp.data;
+}
 
+export async function resetOrderPasskey(
+  orderCode: string
+): Promise<{ success?: boolean; message?: string }> {
+  const resp = await axiosClient.post(
+    "/api/OrderStatus/reset-passkey",
+    {
+      orderCode,
+    }
+  );
+  return resp.data;
+}
 export default {
   getContacts,
   getContact,
@@ -114,4 +149,7 @@ export default {
   deleteContact,
   toggleActive,
   createContactWithEmail,
+  getRetrieveRequestCount,
+  markOrderDetailDamaged,
+  resetOrderPasskey
 };

@@ -62,30 +62,38 @@ const pendingTrackingCount = trackings.filter((it: any) => {
 dispatch(setPendingTrackingCount(pendingTrackingCount));
 
 /* ---------- STORAGE (FIXED) ---------- */
-  const processingOrdersResp = await getOrders({
-    pageNumber: 1,
-    pageSize: 50,
-    style: "full",
-    status: "processing",
-  });
 
-  const processingOrders: any[] = processingOrdersResp?.data ?? [];
+const ordersResp = await getOrders({
+  pageNumber: 1,
+  pageSize: 50,
+  style: "full",
+});
 
-  const detailResponses = await Promise.all(
-    processingOrders.map((o) => getOrderDetails(o.orderCode))
+const orders: any[] = ordersResp?.data ?? [];
+
+const processingOrders = orders.filter(
+  (o) => o.status === "processing"
+);
+
+const detailResponses = await Promise.all(
+  processingOrders.map((o) => getOrderDetails(o.orderCode))
+);
+
+const pendingOrderCodes = new Set<string>();
+
+processingOrders.forEach((o, idx) => {
+  const items = detailResponses[idx]?.data ?? [];
+
+  const hasPending = items.some(
+    (it: any) => !it.storageCode && it.isPlaced !== true
   );
 
-  const pendingOrderCodes = new Set<string>();
+  if (hasPending) {
+    pendingOrderCodes.add(o.orderCode);
+  }
+});
 
-  processingOrders.forEach((o, idx) => {
-    const items = detailResponses[idx]?.data ?? [];
-    const hasPending = items.some(
-      (it: any) => !it.storageCode && it.isPlaced !== false
-    );
-    if (hasPending) pendingOrderCodes.add(o.orderCode);
-  });
-
-  dispatch(setPendingStorageCount(pendingOrderCodes.size));
+dispatch(setPendingStorageCount(pendingOrderCodes.size));
 
 }
 

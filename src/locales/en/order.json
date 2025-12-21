@@ -6,7 +6,14 @@
     "clickToView": "Click an order to view details",
     "noItems": "No items",
     "itemsCount": "{{count}} items",
-    "itemsCount_plural": "{{count}} items"
+    "itemsCount_plural": "{{count}} items",
+    "loading": "Loading...",
+    "loadingItems": "Loading items...",
+    "refreshing": "Refreshing...",
+    "exporting": "Exporting...",
+    "densityNormal": "Normal density",
+    "densityCompact": "Compact density",
+    "searchNotFound": "Not found"
   },
 
   "tabs": {

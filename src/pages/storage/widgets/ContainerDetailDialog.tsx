@@ -38,6 +38,7 @@ import { removeContainer } from "@/api/containerApi";
 
 import { translateStatus } from "@/utils/statusHelper";
 import { translateFieldLabel, formatBoolean } from "@/utils/fieldLabels";
+import contactApi from "@/api/contactApi";
 
 type Props = {
   open: boolean;
@@ -81,7 +82,8 @@ export default function ContainerDetailDialog({
   const [logError, setLogError] = React.useState<string | null>(null);
 
   const [isRemoving, setIsRemoving] = React.useState<boolean>(false);
-
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = React.useState(false);
+  const [isDamagedChecked, setIsDamagedChecked] = React.useState(false);
   const [qrOpen, setQrOpen] = React.useState(false);
   const [qrOrderDetail, setQrOrderDetail] = React.useState<any>(null);
 
@@ -288,12 +290,8 @@ export default function ContainerDetailDialog({
       return null;
     }
   }, []);
-
-  const handleRemoveContainer = React.useCallback(async () => {
-    if (!c?.containerCode) {
-      onNotify?.(t("noContainerSelected"), "warning");
-      return;
-    }
+  const executeRemoveContainer = React.useCallback(async () => {
+    if (!c?.containerCode) return;
 
     const performedBy = getEmployeeCodeFromAccessToken() ?? "UNKNOWN";
     const orderCodeToSend =
@@ -303,6 +301,12 @@ export default function ContainerDetailDialog({
 
     setIsRemoving(true);
     try {
+      if (isDamagedChecked && c?.orderDetailId) {
+        await contactApi.markOrderDetailDamaged(
+          Number(c.orderDetailId)
+        );
+      }
+
       await removeContainer({
         containerCode: c.containerCode,
         performedBy,
@@ -311,6 +315,8 @@ export default function ContainerDetailDialog({
 
       onNotify?.(t("removeContainerSuccess"), "success");
       onRemoved?.(c.containerCode);
+      setConfirmRemoveOpen(false);
+      setIsDamagedChecked(false);
       onClose();
     } catch (err: any) {
       onNotify?.(
@@ -329,8 +335,19 @@ export default function ContainerDetailDialog({
     onClose,
     onNotify,
     getEmployeeCodeFromAccessToken,
+    isDamagedChecked,
     t,
   ]);
+
+  const handleRemoveContainer = React.useCallback(() => {
+    if (!c?.containerCode) {
+      onNotify?.(t("noContainerSelected"), "warning");
+      return;
+    }
+
+    setConfirmRemoveOpen(true);
+  }, [c, onNotify, t]);
+
 
   return (
     <>
@@ -661,6 +678,48 @@ export default function ContainerDetailDialog({
         orderCode={c?.orderCode ?? null}
         onClose={() => setQrOpen(false)}
       />
+      <Dialog
+        open={confirmRemoveOpen}
+        onClose={() => setConfirmRemoveOpen(false)}
+      >
+        <DialogTitle>
+          {t("confirmTakeOut") ?? "Confirm take out"}
+        </DialogTitle>
+
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Typography>
+              {t("confirmTakeOutMessage") ??
+                "Are you sure you want to take out this container?"}
+            </Typography>
+
+            <label>
+              <input
+                type="checkbox"
+                checked={isDamagedChecked}
+                onChange={(e) => setIsDamagedChecked(e.target.checked)}
+              />
+              &nbsp;
+              {t("containerIsDamaged") ?? "Container is damaged"}
+            </label>
+          </Stack>
+        </DialogContent>
+
+        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2 }}>
+          <Button onClick={() => setConfirmRemoveOpen(false)}>
+            {t("cancel")}
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={executeRemoveContainer}
+            disabled={isRemoving}
+          >
+            {isRemoving ? <CircularProgress size={18} /> : t("confirm")}
+          </Button>
+        </Stack>
+      </Dialog>
+
     </>
   );
 }

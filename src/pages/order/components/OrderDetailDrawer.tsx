@@ -236,7 +236,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
   }, [open, orderCode, t]);
 
   const joinIfArray = (v: any): string | null => {
-    if (Array.isArray(v)) return v.join(", ");
+    if (Array.isArray(v)) return v.length > 0 ? v.join(", ") : null;
     if (typeof v === "string" && v.trim()) return v;
     return null;
   };
@@ -253,6 +253,11 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
     } catch {
       return String(v);
     }
+  };
+  const translateDamaged = (v: any) => {
+    if (v === true) return t("item.damaged") ?? "Damaged";
+    if (v === false) return t("item.notDamaged") ?? "Not damaged";
+    return null;
   };
 
   const getContainerLabel = (val: number | string | undefined | null) => {
@@ -549,12 +554,17 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                       </Box>
                     )}
 
-                    {has(order.unpaidAmount) && (
+                    {Number(order.unpaidAmount) > 0 && (
                       <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ width: 140, color: "text.secondary" }}>{t("labels.unpaid")}</Box>
-                        <Box sx={{ flex: 1, color: "error.main", fontWeight: 700 }}>{fmtMoney(order.unpaidAmount)}</Box>
+                        <Box sx={{ width: 140, color: "text.secondary" }}>
+                          {t("labels.unpaid")}
+                        </Box>
+                        <Box sx={{ flex: 1, color: "error.main", fontWeight: 700 }}>
+                          {fmtMoney(order.unpaidAmount)}
+                        </Box>
                       </Box>
                     )}
+
                     {has(order.style) && (
                       <Box sx={{ display: "flex", gap: 2 }}>
                         <Box sx={{ width: 140, color: "text.secondary" }}>{t("table.style")}</Box>
@@ -649,8 +659,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                       const containerLabel = getContainerLabel((d as any).containerType);
                       const shelfLabel = getShelfLabel((d as any).shelfTypeId);
 
-                      // show detail id prominently
-                      const detailTitle = productNames ?? `Item ${d.orderDetailId}`;
+                     
 
                       return (
                         <Card key={d.orderDetailId} variant="outlined" sx={{ borderRadius: 2 }}>
@@ -667,12 +676,10 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
                                 <Box sx={{ minWidth: 0 }}>
-                                  <Typography fontWeight={700} noWrap>
-                                    {detailTitle}
-                                  </Typography>
+                                
 
                                   {/* subtitle: orderDetailId + optional small meta */}
-                                  <Typography variant="caption" color="text.secondary" noWrap>
+                                  <Typography variant="h6" color="#000" noWrap>
                                     {`#${d.orderDetailId}`}
                                     {d.containerCode ? ` • ${d.containerCode}` : ""}
                                     {d.storageCode ? ` • ${d.storageCode}` : ""}
@@ -745,6 +752,46 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                                 {has((d as any).height) && <Chip size="small" label={`H: ${(d as any).height}`} />}
 
                                 {productNames && <Chip size="small" label={withTooltip(productNames, productTranslated)} />}
+                                {/* status */}
+                                {has(d.status) && (
+                                  <Chip
+                                    size="small"
+                                    label={
+                                      <Box sx={{ display: "flex", gap: 0.5 }}>
+                                        <strong>{t("labels.status")}:</strong>
+                                        {withTooltip(
+                                          String(d.status),
+                                          translateStatus(t, String(d.status))
+                                        )}
+                                      </Box>
+                                    }
+                                  />
+                                )}
+
+
+                                {/* last updated date */}
+                                {has(d.lastUpdatedDate) && (
+                                  <Chip
+                                    size="small"
+                                    label={
+                                      <Box sx={{ display: "flex", gap: 0.5 }}>
+                                        <strong>{t("labels.lastUpdated")}:</strong>
+                                        {fmtDate(d.lastUpdatedDate)}
+                                      </Box>
+                                    }
+                                    variant="outlined"
+                                  />
+                                )}
+
+                                {/* damaged */}
+                                {d.isDamaged !== null && d.isDamaged !== undefined && (
+                                  <Chip
+                                    size="small"
+                                    label={translateDamaged(d.isDamaged)}
+                                    color={d.isDamaged ? "error" : "success"}
+                                  />
+                                )}
+
                               </Box>
                             </Box>
                           </CardContent>
