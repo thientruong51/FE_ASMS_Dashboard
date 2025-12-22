@@ -12,7 +12,7 @@
   "arrow": "→",
  "statusNames": {
   "processing": "Đang xử lý",
-  "retrieved": "Đã nhận lại",
+  "retrieved": "Khách nhận lại hàng",
   "pending": "Đang chờ",
   "wait_pick_up": "Chờ lấy hàng",
   "verify": "Xác minh",
