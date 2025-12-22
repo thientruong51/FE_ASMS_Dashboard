@@ -55,7 +55,8 @@
     "refundNote": "Refund note",
     "status": "Status",
     "paymentStatus": "Payment Status",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "lastUpdated": "Last updated"
   },
 
   "item": {
@@ -67,7 +68,9 @@
     "storage": "Storage",
     "floor": "Floor",
     "shelfType": "Shelf type",
-    "containerType": "Container type"
+    "containerType": "Container type",
+    "notDamaged": "Not damaged",
+    "damaged": "Damaged"
   },
 
   "actions": {
@@ -153,7 +156,9 @@
     "noData": "-",
     "delivered": "Delivered",
     "completed": "Completed",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "waiting_refund":"Waiting refund",
+    "removed" : "Removed"
   },
 
   "serviceNames": {

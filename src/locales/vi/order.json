@@ -55,7 +55,8 @@
     "refundNote": "Ghi chú hoàn tiền",
     "status": "Trạng thái",
     "paymentStatus": "Trạng thái thanh toán",
-    "unknown": "Không rõ"
+    "unknown": "Không rõ",
+    "lastUpdated": "Cập nhật lần cuối"
   },
 
   "item": {
@@ -67,7 +68,9 @@
     "storage": "Kho",
     "floor": "Tầng",
     "shelfType": "Loại kệ",
-    "containerType": "Loại thùng"
+    "containerType": "Loại thùng",
+    "notDamaged": "Không hư hỏng",
+    "damaged": "Hư hỏng"
   },
 
   "actions": {
@@ -155,13 +158,14 @@
     "delivered": "Đã vận chuyển xong",
     "completed": "Hoàn thành",
      "waiting_refund":"Chờ hoàn tiền",
-  "cancelled":"Đã bị hủy"
+  "cancelled":"Đã bị hủy",
+  "removed" : "Đã lấy hàng ra"
   },
 
   "serviceNames": {
     "protecting": "Bảo vệ",
     "product_packaging": "Đóng gói sản phẩm",
-    "delivery": "Giao hàng"
+    "delivery": "Giao hàng và đóng gói"
   },
 
   "productTypeNames": {

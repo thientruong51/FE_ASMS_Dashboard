@@ -300,6 +300,8 @@ export default function TrackingHistoryDetailDrawer({
 
         const resp = await orderStatusApi.getOrderStatus(orderCode);
         const info = resp && ((resp as any).data !== undefined ? (resp as any).data : resp);
+        console.log("GET ORDER STATUS RESPONSE", info);
+
         if (info) {
           setData((d) => {
             if (d) {
@@ -340,60 +342,46 @@ export default function TrackingHistoryDetailDrawer({
       t("extendConfirmMsg", { code: orderCode, date: isoDate }),
       async () => {
         const prev = data;
+
         const infoFromFetch = await fetchOrderInfoIfNeeded();
 
-        const merged = {
-          ...(prev ?? {}),
-          ...(data ?? {}),
-          ...(infoFromFetch ?? {}),
-        };
+        const source = infoFromFetch ?? data ?? prev;
 
-        const depositStr = merged.depositDate;
-        const origReturnStr = merged.returnDate;
-        const totalPriceRaw = merged.totalPrice ?? 0;
+        const depositStr = source?.depositDate;
+        const origReturnStr = source?.returnDate;
+        const totalPriceRaw = source?.totalPrice ?? 0;
 
         let unpaidAmount = 0;
 
-        try {
-          if (depositStr && origReturnStr) {
-            const deposit = parseISO(String(depositStr));
-            const origReturn = parseISO(String(origReturnStr));
-            const newReturn = extendDate;
+        if (depositStr && origReturnStr && extendDate) {
+          const deposit = parseISO(String(depositStr));
+          const origReturn = parseISO(String(origReturnStr));
+          const newReturn = extendDate;
 
-            const originalDays = differenceInCalendarDays(origReturn, deposit);
-            const extendDays = differenceInCalendarDays(newReturn, origReturn);
+          const originalDays = differenceInCalendarDays(origReturn, deposit);
+          const extendDays = differenceInCalendarDays(newReturn, origReturn);
+          const totalPrice = Number(totalPriceRaw);
 
-            const totalPrice = Number(totalPriceRaw) || 0;
-
-            if (originalDays > 0 && extendDays > 0 && totalPrice > 0) {
-              const perDay = totalPrice / originalDays;
-              unpaidAmount = Math.round(perDay * extendDays);
-              if (unpaidAmount < 0) unpaidAmount = 0;
-            } else {
-              unpaidAmount = 0;
-            }
-          } else {
-            unpaidAmount = 0;
+          if (originalDays > 0 && extendDays > 0 && totalPrice > 0) {
+            unpaidAmount = Math.round((totalPrice / originalDays) * extendDays);
           }
-        } catch (err) {
-          console.error("[EXTEND] compute error:", err);
-          unpaidAmount = 0;
         }
+        console.log("EXTEND CALC DEBUG", {
+          depositDate: source?.depositDate,
+          returnDate: source?.returnDate,
+          extendDate,
+          totalPrice: source?.totalPrice,
+          unpaidAmount,
+        });
+        setData((d) =>
+          d ? { ...d, returnDate: isoDate, unpaidAmount } : d
+        );
 
-        setData((d) => (d ? { ...d, returnDate: isoDate, unpaidAmount } : d));
-
-        try {
-          await orderStatusApi.extendOrder(orderCode, isoDate, unpaidAmount);
-          await refreshOrderStatus(orderCode);
-          openSnackbar(t("confirmActionSuccess"), "success");
-        } catch (err) {
-          console.error("[EXTEND] API CALL failed:", err);
-          openSnackbar(t("saveFailed"), "error");
-          setData(prev);
-          throw err;
-        }
+        await orderStatusApi.extendOrder(orderCode, isoDate, unpaidAmount);
+        await refreshOrderStatus(orderCode);
       }
     );
+
   };
 
   const handleMoveToExpiredStorage = () => {
@@ -799,7 +787,7 @@ export default function TrackingHistoryDetailDrawer({
                   {!isOverdue &&
                     !isCancelled &&
                     !isCompleted &&
-                     (
+                    (
                       <Button
                         variant="contained"
                         size="small"
