@@ -594,6 +594,7 @@ export default function OrderDetailDrawer({ orderCode, open, onClose, orderFull 
                               "email",
                               "address",
                               "phoneContact",
+                               "shortCode"
                             ].includes(k)
                         )
                         .map((k) => {
