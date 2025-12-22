@@ -72,7 +72,10 @@
   "messages": {
     "toggleSuccess": "Cập nhật thành công",
 
-    "updateImageSuccess": "Cập nhật hình ảnh thành công"
+    "updateImageSuccess": "Cập nhật hình ảnh thành công",
+    "updateImageFailed": "Cập nhật hình ảnh thất bại",
+    "fetchContactsFailed": "Lấy liên hệ thất bại",
+    "resetPasskeySuccess": "Đặt lại mật khẩu thành công"
   },
 
   "errors": {
