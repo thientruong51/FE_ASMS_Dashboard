@@ -102,9 +102,10 @@
     "uploadImages": "Chọn hoặc tải lên hình ảnh liên quan"
   },
   "contactType": {
-    "damage_report": "Báo hỏng",
+    "damage_report": "Hư hỏng hàng hóa",
     "refund": "Hoàn tiền",
-    "request_to_retrieve": "Yêu cầu lấy hàng"
+    "request_to_retrieve": "Yêu cầu khách phải lấy lại hàng",
+    "other": "Khác"
   },
    "filters": {
     "contactType": "Loại liên hệ",
