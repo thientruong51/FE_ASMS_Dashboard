@@ -69,7 +69,10 @@
 
   "messages": {
     "toggleSuccess": "Updated successfully",
-    "updateImageSuccess": "Images updated successfully"
+    "updateImageSuccess": "Images updated successfully",
+    "updateImageFailed": "Failed to update images",
+    "fetchContactsFailed": "Failed to fetch contacts",
+    "resetPasskeySuccess": "Passkey reset successfully"
   },
 
   "errors": {
