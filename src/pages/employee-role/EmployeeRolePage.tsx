@@ -22,12 +22,10 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import PersonIcon from "@mui/icons-material/Person";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import {
   getEmployeeRoles,
-  deleteEmployeeRole,
   type EmployeeRoleItem,
 } from "@/api/employeeRoleApi";
 import EmployeeRoleDialog from "./components/EmployeeRoleDialog";
@@ -153,28 +151,6 @@ export default function EmployeeRolePage() {
     });
   }, [fetchAll, t]);
 
-  const handleDelete = async (id?: number | null) => {
-    if (!id) return;
-    if (!window.confirm(t("dialog.deleteConfirm"))) return;
-
-    try {
-      await deleteEmployeeRole(id);
-      setAllRows((prev) => prev.filter((r) => r.employeeRoleId !== id));
-      setRows((prev) => prev.filter((r) => r.employeeRoleId !== id));
-      setSnack({
-        open: true,
-        message: t("messages.deleted"),
-        severity: "success",
-      });
-    } catch (err) {
-      console.error(err);
-      setSnack({
-        open: true,
-        message: t("messages.deleteFailed"),
-        severity: "error",
-      });
-    }
-  };
 
   /* =========================
      Table columns
@@ -231,13 +207,7 @@ export default function EmployeeRolePage() {
             >
               <EditIcon fontSize="small" />
             </Box>
-            <Box
-              component="span"
-              sx={{ cursor: "pointer" }}
-              onClick={() => handleDelete(params.row.employeeRoleId)}
-            >
-              <DeleteIcon fontSize="small" color="error" />
-            </Box>
+            
           </Box>
         ),
       },
@@ -360,9 +330,7 @@ export default function EmployeeRolePage() {
                           <IconButton onClick={() => openEdit(r.employeeRoleId)}>
                             <EditIcon fontSize="small" />
                           </IconButton>
-                          <IconButton onClick={() => handleDelete(r.employeeRoleId)}>
-                            <DeleteIcon fontSize="small" color="error" />
-                          </IconButton>
+                          
                         </>
                       }
                     >

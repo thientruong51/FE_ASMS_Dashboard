@@ -130,14 +130,11 @@ export default function StaffPage() {
       const matchesRole = filterRole === "" || empRoleKey === filterRole;
       const matchesStatus = filterStatus === "" || emp.status === filterStatus;
 
-      // visibility based on current user's role (new)
       let visibleByRole = true;
       if (currentRoleId != null && allowedRolesForViewer[currentRoleId]) {
         const allowed = allowedRolesForViewer[currentRoleId];
-        // allow if employee's role id is in allowed OR if it's the current user's own record
         visibleByRole = (empRoleId != null && allowed.includes(Number(empRoleId))) || (emp.employeeCode === currentEmployeeCode);
       }
-      // combine all checks
       return matchesSearch && matchesRole && matchesStatus && visibleByRole;
     });
   }, [employees, searchTerm, filterRole, filterStatus, roleKeyToId, currentRoleId, currentEmployeeCode]);
@@ -176,18 +173,7 @@ export default function StaffPage() {
           return <Chip label={roleLabel} size={isSmDown ? "small" : "small"} color="primary" variant="outlined" />;
         }
       },
-      {
-        field: "building",
-        headerName: t("buildingLabel"),
-        minWidth: 120,
-        flex: 0.9,
-        renderCell: (params: GridRenderCellParams) => {
-          const emp = params.row as any;
-          const rawB = emp.buildingName ?? emp.building?.name ?? "";
-          const bLabel = translateBuildingName(t, rawB);
-          return <Typography sx={{ fontSize: { xs: 12, sm: 14 } }}>{bLabel || "-"}</Typography>;
-        }
-      },
+     
       {
         field: "phone",
         headerName: t("phone"),
