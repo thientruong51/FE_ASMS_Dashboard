@@ -260,7 +260,9 @@
      "order_cancelled": "Hủy đơn hàng",
     "auto_update": "Cập nhật tự động",
         "order_cancelled_from_pending": "Đơn bị hủy - Lý do: Khách hàng hủy",
-    "moved_to_expired_storage": "Chuyển đến kho hết hạn"
+    "moved_to_expired_storage": "Chuyển đến kho hết hạn",
+    "customer_retrieved_from_expired_storage": "Khách nhận lại từ kho hết hạn",
+    "order_cancelled_after_30_days_in_expired_storage": "Đơn bị hủy sau 30 ngày trong kho hết hạn"
 
 },
 "UnPaid":"Chưa thanh toán",

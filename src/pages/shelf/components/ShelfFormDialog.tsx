@@ -106,21 +106,29 @@ export default function ShelfFormDialog({
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1 }}>
             <TextField
               label={t("length")}
-              value={form.length || ""}
+              type="number"
+              inputProps={{ step: "any" }}
+              value={form.length ?? ""}
               onChange={handleChange("length")}
               error={!!fieldErrors.length}
               helperText={fieldErrors.length}
             />
+
             <TextField
               label={t("width")}
-              value={form.width || ""}
+              type="number"
+              inputProps={{ step: "any" }}
+              value={form.width ?? ""}
               onChange={handleChange("width")}
               error={!!fieldErrors.width}
               helperText={fieldErrors.width}
             />
+
             <TextField
               label={t("height")}
-              value={form.height || ""}
+              type="number"
+              inputProps={{ step: "any" }}
+              value={form.height ?? ""}
               onChange={handleChange("height")}
               error={!!fieldErrors.height}
               helperText={fieldErrors.height}

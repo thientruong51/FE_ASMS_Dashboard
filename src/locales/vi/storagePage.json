@@ -354,6 +354,8 @@
 
     "close": "Đóng"
   },
+  "confirmTakeOutTitle": "Xác nhận lấy thùng ra",
+  "orderPanel.noDetails": "Không tìm thấy chi tiết đơn hàng phù hợp.",
   "width": "Rộng",
 "length": "Dài",
 "height": "Cao",

@@ -10,7 +10,6 @@ import {
   Stack,
   CircularProgress,
   Paper,
-  Button,
   Tooltip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
@@ -227,9 +226,7 @@ export default function ContainerTypeCard({
 
         <Box sx={{ flex: "1 0 auto" }} />
 
-        <Button size="small" variant="text">
-          {t("card.view")}
-        </Button>
+        
       </CardActions>
     </Card>
   );

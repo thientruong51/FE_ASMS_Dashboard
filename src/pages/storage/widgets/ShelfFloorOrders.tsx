@@ -19,7 +19,6 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import type { ContainerItem } from "@/api/containerApi";
@@ -88,18 +87,6 @@ export default function ShelfFloorOrders({
 
   const containersOnThisFloor = useMemo(() => localContainers ?? [], [localContainers]);
 
-  const openAdd = () => {
-    setEditingOrder(null);
-    setFormData({
-      id: `ORD-${shelfCode}-${floor}-${orders.length + 1}`,
-      customer: "",
-      weight: "",
-      status: "Active",
-      containerCode: containersOnThisFloor[0]?.containerCode ?? null,
-      note: "",
-    });
-    setDialogOpen(true);
-  };
 
   const openEdit = (order: OrderItem) => {
     setEditingOrder(order);
@@ -121,12 +108,6 @@ export default function ShelfFloorOrders({
     setOrders((p) => p.filter((o) => o.id !== id));
   };
 
-  const formatValue = (v: any) => {
-    if (v === null || v === undefined || v === "") return "-";
-    if (typeof v === "boolean") return v ? t("common.yes") : t("common.no");
-    if (typeof v === "number") return v.toString();
-    return String(v);
-  };
 
   const pastelBg = (index: number) =>
     index % 2 === 0
@@ -159,21 +140,17 @@ export default function ShelfFloorOrders({
     notify(t("shelfFloor.savedLocally", { code: updated.containerCode }), "info");
   };
 
-  // NEW: called when a container is successfully removed via ContainerDetailDialog
   const handleContainerRemoved = (containerCode: string) => {
     if (!containerCode) return;
 
-    // remove from editedContainers
     setEditedContainers((prev) => {
       const copy = { ...prev };
       delete copy[containerCode];
       return copy;
     });
 
-    // remove from localContainers
     setLocalContainers((prev) => {
       const next = prev.filter((c) => c.containerCode !== containerCode);
-      // notify parent
       if (typeof onContainersUpdated === "function") {
         try {
           onContainersUpdated(next);
@@ -184,7 +161,6 @@ export default function ShelfFloorOrders({
       return next;
     });
 
-    // if container was selected in dialog, close it
     setSelectedContainer((prev) => (prev?.containerCode === containerCode ? null : prev));
 
     notify(t("shelfFloor.removeSuccess", { code: containerCode }) ?? `${containerCode} removed`, "success");
@@ -348,11 +324,7 @@ export default function ShelfFloorOrders({
           </Stack>
 
           <Box mt={1} mb={0.25}>
-            <Typography fontSize={13} fontWeight={600}>
-              {t("shelfFloor.weightLabel", {
-                weight: typeof c.currentWeight === "number" ? `${c.currentWeight} kg` : formatValue(c.currentWeight),
-              })}
-            </Typography>
+           
             <Typography fontSize={12} color="text.secondary">
               {t("shelfFloor.floorLabel", { floor: c.floorCode ?? "-" })}{" "}
               {isEdited && <span style={{ color: "#1976d2", fontWeight: 700 }}>• {t("shelfFloor.editedTag")}</span>}
@@ -411,7 +383,7 @@ export default function ShelfFloorOrders({
                         {o.id}
                       </Typography>
                       <Typography fontSize={12} color="text.secondary">
-                        {o.customer} • {o.weight}
+                        {o.customer} 
                       </Typography>
                       <Typography fontSize={12} color="text.secondary">
                         {o.note}
@@ -454,9 +426,7 @@ export default function ShelfFloorOrders({
         </Box>
 
         <Stack direction="row" spacing={1} alignItems="center">
-          <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openAdd}>
-            {t("shelfFloor.addButton")}
-          </Button>
+         
           <Button
             variant="outlined"
             size="small"
@@ -524,7 +494,6 @@ export default function ShelfFloorOrders({
               disabled={!!editingOrder}
             />
             <TextField label={t("shelfFloor.customerLabel")} value={formData.customer} onChange={(e) => setFormData({ ...formData, customer: e.target.value })} fullWidth />
-            <TextField label={t("shelfFloor.weightLabelShort")} value={formData.weight} onChange={(e) => setFormData({ ...formData, weight: e.target.value })} fullWidth />
             <TextField
               label={t("shelfFloor.containerOptional")}
               select

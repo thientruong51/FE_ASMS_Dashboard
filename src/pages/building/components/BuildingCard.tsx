@@ -9,13 +9,11 @@ import {
   Chip,
   Stack,
   CircularProgress,
-  Button,
   Avatar,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ApartmentIcon from "@mui/icons-material/Apartment";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -236,11 +234,7 @@ export default function BuildingCard({
           <DeleteIcon />
         </IconButton>
 
-        <Box sx={{ flex: "1 0 auto", display: "flex", justifyContent: "flex-end", pr: 1 }}>
-          <Button size="small" startIcon={<VisibilityIcon />} onClick={(e) => { e.stopPropagation(); }}>
-            {t("card.view", { ns: "building" })}
-          </Button>
-        </Box>
+       
       </CardActions>
     </Card>
   );

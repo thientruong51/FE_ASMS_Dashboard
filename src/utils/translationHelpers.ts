@@ -195,6 +195,8 @@ const actionTypeKeyMapRaw: Record<string, string> = {
   "order cancelled after refund": "order_cancelled_after_refund",
   "Order Cancelled from Pending - Reason: Customer cancel": "order_cancelled_from_pending",
   "Moved to Expired Storage": "moved_to_expired_storage",
+  "Customer Retrieved from Expired Storage": "customer_retrieved_from_expired_storage",
+  "Order Cancelled After 30 Days in Expired Storage": "order_cancelled_after_30_days_in_expired_storage",
 };
 
 const actionTypeMaps = buildNormalizedMap(actionTypeKeyMapRaw);

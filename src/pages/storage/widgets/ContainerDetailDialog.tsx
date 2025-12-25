@@ -430,9 +430,7 @@ export default function ContainerDetailDialog({
                     {t("floor")}: {mainFields.floorCode}
                   </Typography>
 
-                  <Typography fontSize={13} color="text.secondary">
-                    {t("weight")}: {mainFields.weight}
-                  </Typography>
+                 
 
                   {/* ==== BUTTONS: COPY + QR + EDIT ==== */}
                   <Stack

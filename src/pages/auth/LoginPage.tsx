@@ -33,30 +33,46 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
-  const handleLogin = async () => {
-    setErr("");
-    if (!email || !password) {
-      setErr(t("pleaseFill") ?? "Vui lòng nhập email và mật khẩu");
+ const handleLogin = async () => {
+  setErr("");
+
+  if (!email || !password) {
+    setErr(t("pleaseFill") ?? "Vui lòng nhập email và mật khẩu");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    const response = await authApi.employeeLogin({ email, password });
+    const data = (response && (response.data ?? response)) as any;
+
+    if (!data?.success) {
+      setErr(data?.errorMessage ?? t("loginFailed") ?? "Đăng nhập thất bại");
       return;
     }
 
-    try {
-      setLoading(true);
-      const response = await authApi.employeeLogin({ email, password });
-      const data = (response && (response.data ?? response)) as any;
-
-      if (data?.success) {
-        setAuthStorage(data.accessToken ?? null, data.refreshToken ?? null);
-        navigate("/");
-      } else {
-        setErr(data?.errorMessage ?? (t("loginFailed") ?? "Đăng nhập thất bại"));
-      }
-    } catch (e: any) {
-      setErr(e?.response?.data?.errorMessage ?? e?.message ?? (t("loginError") ?? "Lỗi kết nối"));
-    } finally {
-      setLoading(false);
+    if (data?.user?.isActive === false) {
+      setErr(
+        t("accountInactive") ??
+          "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên."
+      );
+      return;
     }
-  };
+
+    setAuthStorage(data.accessToken ?? null, data.refreshToken ?? null);
+    navigate("/");
+  } catch (e: any) {
+    setErr(
+      e?.response?.data?.errorMessage ??
+        e?.message ??
+        t("loginError") ??
+        "Lỗi kết nối"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <Box
