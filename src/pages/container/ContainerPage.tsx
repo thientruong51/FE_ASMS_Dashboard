@@ -163,7 +163,6 @@ export default function ContainerPage() {
         { field: "type", headerName: t("table.type") ?? "Type", minWidth: 90, flex: 0.6 },
         { field: "serialNumber", headerName: t("table.serial") ?? "Serial", minWidth: 90, flex: 0.6 },
         { field: "maxWeight", headerName: t("table.maxWeight") ?? "Max weight", minWidth: 110, flex: 0.8 },
-        { field: "currentWeight", headerName: t("table.currentWeight") ?? "Current", minWidth: 110, flex: 0.8 },
         {
             field: "status",
             headerName: t("table.status") ?? "Status",

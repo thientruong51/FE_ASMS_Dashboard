@@ -51,7 +51,7 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
       setFormData({
         customerCode: customer.customerCode,
         name: customer.name || "",
-        email: customer.email || "",
+        email: customer.email ,
         phone: customer.phone || "",
         address: customer.address || "",
         password: "",
@@ -207,6 +207,7 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
             onChange={(e) => handleChange("email", e.target.value)}
             fullWidth
             required
+             disabled={!!customer}
             size="small"
             error={!!errors.email}
             helperText={errors.email || "example@gmail.com"}
@@ -266,9 +267,11 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
             label={t("form.password")}
             type="password"
             value={formData.password}
+            
             onChange={(e) => handleChange("password", e.target.value)}
             fullWidth
             required={!customer}
+             disabled={!!customer}
             size="small"
             error={!!errors.password}
             helperText={
