@@ -97,7 +97,8 @@
   "auto_update": "Cập nhật tự động",
   "order_cancelled_from_pending": "Đơn bị hủy - Lý do: Khách hàng hủy",
   "moved_to_expired_storage": "Chuyển đến kho hết hạn",
-  "customer_retrieved_from_expired_storage": "Khách nhận lại từ kho hết hạn"
+  "customer_retrieved_from_expired_storage": "Khách nhận lại từ kho hết hạn",
+  "order_cancelled_after_30_days_in_expired_storage": "Đơn bị hủy sau 30 ngày trong kho hết hạn"
 
 },
 "updateImage": "Cập nhật hình",
@@ -111,7 +112,10 @@
 "uploadingImages": "Đang tải ảnh...",
 "noFileChosen": "Chưa chọn file",
 "cancelOrder": "Hủy đơn",
-"cancelConfirmTitle": "Xác nhận hủy đơn"
+"cancelConfirmTitle": "Xác nhận hủy đơn",
+"cancelOrderConfirmTitle": "Hủy đơn hàng",
+"cancelOrderConfirmMsg": "Bạn có chắc muốn hủy đơn {{code}}?"
+
 
 
   
