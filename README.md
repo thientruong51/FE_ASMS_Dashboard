@@ -1,73 +1,105 @@
-# React + TypeScript + Vite
+# Apartment Storage Management System (ASMS)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern **Apartment Storage Rental and Management Platform** that enables users to explore, rent, and manage storage units within apartment complexes through **3D visualization and real-time availability tracking**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+# Overview
 
-## React Compiler
+ASMS (3D-Simulated Apartment Storage Management System) was developed to **digitize storage rental services within apartment buildings**.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The system allows residents to browse storage units, check real-time availability, visualize storage spaces in 3D, and complete online bookings and payments.
 
-## Expanding the ESLint configuration
+The goal of this project is to provide a **transparent, convenient, and fully digital storage rental experience**.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+# Live Demo
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Website  
+https://www.asms.website
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Frontend Repository  
+https://github.com/thientruong51/FE_ASMS_LandingPage
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+# Project Information
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+| Field | Information |
+|------|-------------|
+| Role | Lead Frontend Developer |
+| Team Size | 4 members |
+| Team Structure | 3 Backend Developers, 1 Frontend Developer |
+| Duration | 09/2025 – 12/2025 |
+| Category | Fullstack Web Application |
+
+---
+
+# Key Features
+
+### 3D Storage Visualization
+Users can explore storage spaces through an interactive **3D simulation interface**, helping them understand the size and location of each unit.
+
+### Real-time Storage Availability
+The platform displays **real-time availability of storage units**, ensuring accurate booking information.
+
+### Online Booking & Payment
+Users can rent storage units and complete payments online via **PayOS integration**.
+
+### Google Maps Integration
+Users can easily locate storage facilities using **Google Maps API**.
+
+### Admin Management Dashboard
+Admins can manage:
+
+- storage units
+- user bookings
+- payment records
+- availability updates
+
+through a centralized dashboard.
+
+---
+
+# Technologies Used
+
+### Frontend
+- React
+- React Native
+- TypeScript
+
+### Backend
+- C#
+- .NET
+
+### Cloud & Deployment
+- Azure
+- Vercel
+- Cloudinary
+
+### Database
+- SQL Server
+
+### Third-party Integrations
+- PayOS (online payment)
+- Google Maps API
+- MailKit (email system)
+
+---
+
+# My Responsibilities
+
+As the **Lead Frontend Developer**, my responsibilities included:
+
+- Leading the **frontend development process**
+- Designing the **entire UI/UX architecture**
+- Developing all **frontend components and interface systems**
+- Integrating **backend APIs into the frontend application**
+- Collaborating closely with backend developers to ensure smooth system integration
+
+---
+
+# System Architecture
+
+The system follows a **modern web architecture**:
